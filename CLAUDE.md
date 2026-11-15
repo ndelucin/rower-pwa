@@ -43,7 +43,9 @@ docs/ BRIEF.md
 ## Conventions
 - Code, identifiants et commentaires : anglais. Documentation et messages de commit : français.
 - Modules purs (`ftms.js`, `engine.js`) sans accès au DOM ni à Web Bluetooth, pour rester testables sous Node.
-- Git local uniquement : **aucun push sans accord explicite de Nico** (GitHub Pages viendra plus tard, sur décision).
+- Remote : https://github.com/ndelucin/rower-pwa (**privé**, sauvegarde). **Aucun push sans accord explicite de Nico.** Passage en public + GitHub Pages plus tard, sur décision.
+- Identité Git locale au dépôt : e-mail anonyme GitHub (`…+ndelucin@users.noreply.github.com`), jamais l'adresse personnelle : le dépôt deviendra public.
+- Rien d'identifiant dans le dépôt (adresse Bluetooth du rameur, e-mail, etc.).
 
 ## Avancement
 Versions et périmètre : brief § 16. Version en cours : **v1**.
