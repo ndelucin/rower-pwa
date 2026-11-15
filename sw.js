@@ -29,7 +29,9 @@ async function networkFirst(request) {
   const cache = await caches.open(CACHE);
   try {
     const response = await Promise.race([
-      fetch(request),
+      // 'no-cache' = always revalidate with the server (cheap 304 when unchanged). Without it Chrome's HTTP
+      // cache (GitHub Pages: max-age=600) could serve a 10-minute-old file and hide a fresh deploy.
+      fetch(request, { cache: 'no-cache' }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), TIMEOUT_MS)),
     ]);
     if (response.ok) cache.put(request, response.clone());

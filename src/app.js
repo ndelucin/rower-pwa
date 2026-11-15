@@ -179,8 +179,11 @@ function shareSession(summary) {
     const file = exportFile(summary);
     if (navigator.canShare?.({ files: [file] })) {
       return navigator.share({ files: [file], title: 'Séance RowerMonitor' })
-        .then(() => logEvent('séance partagée'))
-        .catch((err) => logEvent(err.name === 'AbortError' ? 'partage annulé' : `partage impossible : ${err.name} ${err.message}`));
+        .then(() => { logEvent('séance partagée'); return 'Fichier partagé.'; })
+        .catch((err) => {
+          logEvent(err.name === 'AbortError' ? 'partage annulé' : `partage impossible : ${err.name} ${err.message}`);
+          return err.name === 'AbortError' ? 'Partage annulé.' : `Partage impossible (${err.name}).`;
+        });
     }
     logEvent('partage de fichier indisponible : téléchargement');
     const a = document.createElement('a');
@@ -188,10 +191,11 @@ function shareSession(summary) {
     a.download = file.name;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    return Promise.resolve('Partage de fichier indisponible : fichier téléchargé.');
   } catch (err) {
     logEvent(`export impossible : ${err.name} ${err.message}`);
+    return Promise.resolve(`Export impossible (${err.name}).`);
   }
-  return Promise.resolve();
 }
 
 function showSummary(summary) {
@@ -199,13 +203,23 @@ function showSummary(summary) {
   snapshot = summary;
   show(LAYOUTS.summary({
     onKeep: () => {
+      if (summary.startedAt == null) { // no stroke at all: nothing to keep, nothing to share
+        store.deleteDraft().catch(() => {}).finally(() => { goHome(); startMsg.textContent = 'Séance vide : rien à enregistrer.'; });
+        return;
+      }
       // Web Share needs the tap's user gesture: it is started first, synchronously. The local copy
       // is the safety net (a cancelled share loses nothing).
       const sharing = shareSession(summary);
-      const saved = store.saveSession(summary)
+      let saved = 'Séance enregistrée.';
+      store.saveSession(summary)
         .then(() => store.deleteDraft())
-        .catch((err) => logEvent(`enregistrement impossible : ${err.message}`));
-      Promise.all([sharing, saved]).finally(goHome);
+        .catch((err) => { saved = 'Enregistrement local impossible.'; logEvent(`enregistrement impossible : ${err.message}`); })
+        // Home right after the local copy: a share sheet that never answers must not freeze the summary.
+        .finally(() => {
+          goHome();
+          startMsg.textContent = saved;
+          sharing.then((outcome) => { startMsg.textContent = `${saved} ${outcome}`; });
+        });
     },
     onDiscard: () => store.deleteDraft()
       .catch((err) => logEvent(`suppression impossible : ${err.message}`))
