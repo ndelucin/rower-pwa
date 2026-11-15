@@ -52,7 +52,7 @@ scripts/  phone-eval.js  sim-demo.js
 - `adb reverse tcp:8080 tcp:8080`, puis ouvrir `http://localhost:8080` dans Chrome Android (localhost = contexte sécurisé : Web Bluetooth et service worker sans HTTPS).
 - Ouvrir la page : `adb shell am start -a android.intent.action.VIEW -d "http://localhost:8080/" com.android.chrome`. Capture : `adb exec-out screencap -p > s23.png`.
 - Journal de la page (`window.__rower` : trames brutes, série seconde par seconde, événements) : `node scripts/phone-eval.js` ; `--reload` recharge sans cache après une modification. L'écran du téléphone doit rester allumé et Chrome au premier plan. Sinon `chrome://inspect` sur le Mac.
-- `adb` vient de `~/Brewfile` (`android-platform-tools`). Le S23 apparaît dans `adb devices` sous le numéro `RFCW90GPR7V`. Si la liste est vide ou indique `unauthorized` :
+- `adb` vient de `~/Brewfile` (`android-platform-tools`). Le S23 doit apparaître dans `adb devices` avec l’état `device`. Si la liste est vide ou indique `unauthorized` :
   1. sur le Mac, autoriser l'accessoire USB (Réglages Système → Confidentialité et sécurité → « Autoriser les accessoires à se connecter ») ;
   2. sur le S23, Options de développement : « Débogage USB » activé, anciennes autorisations révoquées, configuration USB par défaut sur « Transfert de fichiers » ; rebrancher et accepter la fenêtre ;
   3. vérifier que l'Auto Blocker Samsung est désactivé.
@@ -65,7 +65,7 @@ scripts/  phone-eval.js  sim-demo.js
 
 ## Conventions
 - Code, identifiants et commentaires : anglais. Documentation et messages de commit : français.
-- Remote : https://github.com/ndelucin/rower-pwa (**privé**, sauvegarde). **Aucun push sans accord explicite de Nico.** Passage en public + GitHub Pages plus tard, sur sa décision.
+- Remote : https://github.com/ndelucin/rower-pwa (**public** depuis le 2026-11-15), site sur GitHub Pages : https://ndelucin.github.io/rower-pwa/ (publié depuis `main`, chaque push met le site à jour). **Aucun push sans accord explicite de Nico.**
 - Identité Git locale au dépôt : e-mail anonyme GitHub (`…+ndelucin@users.noreply.github.com`), jamais l'adresse personnelle.
 - Rien d'identifiant dans le dépôt (adresse Bluetooth du rameur, e-mail…).
 
@@ -80,7 +80,7 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
 - [x] Squelette PWA ([docs/PLAN-pwa.md](docs/PLAN-pwa.md)) : nom RowerMonitor, manifeste, icônes, `sw.js` (réseau d'abord, mise à jour silencieuse, démarrage hors ligne vérifié sur le S23). Pas de service worker sur `localhost` sauf `?sw=1`. **Installation réelle à vérifier en HTTPS (GitHub Pages)**
 - [x] Écran d'accueil : bouton de connexion, dernière séance, simulateur caché hors `?dev` (docs/ECRAN.md)
 - [ ] Export JSON `rower-session/1` (« Ajouter au board » du bilan)
-- [ ] GitHub Pages : implique de passer le dépôt en public (décision de Nico)
+- [x] Dépôt public + GitHub Pages (2026-11-15)
 
 ## Questions en suspens
 - Distance affichée par le S4 en fin de 2ᵉ essai, à comparer aux 174 m reçus.
