@@ -73,7 +73,14 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
      - à garder : le **gros chrono central** (temps écoulé), entouré d'un **anneau de progression** (distance parcourue / 2000 m) ;
      - à éviter : les 6 petits panneaux autour, avec des chiffres minuscules ;
      - inutiles : les **calories**, et le temps écoulé en double dans un panneau.
-   - Maquette retenue (séance libre) : chrono central + anneau distance / 2000 m ; autour, 4 grandes valeurs : **split /500 m**, **puissance (W)**, **cadence**, **distance**. Vitesse en m/s écartée (même information que le split, moins lisible, ne correspond pas aux consignes des programmes). Courbe du split en bas : à décider.
+   - Maquette retenue (séance libre) : chrono central + anneau distance / 2000 m ; autour, 4 grandes valeurs : **split /500 m**, **puissance (W)**, **cadence**, **distance**. Vitesse en m/s écartée (même information que le split, moins lisible, ne correspond pas aux consignes des programmes).      - En bas, la courbe du split est remplacée par une **barre de split** horizontale, plus lisible à distance :
+       - échelle fixe de **2:30 (à gauche) à 1:50 (à droite)**, centrée sur 2:10 ; vers la droite = plus vite ;
+       - **curseur ▲** pour le split instantané ; **ligne │** pour le split moyen depuis le début ;
+       - hors de l'échelle, le curseur reste collé au bord avec ◀ ou ▶ ;
+       - bornes choisies d'après les 10 séances de rowerboard (sept.–nov. 2026) : médiane 2:08, 90 % du temps entre 1:55 et 2:28 ;
+       - les bornes sont une constante, à décaler quand l'allure habituelle approchera 1:55–2:00 ;
+       - v2 : une zone cible verte s'y ajoute pour les programmes.
+       - L'historique de la séance (courbe) relève du tableau de bord, après export.
 5. Questions en suspens :
    - Distance affichée par le S4 en fin de 2e essai, à comparer aux 174 m reçus.
    - Un coup très léger (≈ 25 W) juste après un arrêt compte comme une reprise : comportement à confirmer.
