@@ -63,3 +63,13 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
 - [x] Écran maintenu allumé pendant la séance (`src/wakelock.js`, Screen Wake Lock), vérifié sur le S23
 - [ ] Squelette PWA (manifeste, SW, icônes), export JSON, GitHub Pages
 - Vérifié sur le vrai matériel : trames de 27 octets en un seul envoi, jamais découpées.
+
+### Prochaines étapes et points ouverts
+1. **Squelette PWA installable** : manifeste (`display: fullscreen`, `orientation: landscape`, chemins relatifs), icônes, service worker avec message « nouvelle version disponible ».
+2. **Enregistrement + export JSON** `rower-session/1` (brief § 11), téléchargement et partage.
+3. **GitHub Pages** : implique de passer le dépôt en **public** (décision de Nico).
+4. **Retouches de l'écran « à froid »** (décision de Nico : Bluetooth d'abord, affichage ensuite) : lisibilité à 1,5 m sur le support du rameur, libellés, métriques utiles.
+5. Questions en suspens :
+   - Distance affichée par le S4 en fin de 2e essai, à comparer aux 174 m reçus.
+   - Un coup très léger (≈ 25 W) juste après un arrêt compte comme une reprise : comportement à confirmer.
+   - Rattrapage `brew bundle` : le Mac diverge de `~/Brewfile` (node, git, gh, pyenv, quelques apps) ; `~/Brewfile` n'est versionné nulle part.
