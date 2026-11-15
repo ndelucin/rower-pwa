@@ -213,6 +213,15 @@ async function startRower() {
   }
 }
 
+// ---------- Offline start and silent updates (sw.js, docs/PLAN-pwa.md) ----------
+// Not on localhost (the phone would keep old code while we edit it), unless ?sw=1.
+const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+if ('serviceWorker' in navigator && (!isLocal || new URLSearchParams(location.search).has('sw'))) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(() => logEvent('service worker enregistré'))
+    .catch((err) => logEvent(`service worker refusé : ${err.message}`));
+}
+
 // ---------- Start screen ----------
 const btnBle = document.getElementById('btn-ble');
 if (isBleAvailable()) {

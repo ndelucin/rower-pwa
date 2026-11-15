@@ -21,7 +21,7 @@ Documents de référence, à relire avant toute décision de conception :
 
 ## Structure
 ```
-index.html  manifest.webmanifest*  sw.js*  .nojekyll
+index.html  manifest.webmanifest  sw.js  .nojekyll  icons/
 src/  ftms.js          décodeur Rower Data (pur)
       ftms-encoder.js  encodeur de trames (simulateur, tests)
       sim.js           faux rameur (scénarios repos / continu / HIIT)
@@ -40,7 +40,7 @@ scripts/  phone-eval.js  sim-demo.js
 `*` : à venir.
 
 ## Commandes
-- Serveur local : `python3 -m http.server 8080`, puis http://localhost:8080.
+- Serveur local : `python3 -m http.server 8080`, puis http://localhost:8080 (`?sw=1` active le service worker en local ; le panneau navigateur de l'app Claude refuse les service workers : tester dans Chrome).
   - `?sim=steady` (ou `hiit`, `startstop`, `rest`) démarre directement le simulateur ; `&speed=10` accélère (10 s simulées par seconde).
   - Maquettes : http://localhost:8080/docs/maquette-seance-libre.html (et `maquette-hiit.html`, `maquette-phases.html`).
 - Tests : `npm test` (= `node --test test/*.test.js`, runner intégré à Node, sans dépendance). Trames de test : `encodeRowerData` (`src/ftms-encoder.js`) et `test/helpers.js`.
@@ -77,7 +77,8 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
 - [x] Écran maintenu allumé (`wakelock.js`), vérifié sur le S23
 - [x] Écrans de séance décidés sur maquettes : [docs/ECRAN.md](docs/ECRAN.md)
 - [x] Nouvel écran de séance libre, pause auto (`session.js`), bilan, copie de secours (`store.js`) : [docs/PLAN-ecran-v1.md](docs/PLAN-ecran-v1.md). Vérifié au simulateur (scénario `startstop`) ; **reste l'essai sur le vrai rameur**
-- [ ] Squelette PWA installable : manifeste (`display: fullscreen`, `orientation: landscape`, chemins relatifs), icônes, service worker avec « nouvelle version disponible »
+- [x] Squelette PWA ([docs/PLAN-pwa.md](docs/PLAN-pwa.md)) : nom RowerMonitor, manifeste, icônes, `sw.js` (réseau d'abord, mise à jour silencieuse, démarrage hors ligne vérifié sur le S23). Pas de service worker sur `localhost` sauf `?sw=1`. **Installation réelle à vérifier en HTTPS (GitHub Pages)**
+- [ ] Écran d'accueil (connexion, choix de séance) : pas encore maquetté
 - [ ] Export JSON `rower-session/1` (« Ajouter au board » du bilan)
 - [ ] GitHub Pages : implique de passer le dépôt en public (décision de Nico)
 

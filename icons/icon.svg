@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- RowerMonitor icon: the session ring of the app. Full-bleed background, the ring stays inside
+       the maskable safe zone (central circle of 80 % of the size), so one drawing serves both. -->
+  <rect width="512" height="512" fill="#0a0d12"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#1b2533" stroke-width="44"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#4fc3f7" stroke-width="44" stroke-linecap="round"
+          stroke-dasharray="660 943" transform="rotate(-90 256 256)"/>
+  <!-- mini split bar: track, average line, cursor -->
+  <rect x="176" y="244" width="160" height="24" rx="12" fill="#22344a"/>
+  <rect x="246" y="232" width="6" height="48" rx="3" fill="#f3f6fa" opacity=".85"/>
+  <rect x="274" y="222" width="16" height="68" rx="5" fill="#4fc3f7"/>
+</svg>
