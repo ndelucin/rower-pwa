@@ -1,12 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-  <!-- RowerMonitor icon: the session ring of the app. Full-bleed background, the ring stays inside
-       the maskable safe zone (central circle of 80 % of the size), so one drawing serves both. -->
-  <rect width="512" height="512" fill="#0a0d12"/>
-  <circle cx="256" cy="256" r="150" fill="none" stroke="#1b2533" stroke-width="44"/>
-  <circle cx="256" cy="256" r="150" fill="none" stroke="#4fc3f7" stroke-width="44" stroke-linecap="round"
-          stroke-dasharray="660 943" transform="rotate(-90 256 256)"/>
-  <!-- mini split bar: track, average line, cursor -->
-  <rect x="176" y="244" width="160" height="24" rx="12" fill="#22344a"/>
-  <rect x="246" y="232" width="6" height="48" rx="3" fill="#f3f6fa" opacity=".85"/>
-  <rect x="274" y="222" width="16" height="68" rx="5" fill="#4fc3f7"/>
+  <!-- RowerMonitor icon: a heartbeat line inside a thin, partial ring (the session ring of the app).
+       Full-bleed background; ring and line stay inside the maskable safe zone (central circle of
+       80 % of the size), so one drawing serves both the "any" and "maskable" icons. -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="75%">
+      <stop offset="0" stop-color="#16293f"/>
+      <stop offset="1" stop-color="#080b10"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- ring: faint full track + bright arc (about 70 %), starting at the top like the session ring -->
+  <circle cx="256" cy="256" r="172" fill="none" stroke="#3a3322" stroke-width="12"/>
+  <circle cx="256" cy="256" r="172" fill="none" stroke="#ffb547" stroke-width="12" stroke-linecap="round"
+          stroke-dasharray="760 321" transform="rotate(-90 256 256)"/>
+  <!-- heartbeat line, same drawing as the logo of the start screen -->
+  <g transform="translate(121 189) scale(4.2)" fill="none" stroke="#4fc3f7" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1 18H13L16.5 14.5L19.5 18H25L29 4L35 30L39 18H45L48.5 13.5L52 18H63"/>
+  </g>
 </svg>

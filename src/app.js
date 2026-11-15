@@ -11,6 +11,7 @@ import { createActivityFilter } from './activity.js';
 import { createSession } from './session.js';
 import { createStore } from './store.js';
 import { exportFile } from './export.js';
+import { BUILD, formatBuild } from './version.js';
 
 const DRAFT_EVERY_MS = 5000; // backup copy of the running session
 
@@ -101,7 +102,16 @@ async function lockLandscape() {
     await orientation?.lock?.('landscape');
   } catch { /* desktop browser or refused: the rotate hint shows in portrait */ }
 }
-const unlockOrientation = () => { try { window.screen.orientation?.unlock?.(); } catch { /* unsupported */ } };
+// Back to free rotation for the start screen. unlock() alone would fall back to the manifest's orientation,
+// which an already installed app may still carry as "landscape"; lock('any') overrides it explicitly.
+async function freeOrientation() {
+  const orientation = window.screen.orientation;
+  try {
+    await orientation?.lock?.('any');
+  } catch {
+    try { orientation?.unlock?.(); } catch { /* unsupported */ }
+  }
+}
 
 // ---------- Screens ----------
 const startEl = document.getElementById('start');
@@ -129,7 +139,7 @@ function goHome() {
   snapshot = {};
   clearInterval(draftTimer);
   keepAwake.stop();
-  unlockOrientation();
+  freeOrientation();
   source?.disconnect();
   source = null;
   screenEl.hidden = true;
@@ -281,6 +291,8 @@ if (isBleAvailable()) {
 // Simulator buttons: development only (?dev in the address).
 if (new URLSearchParams(location.search).has('dev')) document.getElementById('sim-choice').hidden = false;
 showLastSession();
+document.getElementById('build').textContent = formatBuild(BUILD);
+freeOrientation(); // the start screen follows the phone, even if the installed manifest still says landscape
 
 document.querySelectorAll('[data-sim]').forEach((btn) => btn.addEventListener('click', () => {
   startSimulator(btn.dataset.sim);

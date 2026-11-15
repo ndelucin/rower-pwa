@@ -155,7 +155,9 @@ html, body {
 .btn-connect svg { width: 1.1em; height: 1.1em; }
 .btn-connect:disabled { background: var(--panel); color: var(--muted); box-shadow: none; cursor: default; }
 .start-msg { margin: 0; min-height: 1.3em; max-width: 80vw; font-size: calc(4.2 * var(--u)); color: var(--warn); }
-.last-session { position: absolute; left: 0; right: 0; bottom: calc(4 * var(--u)); margin: 0; padding: 0 calc(4 * var(--u)); text-wrap: balance; min-height: 1.3em; font-size: calc(4.4 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; }
+.last-session { position: absolute; left: 0; right: 0; bottom: calc(7 * var(--u)); margin: 0; padding: 0 calc(4 * var(--u)); text-wrap: balance; min-height: 1.3em; font-size: calc(4.4 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; }
+.build { position: absolute; left: 0; right: 0; bottom: max(calc(2 * var(--u)), env(safe-area-inset-bottom)); margin: 0;
+  font-size: calc(2.9 * var(--u)); color: var(--muted); opacity: .55; font-variant-numeric: tabular-nums; }
 .last-session b { color: var(--text); font-weight: 600; }
 .sim-choice { position: fixed; top: calc(4 * var(--u)); right: max(calc(4 * var(--u)), env(safe-area-inset-right)); display: flex; gap: calc(1.5 * var(--u));
   align-items: center; font-size: calc(3.6 * var(--u)); color: var(--muted); }

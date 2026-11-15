@@ -44,6 +44,7 @@ scripts/  phone-eval.js  sim-demo.js
   - `?dev` affiche les boutons du simulateur sur l'accueil ; `?sim=steady` (ou `hiit`, `startstop`, `rest`) démarre directement le simulateur ; `&speed=10` accélère (10 s simulées par seconde).
   - Maquettes : http://localhost:8080/docs/maquette-seance-libre.html (et `maquette-accueil.html`, `maquette-hiit.html`, `maquette-phases.html`).
 - Tests : `npm test` (= `node --test test/*.test.js`, runner intégré à Node, sans dépendance). Trames de test : `encodeRowerData` (`src/ftms-encoder.js`) et `test/helpers.js`.
+- Numéro de build (discret en bas de l'accueil : « build 38 · 15/11 22:09 ») : `npm run stamp` l'écrit dans `src/version.js` (n° = nombre de commits + 1, + l'heure). **À lancer juste avant chaque commit** pour que le numéro affiché sur le téléphone soit celui du commit ; un crochet Git `pre-commit` peut le faire tout seul (non installé : le dossier `.git/hooks` n'est pas versionné).
 - Capture d'une page à la taille du S23, sans téléphone :
   `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars --force-device-scale-factor=3 --window-size=780,300 --screenshot=out.png "http://localhost:8080/?sim=steady"`
 - Démo du faux rameur en terminal : `node scripts/sim-demo.js [rest|steady|hiit] [secondes] [pas]`.
