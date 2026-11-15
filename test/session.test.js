@@ -206,3 +206,29 @@ test('real session: the phantom stroke after 13 s of rest does not resume', () =
   assert.equal(phantom.elapsed, atPause.elapsed, 'clock frozen');
   assert.equal(phantom.strokes, atPause.strokes + 1, 'the phantom stroke is still counted');
 });
+
+test('real session of the v1 screen trial (2026-11-15): replay gives the summary seen on the phone', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { parseRowerData, createRowerState } = await import('../src/ftms.js');
+  const { createActivityFilter } = await import('../src/activity.js');
+  const { raw } = JSON.parse(readFileSync(new URL('./fixtures/s4-2026-11-15-ecran-v1-raw.json', import.meta.url)));
+  const rower = createRowerState(), filter = createActivityFilter(), session = createSession();
+  const statuses = [];
+  let last;
+  for (const [ms, hex] of raw) {
+    const values = filter.update(rower.apply(parseRowerData(Uint8Array.from(hex.split(' ').map((h) => parseInt(h, 16))))), ms);
+    const { status } = session.update(values, ms);
+    if (status !== statuses.at(-1)) statuses.push(status);
+    last = ms;
+  }
+  // The two phantom strokes of this session (158.8 s and 268.4 s) must not resume it.
+  assert.deepEqual(statuses, ['waiting', 'active', 'paused', 'active', 'paused', 'active', 'paused']);
+  const s = session.end(last);
+  // Phone screen: 2:17, 604 m, split 2:13, 106 W, 20 /min, best 500 m 2:12.
+  assert.equal(Math.floor(s.duration), 137);
+  assert.equal(s.distance, 604);
+  assert.equal(Math.round(s.avgSplit), 133);
+  assert.equal(Math.round(s.avgPower), 106);
+  assert.equal(Math.round(s.avgSpm), 20);
+  assert.equal(Math.floor(s.best500), 131);
+});

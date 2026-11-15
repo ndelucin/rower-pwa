@@ -83,7 +83,7 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
 
 ## Questions en suspens
 - Distance affichée par le S4 en fin de 2ᵉ essai, à comparer aux 174 m reçus.
-- Un coup très léger (≈ 25 W) juste après un arrêt compte comme une reprise : à confirmer sur le rameur (avec la pause auto, il ferait repartir le chrono).
+- Un coup très léger juste après un arrêt compte comme une reprise (vu à 16 W le 2026-11-15, suivi d’une vraie reprise) : comportement gardé, à revoir seulement s’il gêne.
 - À la détection d'un arrêt, le chrono recule des ~6 s de détection (la pause est datée du dernier coup) : à juger sur le rameur.
 - Rowerboard : dans les fichiers TCX du S4, les watts donnent un split ~13 s plus lent que la distance (médiane 2:21 contre 2:08). Ça peut fausser les watts du dashboard.
 - Rattrapage `brew bundle` : le Mac diverge de `~/Brewfile` (node, git, gh, pyenv, quelques apps) ; `~/Brewfile` n'est versionné nulle part.

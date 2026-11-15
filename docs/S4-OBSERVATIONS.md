@@ -28,3 +28,8 @@ Données brutes décodées, une ligne par seconde S4 : [`test/fixtures/s4-2026-1
 - Chaque arrêt est détecté **6 s après le dernier coup**, chaque reprise **au premier coup** ; rejouée dans les tests, la séance donne exactement les mêmes transitions que celles vues sur le téléphone.
 - Le chrono du S4 démarre au mouvement de la poignée : ici **11 s** avant le premier coup compté.
 - Un coup très léger (25 W) juste après un arrêt est compté comme une reprise : c'est le comportement voulu.
+
+## Essai du nouvel écran v1 (2026-11-15, séance avec pause automatique)
+- Trames brutes : [`test/fixtures/s4-2026-11-15-ecran-v1-raw.json`](../test/fixtures/s4-2026-11-15-ecran-v1-raw.json) (712 trames, 3 périodes de rame, fin par ■). Rejouée hors ligne, la séance donne exactement le bilan affiché sur le téléphone : 2:17, 604 m, split moyen 2:13, 106 W, 20 coups/min, meilleur 500 m 2:12.
+- **Le coup fantôme ne remet pas toujours la puissance à 0** : ici il est arrivé 12 s puis 20 s après l'arrêt avec la puissance figée (127 W, 111 W), ce qui faisait reprendre la séance 0,2 à 0,7 s. Sa signature : le nombre de coups augmente alors que la **puissance et la distance sont exactement celles de la trame précédente**. Une vraie reprise change la puissance (même un coup léger à 16 W). Règle ajoutée à `src/activity.js`.
+- Un coup léger (16 W) après un arrêt a bien relancé la séance, suivi d'une vraie période de rame.
