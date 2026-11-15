@@ -4,13 +4,12 @@
 import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { best500 } from '../src/session.js';
-import { SCHEMA, isoLocal } from '../src/export.js';
+import { SCHEMA, isoLocal, round } from '../src/export.js';
 
 const [src, out] = process.argv.slice(2);
 if (!src || !out) { console.error('usage: node scripts/import-rowerboard.js <sessions folder> <output folder>'); process.exit(1); }
 mkdirSync(out, { recursive: true });
 
-const round = (x, d = 0) => (x == null ? null : Math.round(x * 10 ** d) / 10 ** d);
 const SMOOTH_S = 6;      // pace is measured over about 6 s of distance
 const MIN_DIST = 8;      // m over that window, else "not rowing" (no split)
 const MAX_SPLIT = 300;   // s / 500 m: slower than that is a pause

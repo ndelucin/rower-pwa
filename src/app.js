@@ -25,6 +25,9 @@ let status = 'disconnected';
 let sourceLabel = '';
 let view = null;
 let draftTimer = null;
+let draftReady = false;  // the initial read of the backup copy has answered: only then may we write one
+let connecting = false;  // a connection to the rower is in progress (start button pressed)
+let awakeWarning = false; // the screen could not be kept on during this session
 const store = createStore();
 
 // ---------- Diagnostic journal, readable from the Mac (scripts/phone-eval.js) ----------
@@ -77,7 +80,8 @@ function scheduleRender() {
   renderPending = true;
   requestAnimationFrame(() => {
     renderPending = false;
-    view.update({ values, session: snapshot, status, sourceLabel });
+    if (!view) return; // goHome() ran between the request and the frame
+    view.update({ values, session: snapshot, status, sourceLabel, warning: awakeWarning ? 'Écran non maintenu allumé : il peut s’éteindre' : '' });
   });
 }
 
@@ -106,6 +110,9 @@ async function lockLandscape() {
 // which an already installed app may still carry as "landscape"; lock('any') overrides it explicitly.
 async function freeOrientation() {
   const orientation = window.screen.orientation;
+  // Leave the fullscreen that lockLandscape() may have requested (only if there is one: in an installed
+  // fullscreen PWA document.fullscreenElement is null and the app stays fullscreen).
+  try { if (document.fullscreenElement) await document.exitFullscreen?.(); } catch { /* already left */ }
   try {
     await orientation?.lock?.('any');
   } catch {
@@ -140,15 +147,18 @@ function goHome() {
   clearInterval(draftTimer);
   keepAwake.stop();
   freeOrientation();
+  awakeWarning = false;
   source?.disconnect();
   source = null;
   screenEl.hidden = true;
   startEl.hidden = false;
+  btnBle.disabled = !isBleAvailable();
   showLastSession();
 }
 
 const saveDraft = () => {
-  if (!session || session.snapshot().status === 'waiting') return;
+  // Not before the initial read of the previous backup has answered: we could overwrite a copy never shown.
+  if (!draftReady || !session || session.snapshot().status === 'waiting') return;
   store.saveDraft({ sourceLabel, savedAt: Date.now(), session: session.toJSON() })
     .catch((err) => logEvent(`copie de secours impossible : ${err.message}`));
 };
@@ -161,13 +171,24 @@ function startSession(label) {
   snapshot = session.snapshot();
   show(LAYOUTS.free({ onEnd: finishSession }));
   lockLandscape();
-  keepAwake.start();
+  awakeWarning = false;
+  const mine = session;
+  keepAwake.start().then(() => {
+    if (session !== mine) return; // that session is over
+    awakeWarning = !keepAwake.active && (keepAwake.denied || !keepAwake.supported);
+    scheduleRender();
+  });
   clearInterval(draftTimer);
   draftTimer = setInterval(saveDraft, DRAFT_EVERY_MS);
 }
 
 function finishSession() {
   clearInterval(draftTimer);
+  if (session.snapshot().status === 'waiting') { // connected but never rowed: back home, no summary
+    if (draftReady) store.deleteDraft().catch(() => {});
+    goHome();
+    return;
+  }
   saveDraft(); // the draft survives until the summary is kept or discarded
   showSummary(session.end(Date.now()));
 }
@@ -202,8 +223,11 @@ function shareSession(summary) {
 function showSummary(summary) {
   session = null; // the session is over: frames still arriving must not touch the summary
   snapshot = summary;
+  let settled = false; // one outcome per summary: a double tap must not share and save twice
   show(LAYOUTS.summary({
     onKeep: () => {
+      if (settled) return;
+      settled = true;
       if (summary.startedAt == null) { // no stroke at all: nothing to keep, nothing to share
         store.deleteDraft().catch(() => {}).finally(() => { goHome(); startMsg.textContent = 'Séance vide : rien à enregistrer.'; });
         return;
@@ -222,9 +246,13 @@ function showSummary(summary) {
           sharing.then((outcome) => { startMsg.textContent = `${saved} ${outcome}`; });
         });
     },
-    onDiscard: () => store.deleteDraft()
-      .catch((err) => logEvent(`suppression impossible : ${err.message}`))
-      .finally(goHome),
+    onDiscard: () => {
+      if (settled) return;
+      settled = true;
+      store.deleteDraft()
+        .catch((err) => logEvent(`suppression impossible : ${err.message}`))
+        .finally(goHome);
+    },
   }));
 }
 
@@ -232,12 +260,13 @@ function showSummary(summary) {
 function bindSource(src) {
   source = src;
   src.addEventListener('status', (e) => {
+    if (src !== source) return; // a source left behind after goHome()
     status = e.detail;
     logEvent(`état : ${e.detail}`);
     if (status === 'disconnected' && session) snapshot = session.suspend(Date.now());
     scheduleRender();
   });
-  src.addEventListener('log', (e) => logEvent(e.detail));
+  src.addEventListener('log', (e) => { if (src === source) logEvent(e.detail); });
   src.addEventListener('data', (e) => {
     if (src !== source) return; // a source left behind after goHome()
     const parsed = parseRowerData(e.detail);
@@ -261,7 +290,8 @@ function startSimulator(scenario) {
 
 const startMsg = document.getElementById('start-msg');
 const BLE_ERRORS = {
-  NotFoundError: 'Aucun rameur choisi. Réveille le moniteur S4 (appuie sur un bouton) et ferme WaterRower Connect, puis réessaie.',
+  NotFoundError: 'Aucun rameur trouvé ou choisi. Vérifie que le Bluetooth du téléphone est activé, réveille le moniteur S4 (appuie sur un bouton) et ferme WaterRower Connect, puis réessaie.',
+  AbortError: 'Connexion interrompue avant la fin. Réessaie.',
   SecurityError: 'Bluetooth refusé : la page doit être servie en HTTPS ou depuis localhost.',
   NotAllowedError: 'Autorisation Bluetooth refusée.',
   NetworkError: 'Connexion au rameur impossible. Il est peut-être déjà connecté à une autre appli, ou en veille.',
@@ -269,6 +299,9 @@ const BLE_ERRORS = {
 };
 
 async function startRower() {
+  if (connecting || session) return; // a second tap while connecting would open a second link (the S4 takes one)
+  connecting = true;
+  btnBle.disabled = true;
   // The device chooser needs the user gesture: requestDevice must be the first thing called.
   // Landscape comes after the connection (startSession).
   const src = createBleSource();
@@ -281,7 +314,11 @@ async function startRower() {
   } catch (err) {
     logEvent(`erreur : ${err.name} ${err.message}`);
     startMsg.textContent = BLE_ERRORS[err.name] ?? `Erreur : ${err.message}`;
+    src.disconnect(); // close any half-open link: a ghost connection keeps the S4 busy
     source = null;
+    btnBle.disabled = !isBleAvailable();
+  } finally {
+    connecting = false;
   }
 }
 
@@ -313,17 +350,32 @@ document.querySelectorAll('[data-sim]').forEach((btn) => btn.addEventListener('c
   startSimulator(btn.dataset.sim);
 }));
 
+// The page going to the background (app switch, screen off) may be followed by its death: write the backup now.
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveDraft(); });
+window.addEventListener('pagehide', saveDraft);
+
 // A session interrupted by a crash or a reload: show its summary, to keep it or discard it.
 // Otherwise, ?sim=steady starts the simulator directly (handy during development).
 const autoSim = new URLSearchParams(location.search).get('sim');
+function showInterrupted(draft) {
+  logEvent('séance interrompue retrouvée');
+  sourceLabel = draft.sourceLabel;
+  session = createSession({ restore: draft.session });
+  showSummary(session.end(draft.savedAt));
+}
 // IndexedDB that never answers (seen in headless Chrome) must not block the start: 1.5 s at most.
-Promise.race([store.loadDraft(), new Promise((resolve) => setTimeout(resolve, 1500, null))])
-  .catch(() => null)
-  .then((draft) => {
-    if (draft) {
-      logEvent('séance interrompue retrouvée');
-      sourceLabel = draft.sourceLabel;
-      session = createSession({ restore: draft.session });
-      showSummary(session.end(draft.savedAt));
-    } else if (autoSim) startSimulator(autoSim);
+// Backups are not written before the read has answered, and a copy that arrives late is shown if nothing
+// else is going on (home screen, no connection in progress).
+let startupDone = false;
+const draftRead = store.loadDraft().then((draft) => ({ draft }), () => ({ draft: null }));
+draftRead.then(({ draft }) => {
+  draftReady = true;
+  if (startupDone && draft && !session && !view && !connecting) showInterrupted(draft);
+  else if (startupDone && draft) logEvent('copie de secours tardive ignorée (séance en cours)');
+});
+Promise.race([draftRead, new Promise((resolve) => setTimeout(resolve, 1500, null))])
+  .then((read) => {
+    startupDone = true;
+    if (read?.draft) showInterrupted(read.draft);
+    else if (autoSim) startSimulator(autoSim);
   });

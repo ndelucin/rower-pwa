@@ -67,15 +67,7 @@ html, body {
 /* Hold-to-confirm buttons (long press ~1.5 s, progress shown while pressed) */
 .hold { position: relative; font: inherit; color: var(--text); border: 0; cursor: pointer;
   touch-action: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
-.hold-round { width: calc(14 * var(--u)); height: calc(14 * var(--u)); min-width: 48px; min-height: 48px;
-  border-radius: 50%; display: grid; place-items: center; background: #26303f; padding: 0; }
-.hold-icon { width: 42%; height: 42%; fill: currentColor; }
-.hold.stop { color: #ff8a80; box-shadow: inset 0 0 0 calc(.5 * var(--u)) #ff8a8066; }
-.hold-ring { position: absolute; inset: -12%; width: 124%; height: 124%; transform: rotate(-90deg); pointer-events: none; }
-.hold-ring circle { fill: none; stroke: currentColor; stroke-width: 6; stroke-linecap: round;
-  stroke-dasharray: 100 100; stroke-dashoffset: 100; opacity: 0; }
-.hold.holding .hold-ring circle { opacity: 1; stroke-dashoffset: 0; transition: stroke-dashoffset var(--hold-ms) linear; }
-.hold-pill { overflow: hidden; border-radius: 99px; background: #26303f; padding: .55em 1.4em; }
+.hold-pill { overflow: hidden; border-radius: 99px; background: #26303f; padding: .55em 1.4em; min-height: 48px; }
 .hold-fill { position: absolute; inset: 0; transform-origin: left; transform: scaleX(0); background: #ff8a8055; }
 .hold.holding .hold-fill { transform: scaleX(1); transition: transform var(--hold-ms) linear; }
 .hold-text { position: relative; }
@@ -115,7 +107,7 @@ html, body {
 /* Two equal-width buttons (the longer label sets the width). */
 .actions { display: grid; grid-template-columns: repeat(2, 14em); justify-content: center; align-items: start; gap: calc(6 * var(--u)); font-size: calc(5 * var(--u)); }
 .actions .keep { font: inherit; font-weight: 600; color: #08131c; background: var(--pace); border: 0; border-radius: 99px;
-  padding: .55em 1.6em; cursor: pointer; }
+  padding: .55em 1.6em; min-height: 48px; cursor: pointer; }
 .discard-wrap { display: flex; flex-direction: column; align-items: stretch; }
 .actions .keep, .actions .hold { width: 100%; text-align: center; }
 .hold.discard { color: #ff8a80; box-shadow: inset 0 0 0 calc(.4 * var(--u)) #ff8a8066; }
@@ -127,7 +119,11 @@ html, body {
   padding: calc(1.2 * var(--u)) calc(5 * var(--u)); border-radius: 0 0 calc(2 * var(--u)) calc(2 * var(--u));
   background: var(--err); color: #fff; font-weight: 700; font-size: calc(5 * var(--u)); letter-spacing: .03em;
   animation: conn-blink 1.6s ease-in-out infinite; }
+/* Discreet warning (e.g. wake lock refused), top centre, only while connected. */
+.conn-warn { position: fixed; top: calc(.3 * var(--u)); left: 50%; transform: translateX(-50%); z-index: 9; white-space: nowrap;
+  font-size: calc(3.2 * var(--u)); color: var(--warn); opacity: .85; pointer-events: none; }
 @keyframes conn-blink { 50% { opacity: .65; } }
+@media (prefers-reduced-motion: reduce) { .conn-band { animation: none; } }
 
 /* ---------- Start screen ---------- */
 /* Premium background: blue-night gradient, a soft glow behind the button, faint rings echoing the session ring. */
@@ -157,7 +153,7 @@ html, body {
 .start-msg { margin: 0; min-height: 1.3em; max-width: 80vw; font-size: calc(4.2 * var(--u)); color: var(--warn); }
 .last-session { position: absolute; left: 0; right: 0; bottom: calc(7 * var(--u)); margin: 0; padding: 0 calc(4 * var(--u)); text-wrap: balance; min-height: 1.3em; font-size: calc(4.4 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; }
 .build { position: absolute; left: 0; right: 0; bottom: max(calc(2 * var(--u)), env(safe-area-inset-bottom)); margin: 0;
-  font-size: calc(2.9 * var(--u)); color: var(--muted); opacity: .55; font-variant-numeric: tabular-nums; }
+  font-size: calc(3.4 * var(--u)); color: var(--muted); opacity: .75; font-variant-numeric: tabular-nums; }
 .last-session b { color: var(--text); font-weight: 600; }
 .sim-choice { position: fixed; top: calc(4 * var(--u)); right: max(calc(4 * var(--u)), env(safe-area-inset-right)); display: flex; gap: calc(1.5 * var(--u));
   align-items: center; font-size: calc(3.6 * var(--u)); color: var(--muted); }

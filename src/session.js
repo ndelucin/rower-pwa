@@ -89,6 +89,12 @@ export function createSession({ restore } = {}) {
       s.lastNow = now;
 
       const count = values.strokeCount;
+      // The S4 reset its counters mid-session (stroke count or distance went down): shift the baselines
+      // by the same amount so that strokes and distance carry on from where they were, never negative.
+      if (s.baseCount != null && count != null && s.lastCount != null && count < s.lastCount) s.baseCount += count - s.lastCount;
+      if (s.baseDistance != null && values.totalDistance != null && s.lastDistance != null && values.totalDistance < s.lastDistance) {
+        s.baseDistance += values.totalDistance - s.lastDistance;
+      }
       const stroke = count != null && s.lastCount != null && count > s.lastCount;
       if (stroke) s.lastStrokeAt = now;
       if (count != null) s.lastCount = count;

@@ -41,6 +41,8 @@ export function createBleSource({
   let wanted = false;     // true between connect() and disconnect(): auto-reconnect only then
   let retry = 0;
   let retryTimer = null;
+  let generation = 0;     // bumped by disconnect(): an attach() started before it must not take over
+  let unwatch = null;     // removes the 'gattserverdisconnected' listener of the current device
   const watched = new WeakSet();
 
   const onValue = (e) => {
@@ -51,8 +53,10 @@ export function createBleSource({
 
   async function attach() {
     const d = device;
-    // A direct attempt abandoned on timeout may finish later: it must not take over.
-    const check = () => { if (d !== device) { d.gatt?.disconnect?.(); throw Object.assign(new Error('abandonné'), { name: 'AbortError' }); } };
+    const gen = generation;
+    // A direct attempt abandoned on timeout, or one in flight when disconnect() was called, may finish
+    // later: it must not take over (the S4 accepts a single connection: a ghost link keeps it busy).
+    const check = () => { if (d !== device || gen !== generation) { d.gatt?.disconnect?.(); throw Object.assign(new Error('abandonné'), { name: 'AbortError' }); } };
     emit('status', 'connecting');
     const server = await d.gatt.connect();
     check();
@@ -73,7 +77,9 @@ export function createBleSource({
     const delay = Math.min(1000 * 2 ** retry, maxRetryMs);
     retry += 1;
     log(`reconnexion dans ${delay / 1000} s (tentative ${retry})`);
+    clearTimeout(retryTimer); // never two timers: disconnect() could cancel only the last one
     retryTimer = setTimeout(async () => {
+      if (!wanted) return;
       try {
         await attach();
       } catch (err) {
@@ -88,12 +94,14 @@ export function createBleSource({
     device = d;
     if (watched.has(d)) return;
     watched.add(d);
-    d.addEventListener('gattserverdisconnected', () => {
+    const onGattDisconnected = () => {
       if (d !== device) return;
       log('déconnecté');
       emit('status', 'disconnected');
       scheduleReconnect();
-    });
+    };
+    d.addEventListener('gattserverdisconnected', onGattDisconnected);
+    unwatch = () => { d.removeEventListener('gattserverdisconnected', onGattDisconnected); watched.delete(d); };
   }
 
   const withTimeout = (promise, ms) => {
@@ -123,6 +131,7 @@ export function createBleSource({
   source.connect = async () => {
     if (!bluetooth) throw new Error('Web Bluetooth indisponible dans ce navigateur');
     wanted = true;
+    if (device) use(device); // listener removed by a previous disconnect()
     if (!device) {
       const known = await knownRower();
       if (known) {
@@ -133,7 +142,9 @@ export function createBleSource({
           return;
         } catch (err) {
           log(`connexion directe impossible : ${err.name} ${err.message}`);
-          if (known.gatt?.connected) known.gatt.disconnect();
+          known.gatt?.disconnect?.();
+          generation += 1; // the abandoned attempt may complete later, even for this same device object
+          unwatch?.();
           device = null;
           emit('status', 'disconnected');
           // The chooser needs a user gesture that may have expired while we waited.
@@ -156,6 +167,10 @@ export function createBleSource({
       await attach();
     } catch (err) {
       wanted = false;
+      clearTimeout(retryTimer);
+      device?.gatt?.disconnect?.(); // a half-open link would keep the S4 busy
+      unwatch?.();
+      device = null;
       emit('status', 'disconnected');
       throw err;
     }
@@ -163,8 +178,11 @@ export function createBleSource({
 
   source.disconnect = () => {
     wanted = false;
+    generation += 1;
     clearTimeout(retryTimer);
-    if (device?.gatt?.connected) device.gatt.disconnect();
+    unwatch?.();
+    unwatch = null;
+    device?.gatt?.disconnect?.();
     emit('status', 'disconnected');
   };
 

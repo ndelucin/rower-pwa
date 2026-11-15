@@ -98,9 +98,6 @@ export function createRowerState() {
     snapshot() {
       return { ...state };
     },
-    reset() {
-      state = {};
-    },
   };
 }
 

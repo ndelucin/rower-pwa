@@ -246,3 +246,22 @@ test('displayed chrono never goes backwards at a dated-back pause, the summary k
   assert.equal(paused.displayElapsed, 13.5);
   assert.equal(s.end(20000).duration, 9);
 });
+
+test('S4 resets its counters mid-session: strokes and distance carry on, never negative', () => {
+  const s = fresh();
+  const a = row(s, { from: 0, to: 9000, count: 0, dist: 0 }); // 5 strokes, 40 m
+  assert.equal(a.snap.strokes, 5);
+  const before = a.snap.distance;
+  // The S4 starts again from 0 (stroke count and distance).
+  let snap = s.update({ state: 'rowing', strokeCount: 0, totalDistance: 0, instPower: 150, strokeRate: 30, instPace: 125 }, 10000);
+  assert.equal(snap.strokes, 5);
+  assert.equal(snap.distance, before);
+  snap = s.update({ state: 'rowing', strokeCount: 1, totalDistance: 4, instPower: 150, strokeRate: 30, instPace: 125 }, 11000);
+  assert.equal(snap.strokes, 6);
+  assert.equal(snap.distance, before + 4);
+  assert.ok(snap.strokes >= 0 && snap.distance >= 0 && snap.activeDistance >= 0);
+  // A counter alone going back down (distance only) is handled too.
+  snap = s.update({ state: 'rowing', strokeCount: 1, totalDistance: 2, instPower: 150, strokeRate: 30, instPace: 125 }, 12000);
+  assert.equal(snap.distance, before + 4);
+  assert.equal(snap.strokes, 6);
+});

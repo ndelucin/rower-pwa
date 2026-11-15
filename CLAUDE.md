@@ -37,7 +37,7 @@ src/  ftms.js          décodeur Rower Data (pur)
       ui/  components.js  layouts.js  format.js  styles.css
 test/  *.test.js  helpers.js  fixtures/ (séances réelles du S4)
 docs/  BRIEF.md  ECRAN.md  S4-OBSERVATIONS.md  PLAN-*.md  maquette-*.html  artefact-dashboard.html
-scripts/  phone-eval.js  sim-demo.js  stamp-version.js
+scripts/  phone-eval.js  sim-demo.js  stamp-version.js  import-rowerboard.js (import ponctuel des séances de l'autre dépôt rowerboard)
 ```
 `*` : à venir.
 
@@ -81,7 +81,7 @@ Versions et périmètre : brief § 16. Version en cours : **v1**, fonctionnellem
 - [x] Écrans décidés sur maquettes : [docs/ECRAN.md](docs/ECRAN.md)
 - [x] Écran de séance libre, pause automatique (`session.js`), bilan, copie de secours et historique (`store.js`) : [docs/PLAN-ecran-v1.md](docs/PLAN-ecran-v1.md). Essai réel du 2026-11-15 concluant
 - [x] Squelette PWA ([docs/PLAN-pwa.md](docs/PLAN-pwa.md)) : RowerMonitor, `sw.js` (réseau d'abord, mise à jour silencieuse, hors ligne). **Installée sur le S23 : plein écran paysage et icône vérifiés**
-- [x] Écran d'accueil : logo et nom centrés, fond dégradé, portrait ou paysage, bouton de connexion, dernière séance, simulateur caché hors `?dev` ; bascule auto en paysage à la connexion ([docs/maquette-accueil.html](docs/maquette-accueil.html)). Fin de séance : ⏸ en pause, appui immédiat ; bilan « Enregistrer la séance » / « Ignorer la séance »
+- [x] Écran d'accueil : logo et nom centrés, fond dégradé, portrait ou paysage, bouton de connexion, dernière séance, simulateur caché hors `?dev` ; bascule auto en paysage à la connexion ([docs/maquette-accueil.html](docs/maquette-accueil.html)). Fin de séance : ⏸ en pause ou en attente, appui immédiat ; bilan « Enregistrer la séance » / « Ignorer la séance »
 - [x] Dépôt public + GitHub Pages (2026-11-15) : https://ndelucin.github.io/rower-pwa/
 - [x] Reconnexion au rameur déjà autorisé sans le sélecteur Bluetooth de Chrome (`getDevices`), repli sur le sélecteur ; testée sous Node, **validée sur le S23 le 2026-11-15** (à condition d'activer le flag Chrome, voir ci-dessous)
 - [x] Export de séance vers Drive (2026-11-15) : « Enregistrer la séance » → copie locale + partage Android → dossier Drive → artefact Claude qui l'affiche. **Validé de bout en bout sur le S23** (voir « Export et dashboard »)

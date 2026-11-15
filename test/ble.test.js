@@ -10,9 +10,11 @@ function fakeBluetooth({ failConnects = 0 } = {}) {
   const device = new EventTarget();
   device.name = 'S4 BLE 50';
   let failures = failConnects;
+  let connects = 0;
   device.gatt = {
     connected: false,
     connect: async () => {
+      connects += 1;
       if (failures-- > 0) throw Object.assign(new Error('out of range'), { name: 'NetworkError' });
       device.gatt.connected = true;
       return { getPrimaryService: async (uuid) => { assert.equal(uuid, FTMS_SERVICE); return service; } };
@@ -27,7 +29,7 @@ function fakeBluetooth({ failConnects = 0 } = {}) {
     characteristic.dispatchEvent(new Event('characteristicvaluechanged'));
   };
   const drop = () => { device.gatt.connected = false; device.dispatchEvent(new Event('gattserverdisconnected')); };
-  return { bluetooth, requests, push, drop };
+  return { bluetooth, requests, push, drop, device, connects: () => connects };
 }
 
 function record(source) {
@@ -158,4 +160,81 @@ test('no getDevices in this browser: the chooser as before', async () => {
   assert.equal(fake.bluetooth.getDevices, undefined);
   await createBleSource({ bluetooth: fake.bluetooth }).connect();
   assert.equal(fake.requests.length, 1);
+});
+
+// ---------- Reconnection and disconnect races (docs: the S4 accepts a single connection) ----------
+const settle = () => new Promise((r) => setImmediate(r));
+
+test('disconnect event fired twice: a single timer, nothing reconnects after disconnect()', async () => {
+  mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    const fake = fakeBluetooth();
+    const source = createBleSource({ bluetooth: fake.bluetooth });
+    await source.connect();
+    const before = fake.connects();
+    fake.drop();
+    fake.drop(); // gattserverdisconnected + the catch of a failed attempt can both schedule
+    source.disconnect();
+    mock.timers.tick(30000);
+    await settle();
+    assert.equal(fake.connects(), before, 'no attach after disconnect()');
+    assert.equal(fake.device.gatt.connected, false);
+  } finally {
+    mock.timers.reset();
+  }
+});
+
+test('disconnect() while an attach() is in flight: it must not end up connected', async () => {
+  const fake = fakeBluetooth();
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  const original = fake.device.gatt.connect;
+  fake.device.gatt.connect = async () => { await gate; return original(); };
+  const source = createBleSource({ bluetooth: fake.bluetooth });
+  const { statuses } = record(source);
+  const connecting = source.connect();
+  await settle();
+  source.disconnect();
+  release();
+  await assert.rejects(connecting, { name: 'AbortError' });
+  assert.equal(fake.device.gatt.connected, false, 'the late link is closed');
+  assert.ok(!statuses.includes('connected'));
+});
+
+test('reconnection attempt in flight when disconnect() is called: no connection afterwards', async () => {
+  mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    const fake = fakeBluetooth();
+    const source = createBleSource({ bluetooth: fake.bluetooth });
+    const { statuses } = record(source);
+    await source.connect();
+    let release;
+    const gate = new Promise((r) => { release = r; });
+    const original = fake.device.gatt.connect;
+    fake.device.gatt.connect = async () => { await gate; return original(); };
+    fake.drop();
+    mock.timers.tick(1000); // the timer fires: attach() waits on the gate
+    await settle();
+    source.disconnect();
+    const n = statuses.length;
+    release();
+    await settle();
+    assert.equal(fake.device.gatt.connected, false);
+    assert.ok(!statuses.slice(n).includes('connected'));
+  } finally {
+    mock.timers.reset();
+  }
+});
+
+test('failed connection that leaves the GATT open: it is closed', async () => {
+  const fake = fakeBluetooth();
+  const original = fake.device.gatt.connect;
+  fake.device.gatt.connect = async () => {
+    const server = await original();
+    server.getPrimaryService = async () => { throw Object.assign(new Error('no FTMS'), { name: 'NotFoundError' }); };
+    return server;
+  };
+  const source = createBleSource({ bluetooth: fake.bluetooth });
+  await assert.rejects(source.connect(), { name: 'NotFoundError' });
+  assert.equal(fake.device.gatt.connected, false);
 });

@@ -4,7 +4,7 @@
 export const SCHEMA = 'rower-session/1';
 
 const pad = (n) => String(n).padStart(2, '0');
-const round = (x, digits = 0) => (x == null ? null : Math.round(x * 10 ** digits) / 10 ** digits);
+export const round = (x, digits = 0) => (x == null ? null : Math.round(x * 10 ** digits) / 10 ** digits);
 
 /** Local date-time with its UTC offset, e.g. "2026-11-15T14:12:00+01:00" (parses back to the same instant). */
 export function isoLocal(ms) {

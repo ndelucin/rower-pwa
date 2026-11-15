@@ -235,8 +235,8 @@ Les watts d'un WaterRower ne sont comparables qu'entre séances sur **la même m
 
 ## 13. Exigences PWA et hébergement
 
-- `manifest.webmanifest` avec `"display": "fullscreen"`, `"orientation": "landscape"` et des icônes.
-- **Service worker** pour la mise en cache et le fonctionnement **hors ligne** ; prévoir aussi une stratégie de mise à jour (affichage « nouvelle version disponible »).
+- `manifest.webmanifest` avec `"display": "fullscreen"`, `"orientation": "any"` (le verrouillage en paysage se fait par code à la connexion, voir PLAN-pwa.md) et des icônes.
+- **Service worker** pour la mise en cache et le fonctionnement **hors ligne** ; prévoir aussi une stratégie de mise à jour : **mise à jour silencieuse**, appliquée au lancement suivant, sans message (décision actée dans [PLAN-pwa.md](PLAN-pwa.md) ; l'affichage « nouvelle version disponible » initialement prévu est abandonné).
 - **Screen Wake Lock** pendant la séance.
 - **Hébergement : GitHub Pages**, en HTTPS (Web Bluetooth et service worker exigent un contexte sécurisé).
   - Le site est servi dans un sous-chemin (`https://<user>.github.io/<repo>/`) : **chemins relatifs partout**, y compris `start_url` et `scope` dans le manifeste, et l'enregistrement du service worker.

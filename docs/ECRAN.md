@@ -15,7 +15,7 @@ Maquettes de référence (pages statiques, à ouvrir sur le serveur local) :
 │ 2:06                  ╭─╯  anneau  ╰─╮        22 /min    │
 │                       │  libellé     │                   │
 │ PUISSANCE             │  CHRONO      │        DISTANCE   │
-│ 178 W                 ╰─╮  [■]     ╭─╯        1 250 m    │
+│ 178 W                 ╰─╮  [⏸]     ╭─╯        1 250 m    │
 │                         ╰──────────╯                     │
 │ 2:30 ───────────── barre de split ──────────────── 1:50  │
 └──────────────────────────────────────────────────────────┘
@@ -59,11 +59,11 @@ Maquette : [maquette-accueil.html](maquette-accueil.html) (portrait et paysage, 
   - **Le chrono affiché ne recule jamais** : il s'arrête là où il est quand la pause est détectée. Le bilan, lui, retire ces quelques secondes (seul le temps de rame compte) : sa durée est donc un peu plus courte que le dernier chrono affiché.
 - Le S4 n'a pas de pause : le chrono, la distance et les moyennes de la séance sont calculés par la PWA. La distance et les coups comptent à partir du premier coup ; le split moyen n'utilise que la distance parcourue en ramant (pas l'inertie pendant les pauses).
 - En pause, **pas d'overlay** : chrono grisé, libellé « EN PAUSE », valeurs instantanées à `--`, curseur masqué, et un seul bouton rond **⏸** sous le chrono (fond sombre, symbole et liseré rouge adouci).
-- **Terminer = un appui sur ⏸**, effet immédiat (pas d'appui long ni de confirmation) : on arrive sur le bilan, où la séance peut encore être ignorée. Le bouton n'existe qu'en pause.
+- **Terminer = un appui sur ⏸**, effet immédiat (pas d'appui long ni de confirmation) : on arrive sur le bilan, où la séance peut encore être ignorée. Le bouton n'existe qu'en pause et en attente (connecté, avant le premier coup) : il ne se montre jamais pendant l'effort. En attente, il ramène directement à l'accueil, **sans bilan** (rien n'a été ramé : copie de secours éventuelle supprimée, rameur déconnecté). Son libellé accessible reste « Terminer la séance ».
 - Déconnexion Bluetooth : pause automatique + bandeau « Reconnexion… ».
 - **Copie de secours** de la séance en cours (IndexedDB) toutes les quelques secondes : rien n'est perdu en cas de crash, de batterie vide ou de rechargement.
 - **Écran bilan** : même gabarit. Durée au centre (« SÉANCE TERMINÉE »), autour : split moyen, puissance moyenne, cadence moyenne, distance ; meilleur 500 m.
-- **Deux actions seulement** : **Enregistrer la séance** (la range dans l'historique local ; l'export vers rowerboard viendra plus tard) ou **Ignorer la séance** (supprime la séance ; appui long, rempli progressivement, sans mention à l'écran).
+- **Deux actions seulement** : **Enregistrer la séance** (la range dans l'historique local **et** la partage, dans le même geste, par le partage Android vers le dossier Drive lu par l'artefact RowerBoard ; voir CLAUDE.md, « Export et dashboard ») ou **Ignorer la séance** (supprime la séance ; appui long, rempli progressivement, sans mention à l'écran).
 
 ## Séances programmées (v2)
 - Un programme est une suite de **phases** : un **segment seul** (échauffement, récup longue, retour au calme…) ou un **bloc d'intervalles répétés**. Le moteur regroupe tout seul les segments consécutifs qui se répètent ; le format de programme du brief § 6 ne change pas.

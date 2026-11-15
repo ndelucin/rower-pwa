@@ -19,7 +19,7 @@ const distanceArc = (d) => {
 const NOTE = { waiting: 'Premier coup pour démarrer' };
 
 export const LAYOUTS = {
-  /** Free session. onEnd() is called by a tap on ⏸ (only shown while paused): it ends the session at once. */
+  /** Free session. onEnd() is called by a tap on ⏸ (shown while waiting for the first stroke and while paused): it ends the session at once. */
   free: ({ onEnd } = {}) => ({
     left: metricColumn([
       { label: 'Split /500 m', tone: 'pace', value: (m) => formatPace(inst(m, 'instPace')) },
@@ -32,7 +32,7 @@ export const LAYOUTS = {
       note: (m) => NOTE[sessionOf(m).status] ?? '',
       dimmed: isPaused,
       action: tapButton({ label: 'Terminer la séance', icon: 'pause', cls: 'stop', onTap: onEnd }),
-      actionVisible: isPaused,
+      actionVisible: (m) => ['waiting', 'paused'].includes(sessionOf(m).status),
     }),
     right: metricColumn([
       { label: 'Cadence', unit: '/min', value: (m) => formatNumber(inst(m, 'strokeRate')) },

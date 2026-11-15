@@ -63,3 +63,58 @@ test('unsupported browser: no crash', async () => {
   await k.start();
   assert.equal(k.active, false);
 });
+
+// A wake lock whose request() only answers when we say so (the browser can take a while).
+function slowFakes() {
+  const f = fakes();
+  const sentinels = [];
+  let resolvers = [];
+  f.wakeLock.request = () => new Promise((resolve) => {
+    resolvers.push(() => {
+      const s = new EventTarget();
+      s.released = false;
+      s.release = async () => { s.released = true; s.dispatchEvent(new Event('release')); };
+      sentinels.push(s);
+      resolve(s);
+    });
+  });
+  return { ...f, sentinels, answer: () => { resolvers.forEach((r) => r()); resolvers = []; }, pendingRequests: () => resolvers.length };
+}
+
+test('stop() while the request is in flight: the late lock is released, not kept', async () => {
+  const f = slowFakes();
+  const k = createKeepAwake({ wakeLock: f.wakeLock, doc: f.doc });
+  const starting = k.start();
+  await flush();
+  await k.stop();
+  f.answer();
+  await starting;
+  await flush();
+  assert.equal(k.active, false);
+  assert.equal(f.sentinels.length, 1);
+  assert.equal(f.sentinels[0].released, true);
+});
+
+test('start() and a visibility return at the same time: one request, one lock', async () => {
+  const f = slowFakes();
+  const k = createKeepAwake({ wakeLock: f.wakeLock, doc: f.doc });
+  const starting = k.start();
+  f.show(); // visibilitychange while the first request is pending
+  await flush();
+  assert.equal(f.pendingRequests(), 1);
+  f.answer();
+  await starting;
+  await flush();
+  assert.equal(k.active, true);
+  assert.equal(f.sentinels.length, 1);
+  assert.equal(f.sentinels[0].released, false);
+});
+
+test('request refused: denied is reported, active stays false', async () => {
+  const f = fakes();
+  f.wakeLock.request = async () => { throw Object.assign(new Error('low battery'), { name: 'NotAllowedError' }); };
+  const k = createKeepAwake({ wakeLock: f.wakeLock, doc: f.doc });
+  await k.start();
+  assert.equal(k.active, false);
+  assert.equal(k.denied, true);
+});

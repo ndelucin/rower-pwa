@@ -58,11 +58,10 @@ export function metricColumn(items, { align = 'left' } = {}) {
 
 /**
  * Hold-to-confirm button: the callback fires after `duration` ms of continuous press
- * (pointer events; releasing early cancels). A ring (round shape) or a
- * fill (pill shape) shows the progress.
+ * (pointer events; releasing early cancels). A fill shows the progress.
  * Exposes `element` after mount, and setVisible(bool).
  */
-export function holdButton({ label, text = '', icon = null, onHold, duration = 1500, shape = 'round', cls = '' }) {
+export function holdButton({ label, text = '', description = '', onHold, duration = 1500, cls = '' }) {
   let btn, timer = null;
   const cancel = () => {
     clearTimeout(timer);
@@ -72,22 +71,12 @@ export function holdButton({ label, text = '', icon = null, onHold, duration = 1
   const api = {
     element: null,
     mount(el) {
-      btn = h('button', `hold hold-${shape} ${cls}`.trim());
+      btn = h('button', `hold hold-pill ${cls}`.trim());
       btn.type = 'button';
       btn.setAttribute('aria-label', label);
+      if (description) btn.setAttribute('aria-description', description);
       btn.style.setProperty('--hold-ms', `${duration}ms`);
-      if (shape === 'round') {
-        const ring = svg('svg', { viewBox: '0 0 100 100', class: 'hold-ring', 'aria-hidden': 'true' });
-        ring.append(svg('circle', { cx: 50, cy: 50, r: 46, pathLength: 100 }));
-        btn.append(ring);
-      } else {
-        btn.append(h('span', 'hold-fill'));
-      }
-      if (icon === 'stop') {
-        const s = svg('svg', { viewBox: '0 0 10 10', class: 'hold-icon', 'aria-hidden': 'true' });
-        s.append(svg('rect', { x: 1.5, y: 1.5, width: 7, height: 7, rx: 0.8 }));
-        btn.append(s);
-      }
+      btn.append(h('span', 'hold-fill'));
       if (text) btn.append(h('span', 'hold-text', text));
 
       btn.addEventListener('pointerdown', (e) => {
@@ -255,7 +244,10 @@ export function splitBar({ slow = 150, fast = 110, ticks = [140, 130, 120], targ
 
 /** Summary actions (bar zone of the summary screen): tap to save the session, long press (fill shown) to discard it. */
 export function summaryActions({ onKeep, onDiscard }) {
-  const discard = holdButton({ label: 'Ignorer la séance', text: 'Ignorer la séance', shape: 'pill', cls: 'discard', onHold: onDiscard });
+  const discard = holdButton({
+    label: 'Ignorer la séance', text: 'Ignorer la séance', cls: 'discard', onHold: onDiscard,
+    description: 'appui long 1,5 s pour supprimer la séance',
+  });
   return {
     mount(el) {
       const row = h('div', 'actions');
@@ -274,20 +266,25 @@ export function summaryActions({ onKeep, onDiscard }) {
 /**
  * Connection indicator: a small green dot in the corner when connected; a clearly visible
  * "Reconnexion…" band otherwise (connecting / disconnected during a session).
+ * model.warning (optional text): a discreet line while connected (e.g. the screen may turn off).
  */
 export function connection({ bandText = 'Reconnexion…' } = {}) {
-  let dot, band;
+  let dot, band, warn;
   return {
     mount(el) {
       dot = h('div', 'conn-dot');
       band = h('div', 'conn-band', bandText);
       band.setAttribute('role', 'status');
-      el.append(dot, band);
+      warn = h('div', 'conn-warn');
+      warn.hidden = true;
+      el.append(dot, band, warn);
     },
     update(m) {
       const ok = m.status === 'connected';
       dot.hidden = !ok;
       band.hidden = ok;
+      warn.hidden = !m.warning || !ok; // the red band has priority over a warning
+      setText(warn, m.warning ?? '');
       if (m.sourceLabel) setAttr(dot, 'title', m.sourceLabel);
     },
   };
