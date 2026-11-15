@@ -107,11 +107,14 @@ export function createBleSource({
 
   /** A rower this site is already allowed to use, without the chooser; null if none or unsupported. */
   async function knownRower() {
-    if (skipKnown || typeof bluetooth.getDevices !== 'function') return null;
+    if (skipKnown) { log('getDevices ignoré (geste expiré au dernier essai)'); return null; }
+    if (typeof bluetooth.getDevices !== 'function') { log('getDevices indisponible dans ce Chrome'); return null; }
     try {
       const devices = await bluetooth.getDevices();
+      log(`getDevices : ${devices.length} appareil(s) autorisé(s)`);
       return devices.find((d) => d.name?.startsWith(namePrefix)) ?? null;
-    } catch {
+    } catch (err) {
+      log(`getDevices a échoué : ${err.name} ${err.message}`);
       return null;
     }
   }
