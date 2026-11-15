@@ -14,7 +14,7 @@ La spécification complète est dans [docs/BRIEF.md](docs/BRIEF.md) : c'est la s
 ## Structure cible
 ```
 index.html  manifest.webmanifest  sw.js  .nojekyll
-src/  ftms.js  ble.js  engine.js  store.js  audio.js  export.js  sim.js  ui/
+src/  ftms.js  ftms-encoder.js  ble.js  engine.js  store.js  audio.js  export.js  sim.js  ui/
 test/ *.test.js
 icons/
 docs/ BRIEF.md
@@ -25,6 +25,10 @@ docs/ BRIEF.md
 - Tests unitaires : `npm test` (= `node --test test/*.test.js`, runner intégré à Node, sans dépendance). `test/frame-builder.js` fabrique des trames FTMS pour les tests.
 - Test sur le téléphone (USB) : `adb reverse tcp:8080 tcp:8080`, puis ouvrir `http://localhost:8080` dans Chrome Android (localhost = contexte sécurisé, donc Web Bluetooth et service worker fonctionnent sans HTTPS).
 - Débogage : `chrome://inspect` sur le Mac.
+- Démo du faux rameur en terminal : `node scripts/sim-demo.js [rest|steady|hiit] [secondes] [pas]`
+
+## Contrat « source de données »
+`src/sim.js` (`createSimSource`) et le futur `src/ble.js` exposent la **même interface**, pour que l'appli ne sache pas si elle parle au vrai rameur ou au simulateur : un `EventTarget` avec `connect()`, `disconnect()`, des événements `status` (`connecting` | `connected` | `disconnected`) et `data` (un `DataView` par notification Rower Data).
 
 ## Conventions
 - Code, identifiants et commentaires : anglais. Documentation et messages de commit : français.
@@ -34,5 +38,6 @@ docs/ BRIEF.md
 ## Avancement
 Versions et périmètre : brief § 16. Version en cours : **v1**.
 - [x] Décodeur Rower Data `src/ftms.js` + tests (trames de référence du brief § 2, trames fragmentées, tronquées)
-- [ ] Simulation (`sim.js`), squelette PWA, écran séance libre, `ble.js`, Wake Lock, export JSON, GitHub Pages
+- [x] Encodeur `src/ftms-encoder.js` (avec découpage en trames de 20 octets) + faux rameur `src/sim.js` (scénarios repos / continu / HIIT, bruit reproductible)
+- [ ] Squelette PWA, écran séance libre, `ble.js`, Wake Lock, export JSON, GitHub Pages
 - À vérifier sur le vrai matériel : une trame complète (flags `0x0BFE`) fait 27 octets, plus que les 20 octets du MTU BLE par défaut. Le module la découpe-t-il (bit More Data) ?

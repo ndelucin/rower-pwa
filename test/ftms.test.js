@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseRowerData, createRowerState, formatPace } from '../src/ftms.js';
-import { buildRowerFrame, fromHex } from './frame-builder.js';
+import { buildRowerFrame, fromHex } from './helpers.js';
 
 // Reference values observed with nRF Connect (docs/BRIEF.md § 2).
 const AT_REST = {
