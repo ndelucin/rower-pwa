@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Static mock-up of the HIIT screen (2026-11-15). ?recup shows a recovery interval. Not wired to any data. -->
+<!-- Static mock-up of a programmed session, one phase at a time (2026-11-15). ?s=1..6 picks the moment shown. Not wired to any data. -->
 <html lang="fr">
 <head>
 <meta charset="utf-8">
@@ -19,6 +19,7 @@
   body { background: radial-gradient(ellipse at center, var(--tint) 0%, var(--bg) 75%); }
   body.work { --tint: #2a1a0b; --phase: var(--work); }
   body.rest { --tint: #0a2224; --phase: var(--rest); }
+  body.easy { --tint: #141a23; --phase: #aab6c8; }
 
   .screen {
     position: fixed; inset: 0;
@@ -50,6 +51,8 @@
   .avg { position: absolute; top: calc(-2 * var(--u)); bottom: calc(-2 * var(--u)); width: calc(1 * var(--u)); background: var(--text); border-radius: 2px; transform: translateX(-50%); opacity: .8; }
   .cursor { position: absolute; top: 50%; width: calc(2.6 * var(--u)); height: calc(12 * var(--u)); border-radius: calc(.8 * var(--u));
     background: var(--pace); box-shadow: 0 0 calc(2 * var(--u)) var(--pace); transform: translate(-50%, -50%); }
+  .cursor.out::after { content: attr(data-arrow); position: absolute; top: 50%; transform: translateY(-50%); font-size: calc(6 * var(--u)); color: var(--pace); }
+  .cursor.out.left::after { left: calc(3 * var(--u)); } .cursor.out.right::after { right: calc(3 * var(--u)); }
   .scale { position: relative; height: calc(5.5 * var(--u)); font-size: calc(4.2 * var(--u)); color: var(--muted); }
   .scale span { position: absolute; transform: translateX(-50%); top: calc(.8 * var(--u)); }
   .scale span:first-child { transform: none; } .scale span:last-child { transform: translateX(-100%); }
@@ -89,52 +92,68 @@
 <div class="conn"></div>
 
 <script>
-// Program: warm-up 2:00, 6 x (effort 0:40 at 2:00 ±3 s, 26-30 spm / recovery 1:00), cool-down 2:00.
-const segments = [{ type: 'easy', d: 120 }];
-for (let i = 0; i < 6; i++) segments.push({ type: 'work', d: 40, n: i + 1 }, { type: 'rest', d: 60, n: i + 1 });
-segments.push({ type: 'easy', d: 120 });
-const total = segments.reduce((s, x) => s + x.d, 0);
+// Program: warm-up 5:00, set 1 = Tabata 8 x (20 s effort / 10 s recovery), long recovery 3:00,
+// set 2 = same Tabata, cool-down 5:00. The ring shows the CURRENT PHASE only:
+// a single segment = one arc that fills up; a block of intervals = one arc per interval.
+const tabata = { kind: 'block', reps: 8, work: 20, rest: 10, target: { split: [112, 118], spm: '30–34' } };
+const phases = [
+  { kind: 'single', type: 'easy', label: 'Échauffement', d: 300 },
+  { ...tabata, set: 1 },
+  { kind: 'single', type: 'rest', label: 'Récup longue', d: 180 },
+  { ...tabata, set: 2 },
+  { kind: 'single', type: 'easy', label: 'Retour au calme', d: 300 },
+];
+// The moments shown (t = seconds into the phase), with plausible rower values.
+const moments = {
+  1: { phase: 0, t: 170, split: 142, avg: 145, power: 122, spm: 20, dist: 720 },
+  2: { phase: 1, t: 72,  split: 112, avg: 113, power: 249, spm: 32, dist: 1450 },
+  3: { phase: 1, t: 84,  split: 154, avg: 151, power: 96,  spm: 16, dist: 1490 },
+  4: { phase: 2, t: 75,  split: 165, avg: 160, power: 78,  spm: 14, dist: 1760 },
+  5: { phase: 3, t: 125, split: 107, avg: 110, power: 284, spm: 34, dist: 2410 },
+  6: { phase: 4, t: 60,  split: 150, avg: 148, power: 104, spm: 18, dist: 3050 },
+};
+const m = moments[new URLSearchParams(location.search).get('s') ?? '2'];
+const ph = phases[m.phase];
 
-const recup = location.search.includes('recup');
-const state = recup
-  ? { t: 120 + 2 * 100 + 40 + 22, split: 146, avg: 148, power: 112, spm: 18, dist: 1640 }   // recovery 3, 22 s in
-  : { t: 120 + 2 * 100 + 17, split: 118, avg: 120, power: 214, spm: 28, dist: 1480 };       // effort 3, 17 s in
-document.body.className = recup ? 'rest' : 'work';
+// Segments of the current phase
+const segs = ph.kind === 'single' ? [{ type: ph.type, d: ph.d }]
+  : Array.from({ length: ph.reps }, (_, i) => [{ type: 'work', d: ph.work, n: i + 1 }, { type: 'rest', d: ph.rest, n: i + 1 }]).flat();
+const total = segs.reduce((a, x) => a + x.d, 0);
 
-// Ring = the whole session: one arc per segment, proportional to its duration.
-const C = 2 * Math.PI * 44, GAP = 0.8, colors = { easy: 'var(--easy)', work: 'var(--work)', rest: 'var(--rest)' };
-let start = 0, html = '', current, currentStart;
-for (const s of segments) {
-  const len = (s.d / total) * C, end = start + s.d;
-  const arc = (from, l, op) => `<circle cx="50" cy="50" r="44" fill="none" stroke="${colors[s.type]}" stroke-width="7" opacity="${op}"
+const C = 2 * Math.PI * 44, GAP = segs.length > 1 ? 0.8 : 0;
+const colors = { easy: '#aab6c8', work: 'var(--work)', rest: 'var(--rest)' };
+let start = 0, html = '', cur, curStart;
+for (const sg of segs) {
+  const len = (sg.d / total) * C, end = start + sg.d, from = (start / total) * C;
+  const arc = (l, op) => `<circle cx="50" cy="50" r="44" fill="none" stroke="${colors[sg.type]}" stroke-width="7" opacity="${op}"
       stroke-dasharray="${Math.max(l - GAP, 0)} ${C}" stroke-dashoffset="${-from}"/>`;
-  const from = (start / total) * C;
-  if (state.t >= end) html += arc(from, len, 0.9);                       // past
-  else if (state.t < start) html += arc(from, len, 0.22);                 // to come
-  else {                                                                  // current: fills up
-    current = s; currentStart = start;
-    html += arc(from, len, 0.22) + arc(from, ((state.t - start) / total) * C + GAP, 1);
-  }
+  if (m.t >= end) html += arc(len, 0.9);
+  else if (m.t < start) html += arc(len, 0.22);
+  else { cur = sg; curStart = start; html += arc(len, 0.22) + arc(((m.t - start) / total) * C + GAP, 1); }
   start = end;
 }
 document.getElementById('frise').innerHTML = html;
+document.body.className = cur.type;
 
-const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-const names = { work: 'Effort', rest: 'Récup', easy: 'Retour au calme' };
-document.getElementById('phase').textContent = `${names[current.type].toUpperCase()} ${current.n} / 6`;
-document.getElementById('countdown').textContent = fmt(current.d - (state.t - currentStart));
+const fmt = (x) => `${Math.floor(x / 60)}:${String(x % 60).padStart(2, '0')}`;
+const label = ph.kind === 'single' ? ph.label.toUpperCase()
+  : `S${ph.set} · ${cur.type === 'work' ? 'EFFORT' : 'RÉCUP'} ${cur.n} / ${ph.reps}`;
+document.getElementById('phase').textContent = label;
+document.getElementById('countdown').textContent = fmt(cur.d - (m.t - curStart));
 
-document.getElementById('split').textContent = fmt(state.split);
-document.getElementById('power').textContent = state.power;
-document.getElementById('spm').textContent = state.spm;
-document.getElementById('spmTarget').textContent = recup ? '' : 'cible 26–30';
-document.getElementById('dist').textContent = state.dist.toLocaleString('fr-FR');
+document.getElementById('split').textContent = fmt(m.split);
+document.getElementById('power').textContent = m.power;
+document.getElementById('spm').textContent = m.spm;
+const inWork = ph.kind === 'block' && cur.type === 'work';
+document.getElementById('spmTarget').textContent = inWork ? `cible ${ph.target.spm}` : '';
+document.getElementById('dist').textContent = m.dist.toLocaleString('fr-FR');
 
-// Split bar: 2:30 (left) -> 1:50 (right). Target zone during efforts; average = current interval.
-const pos = (s) => `${Math.min(Math.max((150 - s) / 40, 0), 1) * 100}%`;
+// Split bar 2:30 -> 1:50. Target zone during efforts; average = current segment; arrow when off scale.
+const frac = (x) => (150 - x) / 40, pos = (x) => `${Math.min(Math.max(frac(x), 0), 1) * 100}%`;
 const track = document.getElementById('track');
-if (!recup) track.insertAdjacentHTML('afterbegin', `<div class="zone" style="left:${pos(123)};right:calc(100% - ${pos(117)})"></div>`);
-track.insertAdjacentHTML('beforeend', `<div class="avg" style="left:${pos(state.avg)}"></div><div class="cursor" style="left:${pos(state.split)}"></div>`);
+if (inWork) track.insertAdjacentHTML('afterbegin', `<div class="zone" style="left:${pos(ph.target.split[1])};right:calc(100% - ${pos(ph.target.split[0])})"></div>`);
+const out = frac(m.split) < 0 ? 'out left" data-arrow="◀' : frac(m.split) > 1 ? 'out right" data-arrow="▶' : '';
+track.insertAdjacentHTML('beforeend', `<div class="avg" style="left:${pos(m.avg)}"></div><div class="cursor ${out}" style="left:${pos(m.split)}"></div>`);
 </script>
 </body>
 </html>
