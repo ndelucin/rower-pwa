@@ -34,24 +34,22 @@
   .power .value { color: var(--power); }
 
   .ring { position: relative; height: 100%; aspect-ratio: 1; align-self: center; }
-  .ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring > svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
   .ring .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .ring .label { font-size: calc(4 * var(--u)); color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
   .ring .chrono { font-size: calc(18 * var(--u)); font-weight: 700; line-height: 1; }
   .ring .state { font-size: calc(4.5 * var(--u)); color: var(--power); min-height: 1.2em; }
-  .pause { margin-top: calc(1 * var(--u)); padding: calc(1.8 * var(--u)) calc(6 * var(--u));
-    min-height: 48px; border: 0; border-radius: 99px; background: #26303f; color: var(--text);
-    font: 600 calc(4.6 * var(--u)) system-ui, Roboto, sans-serif; letter-spacing: .08em; }
-
-  /* Pause menu (shown with ?pause) */
-  .menu { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; gap: calc(5 * var(--u));
-    background: rgba(10, 13, 18, .88); }
-  .paused .menu { display: flex; }
-  .menu button { min-width: calc(55 * var(--u)); padding: calc(5 * var(--u)) 0; border: 0; border-radius: calc(3 * var(--u));
-    font: 700 calc(7 * var(--u)) system-ui, Roboto, sans-serif; color: var(--bg); }
-  .menu .resume { background: var(--ok); }
-  .menu .stop { background: var(--err); }
-  .menu .info { position: absolute; top: calc(6 * var(--u)); font-size: calc(5 * var(--u)); color: var(--muted); }
+  /* Controls in the ring: pause while rowing; resume / stop when paused (?pause). No overlay. */
+  .controls { display: flex; gap: calc(4 * var(--u)); margin-top: calc(2 * var(--u)); }
+  .ctl { width: calc(14 * var(--u)); height: calc(14 * var(--u)); min-width: 48px; min-height: 48px;
+    border: 0; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: #26303f; }
+  .ctl svg { width: 42%; height: 42%; fill: currentColor; }
+  .ctl.resume { background: var(--ok); color: var(--bg); }
+  .ctl.stop { background: var(--err); color: var(--bg); }
+  .resume, .stop { display: none !important; }
+  .paused .resume, .paused .stop { display: grid !important; }
+  .paused .ctl.pause { display: none; }
+  .paused .chrono { color: var(--muted); }
 
   .bar { grid-column: 1 / -1; margin-top: calc(3 * var(--u)); }
   .track { position: relative; height: calc(8 * var(--u)); border-radius: 99px;
@@ -86,7 +84,11 @@
       <div class="label">Temps écoulé</div>
       <div class="chrono">12:34</div>
       <div class="state"></div>
-      <button class="pause">❚❚ PAUSE</button>
+      <div class="controls">
+        <button class="ctl pause" aria-label="Pause"><svg viewBox="0 0 10 10"><rect x="1.5" y="1" width="2.5" height="8" rx=".5"/><rect x="6" y="1" width="2.5" height="8" rx=".5"/></svg></button>
+        <button class="ctl resume" aria-label="Reprendre"><svg viewBox="0 0 10 10"><path d="M2.5 1 L9 5 L2.5 9 Z"/></svg></button>
+        <button class="ctl stop" aria-label="Terminer"><svg viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" rx=".8"/></svg></button>
+      </div>
     </div>
   </div>
 
@@ -108,11 +110,6 @@
   </div>
 </div>
 <div class="conn" title="connecté"></div>
-<div class="menu">
-  <div class="info">En pause · 12:34 · 1 250 m</div>
-  <button class="resume">▶ Reprendre</button>
-  <button class="stop">■ Terminer</button>
-</div>
-<script>if (location.search.includes('pause')) document.body.classList.add('paused');</script>
+<script>if (location.search.includes('pause')) { document.body.classList.add('paused'); document.querySelector('.ring .label').textContent = 'En pause'; }</script>
 </body>
 </html>
