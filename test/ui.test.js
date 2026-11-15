@@ -24,6 +24,10 @@ test('sparklinePath: scale, inversion and gaps', () => {
     sparklinePath([0, 10, null, 0, 10], { width: 4, height: 10, pad: 0 }),
     'M0.0 10.0 L1.0 0.0 M3.0 10.0 L4.0 0.0',
   );
+  // minSpan: 130 ± 2 s drawn on a 40 s scale stays in the middle band instead of filling the height
+  const ys = sparklinePath([128, 132], { width: 1, height: 100, pad: 0, minSpan: 40 })
+    .match(/ (\d+\.\d)/g).map(Number);
+  assert.deepEqual(ys, [55, 45]);
   // flat series does not divide by zero
   assert.match(sparklinePath([5, 5, 5], { width: 2, height: 10, pad: 0 }), /^M0\.0 5\.0 L1\.0 5\.0 L2\.0 5\.0$/);
 });

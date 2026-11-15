@@ -1,3 +1,4 @@
+/* Sizes use min(vw, vh): readable whether Chrome shows its address bar or not (S23: 780x360 CSS px in landscape). */
 :root {
   --bg: #0a0d12;
   --panel: #141a23;
@@ -33,12 +34,12 @@ html, body {
   padding: var(--gap) max(var(--gap), env(safe-area-inset-right)) var(--gap) max(var(--gap), env(safe-area-inset-left));
   font-variant-numeric: tabular-nums;
 }
-.banner { grid-area: banner; display: flex; justify-content: space-between; align-items: center; font-size: 2.6vw; }
+.banner { grid-area: banner; display: flex; justify-content: space-between; align-items: center; font-size: min(2.6vw, 5.6vh); }
 .banner-title { display: flex; gap: 1.5vw; align-items: baseline; }
 .banner-name { color: var(--muted); }
 .banner-detail { font-weight: 600; }
 
-.status { font-size: 1.8vw; padding: .3em .9em; border-radius: 999px; border: 1px solid currentColor; }
+.status { font-size: min(1.8vw, 4vh); padding: .3em .9em; border-radius: 999px; border: 1px solid currentColor; }
 .status[data-state="connected"] { color: var(--ok); }
 .status[data-state="connecting"] { color: var(--warn); }
 .status[data-state="disconnected"] { color: var(--err); }
@@ -47,22 +48,22 @@ html, body {
   grid-area: main; background: var(--panel); border-radius: 1vw;
   display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 0;
 }
-.big-label, .big-unit { color: var(--muted); font-size: 2.4vw; }
-.big-value { font-size: 19vw; line-height: .95; font-weight: 700; letter-spacing: -.02em; }
+.big-label, .big-unit { color: var(--muted); font-size: min(2.4vw, 5vh); }
+.big-value { font-size: min(19vw, 38vh); line-height: .95; font-weight: 700; letter-spacing: -.02em; }
 
 .side { grid-area: side; display: grid; grid-template: 1fr 1fr / 1fr 1fr; gap: var(--gap); min-height: 0; }
 .metric {
   background: var(--panel); border-radius: 1vw;
   display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 0;
 }
-.metric-label, .metric-unit { color: var(--muted); font-size: 1.6vw; }
-.metric-value { font-size: 6.5vw; line-height: 1; font-weight: 650; }
+.metric-label, .metric-unit { color: var(--muted); font-size: min(1.6vw, 3.6vh); }
+.metric-value { font-size: min(6.5vw, 13vh); line-height: 1; font-weight: 650; }
 
 .progress { grid-area: progress; position: relative; background: var(--panel); border-radius: 1vw; overflow: hidden; }
-.spark { position: absolute; inset: 8% 1% 8% 1%; width: 98%; height: 84%; }
+.spark { position: absolute; inset: 26% 1% 8% 1%; width: 98%; height: 66%; }
 .spark path { fill: none; stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
 .spark-pace { stroke: var(--pace); opacity: .85; }
-.spark-legend { position: absolute; top: .4vw; left: 1vw; display: flex; gap: 1.2vw; font-size: 1.3vw; color: var(--muted); }
+.spark-legend { position: absolute; top: .4vw; left: 1vw; display: flex; gap: 1.2vw; font-size: min(1.3vw, 3vh); color: var(--muted); }
 .lg-pace { color: var(--pace); }
 
 /* ---------- Start screen ---------- */

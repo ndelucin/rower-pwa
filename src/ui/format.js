@@ -20,14 +20,19 @@ export function formatNumber(value, decimals = 0) {
 /**
  * SVG path ("M x y L x y ...") for a mini-curve. Points are evenly spaced over `width`;
  * null values create a gap (new "M"). invert: true draws small values at the top
- * (used for the split: lower = faster = higher on screen).
+ * (used for the split: lower = faster = higher on screen). minSpan: smallest value range drawn.
  */
-export function sparklinePath(values, { width = 100, height = 100, invert = false, pad = 0.1 } = {}) {
+export function sparklinePath(values, { width = 100, height = 100, invert = false, pad = 0.1, minSpan = 2 } = {}) {
   const known = values.filter((v) => v != null && Number.isFinite(v));
   if (known.length === 0) return '';
   let min = Math.min(...known);
   let max = Math.max(...known);
-  if (min === max) { min -= 1; max += 1; }
+  // minSpan: the vertical scale never zooms in more than this, so small noise stays small on screen.
+  if (max - min < minSpan) {
+    const mid = (min + max) / 2;
+    min = mid - minSpan / 2;
+    max = mid + minSpan / 2;
+  }
   const span = max - min;
   min -= span * pad;
   max += span * pad;

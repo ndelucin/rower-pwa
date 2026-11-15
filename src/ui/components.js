@@ -88,7 +88,7 @@ export function sparkline({ window = 180 } = {}) {
     },
     update(m) {
       const recent = m.history.slice(-window);
-      pacePath.setAttribute('d', sparklinePath(recent.map((s) => s.pace), { width: W, height: H, invert: true }));
+      pacePath.setAttribute('d', sparklinePath(recent.map((s) => s.pace), { width: W, height: H, invert: true, minSpan: 40 }));
     },
   };
 }

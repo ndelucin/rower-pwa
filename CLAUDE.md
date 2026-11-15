@@ -5,7 +5,10 @@ La spécification complète est dans [docs/BRIEF.md](docs/BRIEF.md) : c'est la s
 
 ## Principes non négociables
 - **HTML / CSS / JS vanilla, modules ES, aucune étape de build, aucune dépendance runtime.** Pas de framework ni de librairie graphique (rendu natif HTML/CSS/SVG/canvas).
-- **Cible : Chrome Android uniquement** (Web Bluetooth). Paysage plein écran.
+- **Cible : Samsung Galaxy S23, Chrome Android** (Web Bluetooth ; ne pas utiliser Samsung Internet, le navigateur par défaut). Paysage plein écran.
+  - Viewport CSS en paysage : **780 × 360** en plein écran, environ **780 × 300** avec la barre d'adresse de Chrome. Vérifier toute mise en page à ces deux tailles.
+  - Densité ×3 ; caméra perforée sur le côté en paysage → marges `env(safe-area-inset-*)` avec `viewport-fit=cover`.
+  - Tailles de police en `min(vw, vh)` pour rester lisible dans les deux cas.
 - **Chemins relatifs partout** (site servi en sous-chemin sur GitHub Pages) : imports, manifeste (`start_url`, `scope`), enregistrement du service worker.
 - **Aucun secret dans le code** : le dépôt et le site seront publics. Les données de séance restent sur le téléphone.
 - Le format d'export `rower-session/1` (brief § 11) est le **seul contrat** avec le dashboard : toute évolution passe par une nouvelle version du schéma.
