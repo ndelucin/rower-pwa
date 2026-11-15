@@ -4,6 +4,7 @@ import { parseRowerData, createRowerState } from './ftms.js';
 import { createSimSource } from './sim.js';
 import { createBleSource, isBleAvailable } from './ble.js';
 import { LAYOUTS, mountLayout } from './ui/layouts.js';
+import { createKeepAwake } from './wakelock.js';
 
 const HISTORY_MAX = 3600; // one sample per second of session time
 
@@ -27,6 +28,7 @@ const diag = (window.__rower = {
   firstAt: null,        // reception time of the first / latest frame (frequency)
   lastAt: null,
   snapshot: () => rower.snapshot(),
+  screenKeptOn: () => keepAwake.active,
 });
 const hex = (dv) => [...new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength)]
   .map((b) => b.toString(16).padStart(2, '0')).join(' ');
@@ -49,6 +51,9 @@ function logFrame(dv, parsed) {
   diag.raw.push([diag.lastAt - diag.firstAt, hex(dv)]);
   if (diag.raw.length > 10000) diag.raw.shift();
 }
+
+// Screen stays on during a session, otherwise the page freezes and Bluetooth drops.
+const keepAwake = createKeepAwake({ log: logEvent });
 
 // ---------- Rendering ----------
 // Several notifications can arrive within the same frame (split messages):
@@ -101,6 +106,7 @@ function showSession(label) {
   view = mountLayout(screenEl, LAYOUTS.free());
   // A tap on the session screen (re)enters fullscreen, e.g. after the Bluetooth chooser.
   screenEl.addEventListener('click', enterFullscreenLandscape);
+  keepAwake.start();
   scheduleRender();
 }
 
