@@ -82,7 +82,7 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
        - v2 : une zone cible verte s'y ajoute pour les programmes.
        - L'historique de la séance (courbe) relève du tableau de bord, après export.
      - Rendu de référence : [docs/maquette-seance-libre.html](docs/maquette-seance-libre.html) (`?pause` affiche le menu de pause). Curseur instantané = **rectangle étroit**, pas un disque. Valeurs latérales en grand (20 × `min(vw, vh)` %), chrono à 18.
-     - **Bouton rond ❚❚** (symbole seul) dans l'anneau, sous le chrono (pas de distance dans l'anneau). En pause, **pas d'overlay** : à la même place, deux boutons ronds **▶ reprendre** (vert) et **■ terminer** (rouge), chrono grisé, libellé « En pause ». ■ à protéger contre un appui accidentel (appui long ou confirmation). Le S4 n'a pas de pause : le chrono de la séance est géré par la PWA.
+     - **Bouton rond ❚❚** (symbole seul) dans l'anneau, sous le chrono (pas de distance dans l'anneau). En pause, **pas d'overlay** : à la même place, deux boutons ronds **▶ reprendre** (plein, bleu allure) et **■ terminer** (fond sombre comme ❚❚, carré et liseré rouge adouci), chrono grisé, libellé « En pause ». ■ à protéger contre un appui accidentel (appui long ou confirmation). Le S4 n'a pas de pause : le chrono de la séance est géré par la PWA.
      - **Pas de ligne du haut** (type de séance + état de connexion), pour gagner de la hauteur :
        - l'état de la séance (« en attente du premier coup », « arrêt ») s'affiche sous le chrono ;
        - la connexion : un petit point dans un coin quand tout va bien, et un **bandeau bien visible seulement en cas de déconnexion ou de reconnexion**.
