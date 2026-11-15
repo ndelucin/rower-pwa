@@ -10,6 +10,7 @@ import { createKeepAwake } from './wakelock.js';
 import { createActivityFilter } from './activity.js';
 import { createSession } from './session.js';
 import { createStore } from './store.js';
+import { exportFile } from './export.js';
 
 const DRAFT_EVERY_MS = 5000; // backup copy of the running session
 
@@ -161,14 +162,41 @@ function finishSession() {
   showSummary(session.end(Date.now()));
 }
 
+// Hands the session file to Android's share sheet (Drive, Claude…); plain download where sharing
+// files is unsupported. Never rejects: the outcome goes to the diagnostic journal.
+function shareSession(summary) {
+  try {
+    const file = exportFile(summary);
+    if (navigator.canShare?.({ files: [file] })) {
+      return navigator.share({ files: [file], title: 'Séance RowerMonitor' })
+        .then(() => logEvent('séance partagée'))
+        .catch((err) => logEvent(err.name === 'AbortError' ? 'partage annulé' : `partage impossible : ${err.name} ${err.message}`));
+    }
+    logEvent('partage de fichier indisponible : téléchargement');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(file);
+    a.download = file.name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch (err) {
+    logEvent(`export impossible : ${err.name} ${err.message}`);
+  }
+  return Promise.resolve();
+}
+
 function showSummary(summary) {
   session = null; // the session is over: frames still arriving must not touch the summary
   snapshot = summary;
   show(LAYOUTS.summary({
-    onKeep: () => store.saveSession(summary)
-      .then(() => store.deleteDraft())
-      .catch((err) => logEvent(`enregistrement impossible : ${err.message}`))
-      .finally(goHome),
+    onKeep: () => {
+      // Web Share needs the tap's user gesture: it is started first, synchronously. The local copy
+      // is the safety net (a cancelled share loses nothing).
+      const sharing = shareSession(summary);
+      const saved = store.saveSession(summary)
+        .then(() => store.deleteDraft())
+        .catch((err) => logEvent(`enregistrement impossible : ${err.message}`));
+      Promise.all([sharing, saved]).finally(goHome);
+    },
     onDiscard: () => store.deleteDraft()
       .catch((err) => logEvent(`suppression impossible : ${err.message}`))
       .finally(goHome),
