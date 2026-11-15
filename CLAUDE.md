@@ -28,6 +28,12 @@ docs/ BRIEF.md
   - `?sim=hiit` (ou `steady`, `rest`) démarre directement le simulateur ; `&speed=10` accélère la séance (10 s simulées par seconde).
 - Tests unitaires : `npm test` (= `node --test test/*.test.js`, runner intégré à Node, sans dépendance). `test/frame-builder.js` fabrique des trames FTMS pour les tests.
 - Test sur le téléphone (USB) : `adb reverse tcp:8080 tcp:8080`, puis ouvrir `http://localhost:8080` dans Chrome Android (localhost = contexte sécurisé, donc Web Bluetooth et service worker fonctionnent sans HTTPS).
+  - Ouvrir directement sur le téléphone : `adb shell am start -a android.intent.action.VIEW -d "http://localhost:8080/" com.android.chrome`. Capture d'écran : `adb exec-out screencap -p > s23.png`.
+  - `adb` vient de `~/Brewfile` (`android-platform-tools`). S23 détecté par `adb devices` sous le numéro `RFCW90GPR7V`.
+  - Si `adb devices` est vide ou indique `unauthorized` :
+    1. sur le Mac, autoriser l'accessoire USB (Réglages Système → Confidentialité et sécurité → « Autoriser les accessoires à se connecter ») ;
+    2. sur le S23, dans les Options de développement : activer « Débogage USB », révoquer les anciennes autorisations, régler la configuration USB par défaut sur « Transfert de fichiers », puis rebrancher et accepter la fenêtre ;
+    3. vérifier que l'Auto Blocker Samsung est désactivé.
 - Débogage : `chrome://inspect` sur le Mac.
 - Démo du faux rameur en terminal : `node scripts/sim-demo.js [rest|steady|hiit] [secondes] [pas]`
 
