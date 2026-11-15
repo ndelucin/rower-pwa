@@ -59,7 +59,7 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
 - [x] Encodeur `src/ftms-encoder.js` (avec découpage en trames de 20 octets) + faux rameur `src/sim.js` (scénarios repos / continu / HIIT, bruit reproductible)
 - [x] Écran séance libre en paysage : gabarit `index.html` (zones `data-zone`), composants `src/ui/components.js`, configuration par type `src/ui/layouts.js`, câblage `src/app.js`
 - [x] Connexion Bluetooth `src/ble.js` (reconnexion automatique), **validée sur le vrai rameur** : voir [docs/S4-OBSERVATIONS.md](docs/S4-OBSERVATIONS.md)
-- [ ] Détection d'arrêt (le S4 garde des valeurs périmées, voir observations)
+- [x] Détection d'arrêt `src/activity.js` (attente / en cours / arrêt), testée en rejouant la vraie séance enregistrée
 - [x] Écran maintenu allumé pendant la séance (`src/wakelock.js`, Screen Wake Lock), vérifié sur le S23
 - [ ] Squelette PWA (manifeste, SW, icônes), export JSON, GitHub Pages
 - Vérifié sur le vrai matériel : trames de 27 octets en un seul envoi, jamais découpées.

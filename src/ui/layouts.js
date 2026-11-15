@@ -3,9 +3,12 @@
 import { banner, statusPill, bigMetric, metricGrid, sparkline } from './components.js';
 import { formatPace, formatDuration, formatNumber } from './format.js';
 
+// Activity state from activity.js, shown next to the elapsed time.
+const STATE_SUFFIX = { waiting: ' · en attente du premier coup', rowing: '', stopped: ' · arrêt' };
+
 export const LAYOUTS = {
   free: () => ({
-    banner: banner({ title: 'Séance libre', detail: (v) => formatDuration(v.elapsedTime) }),
+    banner: banner({ title: 'Séance libre', detail: (v) => formatDuration(v.elapsedTime) + STATE_SUFFIX[v.state ?? 'waiting'] }),
     status: statusPill(),
     main: bigMetric({ label: 'Split', value: (v) => formatPace(v.instPace), unit: '/500 m' }),
     side: metricGrid([

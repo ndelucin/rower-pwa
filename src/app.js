@@ -5,10 +5,13 @@ import { createSimSource } from './sim.js';
 import { createBleSource, isBleAvailable } from './ble.js';
 import { LAYOUTS, mountLayout } from './ui/layouts.js';
 import { createKeepAwake } from './wakelock.js';
+import { createActivityFilter } from './activity.js';
 
 const HISTORY_MAX = 3600; // one sample per second of session time
 
 const rower = createRowerState();
+const activity = createActivityFilter(); // hides the S4's stale values when not rowing
+let display = {};                        // what the screen shows: rower state after the activity filter
 const history = [];       // [{ t, pace, power }] for the mini-curve
 let status = 'disconnected';
 let sourceLabel = '';
@@ -64,7 +67,7 @@ function scheduleRender() {
   renderPending = true;
   requestAnimationFrame(() => {
     renderPending = false;
-    view.update({ values: rower.snapshot(), history, status, sourceLabel });
+    view.update({ values: display, history, status, sourceLabel });
   });
 }
 
@@ -93,7 +96,8 @@ function bindSource(source) {
   source.addEventListener('data', (e) => {
     const parsed = parseRowerData(e.detail);
     logFrame(e.detail, parsed);
-    record(rower.apply(parsed));
+    display = activity.update(rower.apply(parsed), Date.now());
+    record(display);
     scheduleRender();
   });
 }
