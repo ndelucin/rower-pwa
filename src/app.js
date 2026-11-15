@@ -182,7 +182,7 @@ function shareSession(summary) {
         .then(() => { logEvent('séance partagée'); return 'Fichier partagé.'; })
         .catch((err) => {
           logEvent(err.name === 'AbortError' ? 'partage annulé' : `partage impossible : ${err.name} ${err.message}`);
-          return err.name === 'AbortError' ? 'Partage annulé.' : `Partage impossible (${err.name}).`;
+          return err.name === 'AbortError' ? 'Partage annulé.' : `Partage impossible (${err.name}${err.message ? ` : ${err.message}` : ''}).`;
         });
     }
     logEvent('partage de fichier indisponible : téléchargement');

@@ -29,12 +29,12 @@ test('buildExport: rower-session/1 shape, rounded values, no 500 m record when t
 });
 
 test('exportFileName: no colon, sortable', () => {
-  assert.match(exportFileName(summary), /^rower-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}\.json$/);
+  assert.match(exportFileName(summary), /^rower-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}\.txt$/);
 });
 
-test('exportFile: a JSON file carrying the export', async () => {
+test('exportFile: a plain-text file (shareable on Android) carrying the JSON export', async () => {
   const f = exportFile(summary);
-  assert.equal(f.type, 'application/json');
+  assert.equal(f.type, 'text/plain');
   assert.equal(f.name, exportFileName(summary));
   assert.equal(JSON.parse(await f.text()).schema, SCHEMA);
 });

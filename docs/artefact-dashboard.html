@@ -79,7 +79,7 @@
     </div>
     <div class="actions">
       <button id="refresh" type="button">Actualiser depuis Drive</button>
-      <label class="filebtn">Importer un fichier<input id="file" type="file" accept=".json,application/json" multiple></label>
+      <label class="filebtn">Importer un fichier<input id="file" type="file" accept=".txt,.json,text/plain,application/json" multiple></label>
     </div>
   </header>
 
@@ -249,7 +249,8 @@
         folderName = folder.name || 'dossier choisi';
         const res = await mcp.callTool(SERVER, 'search_files', { query: `parentId = '${folder.id}' and trashed = false`, pageSize: 100, orderBy: 'modifiedTime desc', excludeContentSnippets: true }, cacheOpt);
         const list = findFileList(res.payload ?? res.structuredContent) || [];
-        const files = list.filter((f) => /\.json$/i.test(String(f.title ?? f.name ?? ''))).slice(0, 60);
+        // The app shares its JSON as plain text (.txt): Chrome Android refuses to share .json files.
+        const files = list.filter((f) => /\.(json|txt)$/i.test(String(f.title ?? f.name ?? ''))).slice(0, 60);
         diag.files = files.length;
         diag.note = `dossier : ${folder.name ?? folder.id}${folder.count > 1 ? ` (${folder.count} dossiers portent ce nom, le premier est lu)` : ''}\nréponse de recherche : ${list.length} élément(s), clés du premier : ${list[0] ? Object.keys(list[0]).join(', ') : 'aucun'}`;
         const found = [];
@@ -269,8 +270,8 @@
         loadedAt = new Date();
         sourceLabel = `Google Drive · ${folderName}`;
         hideBanner();
-        if (!files.length) showBanner(false, `Aucun fichier .json dans « ${folderName} ».`, 'Déposez-y une séance depuis l’appli (Enregistrer la séance, puis Drive), puis actualisez.');
-        else if (!found.length) showBanner(true, 'Des fichiers .json ont été trouvés, mais aucun n’est une séance lisible.', 'Voir les détails techniques en bas de page.');
+        if (!files.length) showBanner(false, `Aucun fichier de séance (.txt ou .json) dans « ${folderName} ».`, 'Déposez-y une séance depuis l’appli (Enregistrer la séance, puis Drive), puis actualisez.');
+        else if (!found.length) showBanner(true, 'Des fichiers .txt ou .json ont été trouvés, mais aucun n’est une séance lisible.', 'Voir les détails techniques en bas de page.');
       } catch (e) {
         const [t, fix] = e.code === 'folder_not_found'
           ? [`Le dossier « ${e.message} » est introuvable dans votre Drive.`, 'Vérifiez son nom, ou collez le lien du dossier.']

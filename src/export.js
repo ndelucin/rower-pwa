@@ -36,12 +36,16 @@ export function buildExport(summary, { program = { id: 'free', name: 'Séance li
   };
 }
 
-/** File name without characters Android or Drive dislike: "rower-2026-11-15T14-12.json". */
+/**
+ * File name without characters Android or Drive dislike: "rower-2026-11-15T14-12.txt".
+ * The content is JSON, but the file is plain text: Chrome Android only shares files of a short list
+ * of types (images, audio, video, PDF, text, CSV…) and refuses .json with NotAllowedError (seen on the S23).
+ */
 export function exportFileName(summary) {
-  return `rower-${isoLocal(summary.startedAt).slice(0, 16).replace(':', '-')}.json`;
+  return `rower-${isoLocal(summary.startedAt).slice(0, 16).replace(':', '-')}.txt`;
 }
 
 /** The file to share or download. */
 export function exportFile(summary, FileCtor = globalThis.File) {
-  return new FileCtor([JSON.stringify(buildExport(summary))], exportFileName(summary), { type: 'application/json' });
+  return new FileCtor([JSON.stringify(buildExport(summary))], exportFileName(summary), { type: 'text/plain' });
 }
