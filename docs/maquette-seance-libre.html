@@ -37,18 +37,18 @@
   .ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
   .ring .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .ring .label { font-size: calc(4 * var(--u)); color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
-  .ring .chrono { font-size: calc(22 * var(--u)); font-weight: 700; line-height: 1; }
+  .ring .chrono { font-size: calc(18 * var(--u)); font-weight: 700; line-height: 1; }
   .ring .state { font-size: calc(4.5 * var(--u)); color: var(--power); min-height: 1.2em; }
   .ring .dist { font-size: calc(4.2 * var(--u)); color: var(--muted); }
 
-  .bar { grid-column: 1 / -1; margin-top: calc(2 * var(--u)); }
-  .track { position: relative; height: calc(4 * var(--u)); border-radius: 99px;
+  .bar { grid-column: 1 / -1; margin-top: calc(3 * var(--u)); }
+  .track { position: relative; height: calc(8 * var(--u)); border-radius: 99px;
     background: linear-gradient(90deg, #1b2533, #22344a 50%, #1b2533); }
   .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: #3a4a60; }
-  .avg { position: absolute; top: calc(-1.5 * var(--u)); bottom: calc(-1.5 * var(--u)); width: calc(.8 * var(--u)); background: var(--text); border-radius: 2px; transform: translateX(-50%); opacity: .8; }
-  .cursor { position: absolute; top: 50%; width: calc(5.5 * var(--u)); height: calc(5.5 * var(--u)); border-radius: 50%;
+  .avg { position: absolute; top: calc(-2 * var(--u)); bottom: calc(-2 * var(--u)); width: calc(1 * var(--u)); background: var(--text); border-radius: 2px; transform: translateX(-50%); opacity: .8; }
+  .cursor { position: absolute; top: 50%; width: calc(10 * var(--u)); height: calc(10 * var(--u)); border-radius: 50%;
     background: var(--pace); box-shadow: 0 0 calc(2 * var(--u)) var(--pace); transform: translate(-50%, -50%); }
-  .scale { position: relative; height: calc(4.5 * var(--u)); font-size: calc(3.6 * var(--u)); color: var(--muted); }
+  .scale { position: relative; height: calc(5.5 * var(--u)); font-size: calc(4.2 * var(--u)); color: var(--muted); }
   .scale span { position: absolute; transform: translateX(-50%); top: calc(.8 * var(--u)); }
   .scale span:first-child { transform: none; } .scale span:last-child { transform: translateX(-100%); }
 
