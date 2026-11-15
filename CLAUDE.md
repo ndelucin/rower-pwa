@@ -70,17 +70,23 @@ scripts/  phone-eval.js  sim-demo.js
 - Rien d'identifiant dans le dépôt (adresse Bluetooth du rameur, e-mail…).
 
 ## Avancement
-Versions et périmètre : brief § 16. Version en cours : **v1**.
+Versions et périmètre : brief § 16. Version en cours : **v1**, presque terminée (il manque l'export).
 - [x] Décodeur `ftms.js`, encodeur `ftms-encoder.js` et faux rameur `sim.js`, testés
 - [x] Connexion Bluetooth `ble.js` (reconnexion automatique), validée sur le vrai rameur : trames de 27 octets en un seul envoi, jamais découpées
-- [x] Détection d'arrêt `activity.js`, testée en rejouant deux séances réelles
+- [x] Détection d'arrêt `activity.js` : seuil adaptatif (≈ 4 s), coup fantôme du S4 ignoré ; testée en rejouant trois séances réelles
 - [x] Écran maintenu allumé (`wakelock.js`), vérifié sur le S23
-- [x] Écrans de séance décidés sur maquettes : [docs/ECRAN.md](docs/ECRAN.md)
-- [x] Nouvel écran de séance libre, pause auto (`session.js`), bilan, copie de secours (`store.js`) : [docs/PLAN-ecran-v1.md](docs/PLAN-ecran-v1.md). Vérifié au simulateur (scénario `startstop`) ; **reste l'essai sur le vrai rameur**
-- [x] Squelette PWA ([docs/PLAN-pwa.md](docs/PLAN-pwa.md)) : nom RowerMonitor, manifeste, icônes, `sw.js` (réseau d'abord, mise à jour silencieuse, démarrage hors ligne vérifié sur le S23). Pas de service worker sur `localhost` sauf `?sw=1`. **Installation réelle à vérifier en HTTPS (GitHub Pages)**
-- [x] Écran d'accueil : bouton de connexion, dernière séance, simulateur caché hors `?dev` (docs/ECRAN.md)
-- [ ] Export JSON `rower-session/1` (« Ajouter au board » du bilan)
-- [x] Dépôt public + GitHub Pages (2026-11-15)
+- [x] Écrans décidés sur maquettes : [docs/ECRAN.md](docs/ECRAN.md)
+- [x] Écran de séance libre, pause automatique (`session.js`), bilan, copie de secours et historique (`store.js`) : [docs/PLAN-ecran-v1.md](docs/PLAN-ecran-v1.md). Essai réel du 2026-11-15 concluant
+- [x] Squelette PWA ([docs/PLAN-pwa.md](docs/PLAN-pwa.md)) : RowerMonitor, `sw.js` (réseau d'abord, mise à jour silencieuse, hors ligne). **Installée sur le S23 : plein écran paysage et icône vérifiés**
+- [x] Écran d'accueil : bouton de connexion, dernière séance, simulateur caché hors `?dev`
+- [x] Dépôt public + GitHub Pages (2026-11-15) : https://ndelucin.github.io/rower-pwa/
+- [x] Reconnexion au rameur déjà autorisé sans le sélecteur Bluetooth de Chrome (`getDevices`), repli sur le sélecteur ; testée sous Node, **pas encore sur le S23**
+
+## Reste à faire (dans l'ordre)
+1. **Vérifier sur le S23** (appli installée, relancée une fois pour prendre la mise à jour) : au 2ᵉ « Connecter le rameur », la fenêtre « … tente de s'associer » ne doit plus apparaître. Si elle revient à chaque fois, `getDevices()` n'est pas disponible dans ce Chrome : regarder le journal (`window.__rower.events`, via câble et `scripts/phone-eval.js`).
+2. **Vraie séance de 20 min** avec 2-3 arrêts, appli installée : pause en ≈ 4 s, chrono qui ne recule pas, lisibilité à 1,5 m sur la durée, comparaison avec les séances rowerboard (médiane 2:08).
+3. **Export JSON `rower-session/1`** (brief § 11) derrière « Ajouter au board » : partage Android (Web Share) ou téléchargement. Décider d'abord : format strict du brief, ou ce que rowerboard peut importer le plus facilement (aujourd'hui il ne lit que les TCX du S4 ; l'import côté rowerboard est un travail dans l'autre dépôt, prévu en v4).
+4. **v2** : moteur de programmes (`engine.js`, phases = segment seul ou bloc d'intervalles), écran HIIT déjà maquetté ([docs/maquette-hiit.html](docs/maquette-hiit.html), [docs/maquette-phases.html](docs/maquette-phases.html)), choix du type de séance sur l'accueil, signaux sonores.
 
 ## Questions en suspens
 - Distance affichée par le S4 en fin de 2ᵉ essai, à comparer aux 174 m reçus.
