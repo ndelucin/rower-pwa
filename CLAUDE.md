@@ -34,7 +34,7 @@ docs/ BRIEF.md
     1. sur le Mac, autoriser l'accessoire USB (Réglages Système → Confidentialité et sécurité → « Autoriser les accessoires à se connecter ») ;
     2. sur le S23, dans les Options de développement : activer « Débogage USB », révoquer les anciennes autorisations, régler la configuration USB par défaut sur « Transfert de fichiers », puis rebrancher et accepter la fenêtre ;
     3. vérifier que l'Auto Blocker Samsung est désactivé.
-- Débogage : `chrome://inspect` sur le Mac.
+- Débogage : `chrome://inspect` sur le Mac, ou `node scripts/phone-eval.js` qui lit le journal `window.__rower` de la page ouverte sur le téléphone (trames brutes, série seconde par seconde, événements). `node scripts/phone-eval.js --reload` recharge la page sans cache après une modification. L'écran du téléphone doit rester allumé.
 - Démo du faux rameur en terminal : `node scripts/sim-demo.js [rest|steady|hiit] [secondes] [pas]`
 
 ## Interface : gabarit + composants + configurations
@@ -58,5 +58,7 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
 - [x] Décodeur Rower Data `src/ftms.js` + tests (trames de référence du brief § 2, trames fragmentées, tronquées)
 - [x] Encodeur `src/ftms-encoder.js` (avec découpage en trames de 20 octets) + faux rameur `src/sim.js` (scénarios repos / continu / HIIT, bruit reproductible)
 - [x] Écran séance libre en paysage : gabarit `index.html` (zones `data-zone`), composants `src/ui/components.js`, configuration par type `src/ui/layouts.js`, câblage `src/app.js`
-- [ ] Squelette PWA (manifeste, SW, icônes), `ble.js`, Wake Lock, export JSON, GitHub Pages
-- À vérifier sur le vrai matériel : une trame complète (flags `0x0BFE`) fait 27 octets, plus que les 20 octets du MTU BLE par défaut. Le module la découpe-t-il (bit More Data) ?
+- [x] Connexion Bluetooth `src/ble.js` (reconnexion automatique), **validée sur le vrai rameur** : voir [docs/S4-OBSERVATIONS.md](docs/S4-OBSERVATIONS.md)
+- [ ] Détection d'arrêt (le S4 garde des valeurs périmées, voir observations)
+- [ ] Squelette PWA (manifeste, SW, icônes), Wake Lock, export JSON, GitHub Pages
+- Vérifié sur le vrai matériel : trames de 27 octets en un seul envoi, jamais découpées.
