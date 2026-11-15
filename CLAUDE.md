@@ -81,6 +81,9 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
        - les bornes sont une constante, à décaler quand l'allure habituelle approchera 1:55–2:00 ;
        - v2 : une zone cible verte s'y ajoute pour les programmes.
        - L'historique de la séance (courbe) relève du tableau de bord, après export.
+     - **Pas de ligne du haut** (type de séance + état de connexion), pour gagner de la hauteur :
+       - l'état de la séance (« en attente du premier coup », « arrêt ») s'affiche sous le chrono ;
+       - la connexion : un petit point dans un coin quand tout va bien, et un **bandeau bien visible seulement en cas de déconnexion ou de reconnexion**.
 5. Questions en suspens :
    - Distance affichée par le S4 en fin de 2e essai, à comparer aux 174 m reçus.
    - Un coup très léger (≈ 25 W) juste après un arrêt compte comme une reprise : comportement à confirmer.
