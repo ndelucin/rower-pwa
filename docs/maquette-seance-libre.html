@@ -27,9 +27,9 @@
   }
   .col { display: flex; flex-direction: column; justify-content: space-around; }
   .col.right { text-align: right; }
-  .metric .label { font-size: calc(4.2 * var(--u)); color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
-  .metric .value { font-size: calc(15 * var(--u)); font-weight: 700; line-height: 1; }
-  .metric .unit { font-size: calc(5 * var(--u)); color: var(--muted); font-weight: 400; margin-left: .2em; }
+  .metric .label { font-size: calc(4.6 * var(--u)); color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
+  .metric .value { font-size: calc(20 * var(--u)); font-weight: 700; line-height: 1; }
+  .metric .unit { font-size: calc(5.5 * var(--u)); color: var(--muted); font-weight: 400; margin-left: .2em; }
   .split .value { color: var(--pace); }
   .power .value { color: var(--power); }
 
@@ -39,14 +39,26 @@
   .ring .label { font-size: calc(4 * var(--u)); color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
   .ring .chrono { font-size: calc(18 * var(--u)); font-weight: 700; line-height: 1; }
   .ring .state { font-size: calc(4.5 * var(--u)); color: var(--power); min-height: 1.2em; }
-  .ring .dist { font-size: calc(4.2 * var(--u)); color: var(--muted); }
+  .pause { margin-top: calc(1 * var(--u)); padding: calc(1.8 * var(--u)) calc(6 * var(--u));
+    min-height: 48px; border: 0; border-radius: 99px; background: #26303f; color: var(--text);
+    font: 600 calc(4.6 * var(--u)) system-ui, Roboto, sans-serif; letter-spacing: .08em; }
+
+  /* Pause menu (shown with ?pause) */
+  .menu { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; gap: calc(5 * var(--u));
+    background: rgba(10, 13, 18, .88); }
+  .paused .menu { display: flex; }
+  .menu button { min-width: calc(55 * var(--u)); padding: calc(5 * var(--u)) 0; border: 0; border-radius: calc(3 * var(--u));
+    font: 700 calc(7 * var(--u)) system-ui, Roboto, sans-serif; color: var(--bg); }
+  .menu .resume { background: var(--ok); }
+  .menu .stop { background: var(--err); }
+  .menu .info { position: absolute; top: calc(6 * var(--u)); font-size: calc(5 * var(--u)); color: var(--muted); }
 
   .bar { grid-column: 1 / -1; margin-top: calc(3 * var(--u)); }
   .track { position: relative; height: calc(8 * var(--u)); border-radius: 99px;
     background: linear-gradient(90deg, #1b2533, #22344a 50%, #1b2533); }
   .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: #3a4a60; }
   .avg { position: absolute; top: calc(-2 * var(--u)); bottom: calc(-2 * var(--u)); width: calc(1 * var(--u)); background: var(--text); border-radius: 2px; transform: translateX(-50%); opacity: .8; }
-  .cursor { position: absolute; top: 50%; width: calc(10 * var(--u)); height: calc(10 * var(--u)); border-radius: 50%;
+  .cursor { position: absolute; top: 50%; width: calc(2.6 * var(--u)); height: calc(12 * var(--u)); border-radius: calc(.8 * var(--u));
     background: var(--pace); box-shadow: 0 0 calc(2 * var(--u)) var(--pace); transform: translate(-50%, -50%); }
   .scale { position: relative; height: calc(5.5 * var(--u)); font-size: calc(4.2 * var(--u)); color: var(--muted); }
   .scale span { position: absolute; transform: translateX(-50%); top: calc(.8 * var(--u)); }
@@ -74,7 +86,7 @@
       <div class="label">Temps écoulé</div>
       <div class="chrono">12:34</div>
       <div class="state"></div>
-      <div class="dist">1 250 / 2 000 m</div>
+      <button class="pause">❚❚ PAUSE</button>
     </div>
   </div>
 
@@ -96,5 +108,11 @@
   </div>
 </div>
 <div class="conn" title="connecté"></div>
+<div class="menu">
+  <div class="info">En pause · 12:34 · 1 250 m</div>
+  <button class="resume">▶ Reprendre</button>
+  <button class="stop">■ Terminer</button>
+</div>
+<script>if (location.search.includes('pause')) document.body.classList.add('paused');</script>
 </body>
 </html>
