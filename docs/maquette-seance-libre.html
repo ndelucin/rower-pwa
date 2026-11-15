@@ -39,17 +39,16 @@
   .ring .label { font-size: calc(4 * var(--u)); color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
   .ring .chrono { font-size: calc(18 * var(--u)); font-weight: 700; line-height: 1; }
   .ring .state { font-size: calc(4.5 * var(--u)); color: var(--power); min-height: 1.2em; }
-  /* Controls in the ring: pause while rowing; resume / stop when paused (?pause). No overlay. */
-  .controls { display: flex; gap: calc(4 * var(--u)); margin-top: calc(2 * var(--u)); }
+  /* No button while rowing (auto-pause). When paused (?pause): stop only, long press to end. No overlay. */
+  .controls { min-height: calc(14 * var(--u)); display: flex; gap: calc(4 * var(--u)); margin-top: calc(2 * var(--u)); }
   .ctl { width: calc(14 * var(--u)); height: calc(14 * var(--u)); min-width: 48px; min-height: 48px;
     border: 0; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: #26303f; }
   .ctl svg { width: 42%; height: 42%; fill: currentColor; }
-  .ctl.resume { background: var(--pace); color: var(--bg); }
   .ctl.stop { background: #26303f; color: #ff8a80; box-shadow: inset 0 0 0 calc(.5 * var(--u)) #ff8a8066; }
-  .resume, .stop { display: none !important; }
-  .paused .resume, .paused .stop { display: grid !important; }
-  .paused .ctl.pause { display: none; }
+  .stop { display: none !important; }
+  .paused .stop { display: grid !important; }
   .paused .chrono { color: var(--muted); }
+  .paused .cursor { display: none; }
 
   .bar { grid-column: 1 / -1; margin-top: calc(3 * var(--u)); }
   .track { position: relative; height: calc(8 * var(--u)); border-radius: 99px;
@@ -85,8 +84,6 @@
       <div class="chrono">12:34</div>
       <div class="state"></div>
       <div class="controls">
-        <button class="ctl pause" aria-label="Pause"><svg viewBox="0 0 10 10"><rect x="1.5" y="1" width="2.5" height="8" rx=".5"/><rect x="6" y="1" width="2.5" height="8" rx=".5"/></svg></button>
-        <button class="ctl resume" aria-label="Reprendre"><svg viewBox="0 0 10 10"><path d="M2.5 1 L9 5 L2.5 9 Z"/></svg></button>
         <button class="ctl stop" aria-label="Terminer"><svg viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" rx=".8"/></svg></button>
       </div>
     </div>
@@ -110,6 +107,7 @@
   </div>
 </div>
 <div class="conn" title="connecté"></div>
-<script>if (location.search.includes('pause')) { document.body.classList.add('paused'); document.querySelector('.ring .label').textContent = 'En pause'; }</script>
+<script>if (location.search.includes('pause')) { document.body.classList.add('paused'); document.querySelector('.ring .label').textContent = 'En pause';
+  document.querySelectorAll('.split .value, .power .value, .col.right .metric:first-child .value').forEach((el) => { el.firstChild.textContent = '--'; }); }</script>
 </body>
 </html>

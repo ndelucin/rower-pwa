@@ -82,7 +82,16 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
        - v2 : une zone cible verte s'y ajoute pour les programmes.
        - L'historique de la séance (courbe) relève du tableau de bord, après export.
      - Rendu de référence : [docs/maquette-seance-libre.html](docs/maquette-seance-libre.html) (`?pause` affiche le menu de pause). Curseur instantané = **rectangle étroit**, pas un disque. Valeurs latérales en grand (20 × `min(vw, vh)` %), chrono à 18.
-     - **Bouton rond ❚❚** (symbole seul) dans l'anneau, sous le chrono (pas de distance dans l'anneau). En pause, **pas d'overlay** : à la même place, deux boutons ronds **▶ reprendre** (plein, bleu allure) et **■ terminer** (fond sombre comme ❚❚, carré et liseré rouge adouci), chrono grisé, libellé « En pause ». ■ à protéger contre un appui accidentel (appui long ou confirmation). Le S4 n'a pas de pause : le chrono de la séance est géré par la PWA.
+     - **Pause automatique, sans bouton pendant l'effort** (décision du 2026-11-15) :
+       - pause dès que la détection d'arrêt passe à « arrêt » (6 s sans coup), **datée du dernier coup** (pas de temps mort compté) ; reprise automatique au premier coup ;
+       - le S4 n'a pas de pause : le chrono et les cumuls de la séance sont gérés par la PWA ;
+       - en pause, **pas d'overlay** : chrono grisé, libellé « En pause », valeurs instantanées à `--`, et un seul bouton rond **■ terminer** sous le chrono (fond sombre, carré et liseré rouge adouci) ;
+       - **terminer = appui long ~1,5 s** sur ■, avec un anneau qui se remplit autour du bouton (pas de fenêtre de confirmation).
+     - **Fin de séance** :
+       - copie de secours de la séance en cours (IndexedDB) toutes les quelques secondes, pour ne rien perdre en cas de crash ou de coupure ;
+       - écran **bilan** : durée, distance, split moyen, puissance moyenne, cadence moyenne, meilleur 500 m ;
+       - deux actions seulement : **Ajouter au board** (export vers rowerboard, à coder plus tard) ou **Ignorer la séance** (supprime la copie, appui long) ;
+       - séance programmée (v2) : fin automatique, même bilan ; déconnexion Bluetooth : pause automatique + bandeau « Reconnexion… ».
      - **Pas de ligne du haut** (type de séance + état de connexion), pour gagner de la hauteur :
        - l'état de la séance (« en attente du premier coup », « arrêt ») s'affiche sous le chrono ;
        - la connexion : un petit point dans un coin quand tout va bien, et un **bandeau bien visible seulement en cas de déconnexion ou de reconnexion**.
