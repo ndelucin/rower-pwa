@@ -40,8 +40,7 @@
   .ring > svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
   .ring .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .ring .phase { font-size: calc(5 * var(--u)); font-weight: 700; letter-spacing: .08em; color: var(--phase); }
-  .ring .countdown { font-size: calc(20 * var(--u)); font-weight: 700; line-height: 1.05; color: var(--phase); }
-  .ring .next { font-size: calc(4 * var(--u)); color: var(--muted); }
+  .ring .countdown { font-size: calc(23 * var(--u)); font-weight: 700; line-height: 1.05; color: var(--phase); }
 
   .bar { grid-column: 1 / -1; margin-top: calc(3 * var(--u)); }
   .track { position: relative; height: calc(8 * var(--u)); border-radius: 99px;
@@ -70,7 +69,6 @@
     <div class="center">
       <div class="phase" id="phase"></div>
       <div class="countdown" id="countdown"></div>
-      <div class="next" id="next"></div>
     </div>
   </div>
 
@@ -122,11 +120,9 @@ for (const s of segments) {
 document.getElementById('frise').innerHTML = html;
 
 const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-const idx = segments.indexOf(current), nextSeg = segments[idx + 1];
 const names = { work: 'Effort', rest: 'Récup', easy: 'Retour au calme' };
 document.getElementById('phase').textContent = `${names[current.type].toUpperCase()} ${current.n} / 6`;
 document.getElementById('countdown').textContent = fmt(current.d - (state.t - currentStart));
-document.getElementById('next').textContent = `ensuite : ${names[nextSeg.type].toLowerCase()} ${nextSeg.n ?? ''} · ${fmt(nextSeg.d)}`;
 
 document.getElementById('split').textContent = fmt(state.split);
 document.getElementById('power').textContent = state.power;
