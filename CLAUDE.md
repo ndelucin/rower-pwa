@@ -41,7 +41,7 @@ scripts/  phone-eval.js  sim-demo.js
 
 ## Commandes
 - Serveur local : `python3 -m http.server 8080`, puis http://localhost:8080 (`?sw=1` active le service worker en local ; le panneau navigateur de l'app Claude refuse les service workers : tester dans Chrome).
-  - `?sim=steady` (ou `hiit`, `startstop`, `rest`) démarre directement le simulateur ; `&speed=10` accélère (10 s simulées par seconde).
+  - `?dev` affiche les boutons du simulateur sur l'accueil ; `?sim=steady` (ou `hiit`, `startstop`, `rest`) démarre directement le simulateur ; `&speed=10` accélère (10 s simulées par seconde).
   - Maquettes : http://localhost:8080/docs/maquette-seance-libre.html (et `maquette-hiit.html`, `maquette-phases.html`).
 - Tests : `npm test` (= `node --test test/*.test.js`, runner intégré à Node, sans dépendance). Trames de test : `encodeRowerData` (`src/ftms-encoder.js`) et `test/helpers.js`.
 - Capture d'une page à la taille du S23, sans téléphone :
@@ -78,7 +78,7 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
 - [x] Écrans de séance décidés sur maquettes : [docs/ECRAN.md](docs/ECRAN.md)
 - [x] Nouvel écran de séance libre, pause auto (`session.js`), bilan, copie de secours (`store.js`) : [docs/PLAN-ecran-v1.md](docs/PLAN-ecran-v1.md). Vérifié au simulateur (scénario `startstop`) ; **reste l'essai sur le vrai rameur**
 - [x] Squelette PWA ([docs/PLAN-pwa.md](docs/PLAN-pwa.md)) : nom RowerMonitor, manifeste, icônes, `sw.js` (réseau d'abord, mise à jour silencieuse, démarrage hors ligne vérifié sur le S23). Pas de service worker sur `localhost` sauf `?sw=1`. **Installation réelle à vérifier en HTTPS (GitHub Pages)**
-- [ ] Écran d'accueil (connexion, choix de séance) : pas encore maquetté
+- [x] Écran d'accueil : bouton de connexion, dernière séance, simulateur caché hors `?dev` (docs/ECRAN.md)
 - [ ] Export JSON `rower-session/1` (« Ajouter au board » du bilan)
 - [ ] GitHub Pages : implique de passer le dépôt en public (décision de Nico)
 

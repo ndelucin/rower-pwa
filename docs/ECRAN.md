@@ -37,6 +37,13 @@ Maquettes de référence (pages statiques, à ouvrir sur le serveur local) :
 - Pas d'allure instantanée (arrêt, pause) : le curseur disparaît, le trait de moyenne reste.
 - Programmes (v2) : **zone cible verte** pendant les efforts.
 
+## Accueil (v1)
+- En haut à gauche, l'icône et le nom **RowerMonitor**.
+- Au centre, un **gros bouton « Connecter le rameur »** (bleu), avec en dessous le rappel « Réveille le S4 (appuie sur un bouton) et ferme WaterRower Connect », et la ligne des messages d'erreur.
+- En bas, **la dernière séance** de l'historique : « Dernière séance : hier · 20:12 · 4 988 m · 2:00 /500 m ».
+- Parcours : Connecter → choix du rameur par Chrome → **directement l'écran de séance** (en attente du premier coup). Pas de choix du type de séance en v1 (séance libre seulement) : il viendra avec la v2.
+- Les boutons du **simulateur** n'apparaissent qu'avec `?dev` dans l'adresse (en haut à droite).
+
 ## Séance libre (v1)
 - Anneau = **distance parcourue / 2000 m** (distance de référence en aviron) ; au-delà, il recommence un tour tous les 2000 m.
 - Avant le premier coup : chrono à 0:00 et « Premier coup pour démarrer » sous le chrono.

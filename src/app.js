@@ -5,6 +5,7 @@ import { parseRowerData, createRowerState } from './ftms.js';
 import { createSimSource } from './sim.js';
 import { createBleSource, isBleAvailable } from './ble.js';
 import { LAYOUTS, mountLayout } from './ui/layouts.js';
+import { formatLastSession } from './ui/format.js';
 import { createKeepAwake } from './wakelock.js';
 import { createActivityFilter } from './activity.js';
 import { createSession } from './session.js';
@@ -107,6 +108,13 @@ function show(layout) {
   scheduleRender();
 }
 
+// Last saved session, shown at the bottom of the start screen.
+function showLastSession() {
+  store.listSessions()
+    .then((list) => { document.getElementById('last-session').textContent = formatLastSession(list.at(-1), Date.now()); })
+    .catch(() => {});
+}
+
 function goHome() {
   view = null;
   session = null;
@@ -117,6 +125,7 @@ function goHome() {
   source = null;
   screenEl.hidden = true;
   startEl.hidden = false;
+  showLastSession();
 }
 
 const saveDraft = () => {
@@ -228,8 +237,12 @@ if (isBleAvailable()) {
   btnBle.disabled = false;
   btnBle.addEventListener('click', startRower);
 } else {
-  btnBle.querySelector('small').textContent = '(Bluetooth web indisponible : Chrome Android requis)';
+  startMsg.textContent = 'Bluetooth web indisponible : ouvre l’appli dans Chrome sur Android.';
 }
+
+// Simulator buttons: development only (?dev in the address).
+if (new URLSearchParams(location.search).has('dev')) document.getElementById('sim-choice').hidden = false;
+showLastSession();
 
 document.querySelectorAll('[data-sim]').forEach((btn) => btn.addEventListener('click', () => {
   enterFullscreenLandscape();

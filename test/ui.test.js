@@ -65,3 +65,14 @@ test('ringArcs: several arcs with a gap (v2 interval frieze)', () => {
   // an arc shorter than the gap is not drawn (no negative length)
   assert.equal(ringArcs([{ from: 0, to: 0.005 }], { gap: 0.01 })[0].length, 0);
 });
+
+test('formatLastSession: start screen line for the last session', async () => {
+  const { formatLastSession } = await import('../src/ui/format.js');
+  const now = new Date(2026, 10, 15, 19, 0).getTime();
+  const s = { startedAt: new Date(2026, 10, 15, 18, 3).getTime(), duration: 137.2, distance: 604, avgSplit: 132.7 };
+  assert.equal(formatLastSession(s, now), "Dernière séance : aujourd'hui · 2:17 · 604 m · 2:13 /500 m");
+  assert.match(formatLastSession({ ...s, startedAt: new Date(2026, 10, 14, 20, 0).getTime() }, now), /^Dernière séance : hier · /);
+  assert.match(formatLastSession({ ...s, startedAt: new Date(2026, 10, 1, 15, 0).getTime() }, now), /^Dernière séance : le 1 nov\./);
+  assert.equal(formatLastSession({ ...s, avgSplit: null }, now), "Dernière séance : aujourd'hui · 2:17 · 604 m");
+  assert.equal(formatLastSession(null, now), '');
+});

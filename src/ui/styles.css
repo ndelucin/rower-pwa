@@ -1,5 +1,6 @@
 /* Sizes use min(vw, vh): readable whether Chrome shows its address bar or not (S23: 780x360 CSS px in landscape). */
 :root {
+  --u: min(1vw, 1vh); /* size unit of every screen: readable with or without Chrome's address bar */
   --bg: #0a0d12;
   --panel: #141a23;
   --line: #222b38;
@@ -26,7 +27,6 @@ html, body {
    Grid: [left metrics | ring | right metrics] over the full-width split bar.
    Zones are display: contents, so the components they hold are the grid items. */
 .screen {
-  --u: min(1vw, 1vh);
   position: fixed; inset: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -122,17 +122,30 @@ html, body {
 
 /* ---------- Start screen ---------- */
 .start {
-  position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
-  gap: 3vh; text-align: center;
+  position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+  padding: calc(4 * var(--u)) max(calc(4 * var(--u)), env(safe-area-inset-right)) calc(4 * var(--u)) max(calc(4 * var(--u)), env(safe-area-inset-left));
+  text-align: center;
 }
-.start h1 { margin: 0; font-size: 5vw; font-weight: 700; }
-.start button {
-  font: inherit; font-size: 2.2vw; color: var(--text); background: var(--panel);
-  border: 1px solid var(--line); border-radius: .8vw; padding: .8em 1.6em; cursor: pointer;
+.brand { align-self: flex-start; display: flex; align-items: center; gap: calc(2 * var(--u));
+  font-size: calc(5.5 * var(--u)); font-weight: 700; letter-spacing: .02em; }
+.brand img { width: calc(12 * var(--u)); height: calc(12 * var(--u)); border-radius: 22%; }
+.start-main { display: flex; flex-direction: column; align-items: center; gap: calc(2.5 * var(--u)); }
+.btn-connect {
+  display: inline-flex; align-items: center; gap: calc(3 * var(--u));
+  font: 700 calc(7.5 * var(--u)) system-ui, Roboto, sans-serif; color: var(--bg); background: var(--pace);
+  border: 0; border-radius: 99px; padding: calc(4 * var(--u)) calc(10 * var(--u)); cursor: pointer;
+  box-shadow: 0 0 calc(5 * var(--u)) rgba(79, 195, 247, .35);
 }
-.start button:disabled { opacity: .45; cursor: default; }
-.start small { color: var(--muted); }
-.sim-choice { display: flex; gap: 1vw; align-items: center; font-size: 2vw; color: var(--muted); }
+.btn-connect svg { width: 1.1em; height: 1.1em; }
+.btn-connect:disabled { background: var(--panel); color: var(--muted); box-shadow: none; cursor: default; }
+.start-hint { margin: 0; font-size: calc(4.2 * var(--u)); color: var(--muted); }
+.start-msg { margin: 0; min-height: 1.3em; max-width: 80vw; font-size: calc(4.2 * var(--u)); color: var(--warn); }
+.last-session { margin: 0; min-height: 1.3em; font-size: calc(4.4 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; }
+.last-session b { color: var(--text); font-weight: 600; }
+.sim-choice { position: fixed; top: calc(4 * var(--u)); right: max(calc(4 * var(--u)), env(safe-area-inset-right)); display: flex; gap: calc(1.5 * var(--u));
+  align-items: center; font-size: calc(3.6 * var(--u)); color: var(--muted); }
+.sim-choice button { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line);
+  border-radius: calc(1.5 * var(--u)); padding: .4em .9em; cursor: pointer; }
 
 /* ---------- Portrait: ask to rotate ---------- */
 .rotate-hint { display: none; }
@@ -143,4 +156,3 @@ html, body {
     padding: 2rem; text-align: center; font-size: 1.4rem; color: var(--muted);
   }
 }
-.start-msg { margin: 0; min-height: 1.4em; max-width: 70vw; font-size: min(1.8vw, 4vh); color: var(--warn); }

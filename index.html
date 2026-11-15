@@ -21,11 +21,20 @@
     <div class="zone-conn" data-zone="conn"></div>
   </main>
 
+  <!-- Start screen (docs/ECRAN.md, "Accueil"): v1 = free session only, the choice of session type comes in v2. -->
   <div id="start" class="start">
-    <h1>RowerMonitor</h1>
-    <button id="btn-ble" disabled>Connecter le rameur <small></small></button>
-    <p id="start-msg" class="start-msg" role="status"></p>
-    <div class="sim-choice">
+    <header class="brand"><img src="icons/icon.svg" alt=""><span>RowerMonitor</span></header>
+    <div class="start-main">
+      <button id="btn-ble" class="btn-connect" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10-5 5V2l5 5L7 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Connecter le rameur
+      </button>
+      <p class="start-hint">Réveille le S4 (appuie sur un bouton) et ferme WaterRower Connect</p>
+      <p id="start-msg" class="start-msg" role="status"></p>
+    </div>
+    <p id="last-session" class="last-session"></p>
+    <!-- Simulator: development only, shown with ?dev in the address. -->
+    <div class="sim-choice" id="sim-choice" hidden>
       <span>Simulateur :</span>
       <button data-sim="steady">Continu</button>
       <button data-sim="hiit">HIIT</button>
