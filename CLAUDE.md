@@ -92,6 +92,11 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
        - écran **bilan** : durée, distance, split moyen, puissance moyenne, cadence moyenne, meilleur 500 m ;
        - deux actions seulement : **Ajouter au board** (export vers rowerboard, à coder plus tard) ou **Ignorer la séance** (supprime la copie, appui long) ;
        - séance programmée (v2) : fin automatique, même bilan ; déconnexion Bluetooth : pause automatique + bandeau « Reconnexion… ».
+     - **HIIT** (v2), rendu de référence [docs/maquette-hiit.html](docs/maquette-hiit.html) (`?recup` pour une récupération) :
+       - l'anneau devient la **frise de toute la séance** : un arc par intervalle, proportionnel à sa durée (échauffement/retour au calme gris, effort orange, récup bleu-vert) ; passés pleins, à venir estompés, l'arc en cours se remplit ;
+       - au centre : « EFFORT 3 / 6 » et le **compte à rebours de l'intervalle** dans la couleur de la phase, puis « ensuite : récup 3 · 1:00 » ;
+       - fond teinté selon la phase ; barre de split avec la **zone cible verte** en effort, et la moyenne de l'**intervalle en cours** ; cadence cible sous la cadence ;
+       - pas de pause automatique pendant les récupérations.
      - **Pas de ligne du haut** (type de séance + état de connexion), pour gagner de la hauteur :
        - l'état de la séance (« en attente du premier coup », « arrêt ») s'affiche sous le chrono ;
        - la connexion : un petit point dans un coin quand tout va bien, et un **bandeau bien visible seulement en cas de déconnexion ou de reconnexion**.
