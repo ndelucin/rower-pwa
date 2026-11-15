@@ -22,7 +22,7 @@ docs/ BRIEF.md
 
 ## Commandes
 - Serveur local : `python3 -m http.server 8080` puis http://localhost:8080
-- Tests unitaires : `node --test` (runner intégré à Node, sans dépendance)
+- Tests unitaires : `npm test` (= `node --test test/*.test.js`, runner intégré à Node, sans dépendance). `test/frame-builder.js` fabrique des trames FTMS pour les tests.
 - Test sur le téléphone (USB) : `adb reverse tcp:8080 tcp:8080`, puis ouvrir `http://localhost:8080` dans Chrome Android (localhost = contexte sécurisé, donc Web Bluetooth et service worker fonctionnent sans HTTPS).
 - Débogage : `chrome://inspect` sur le Mac.
 
@@ -32,4 +32,7 @@ docs/ BRIEF.md
 - Git local uniquement : **aucun push sans accord explicite de Nico** (GitHub Pages viendra plus tard, sur décision).
 
 ## Avancement
-Versions et périmètre : brief § 16. Version en cours : **v1** (non commencée).
+Versions et périmètre : brief § 16. Version en cours : **v1**.
+- [x] Décodeur Rower Data `src/ftms.js` + tests (trames de référence du brief § 2, trames fragmentées, tronquées)
+- [ ] Simulation (`sim.js`), squelette PWA, écran séance libre, `ble.js`, Wake Lock, export JSON, GitHub Pages
+- À vérifier sur le vrai matériel : une trame complète (flags `0x0BFE`) fait 27 octets, plus que les 20 octets du MTU BLE par défaut. Le module la découpe-t-il (bit More Data) ?
