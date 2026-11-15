@@ -69,6 +69,10 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
 2. **Enregistrement + export JSON** `rower-session/1` (brief § 11), téléchargement et partage.
 3. **GitHub Pages** : implique de passer le dépôt en **public** (décision de Nico).
 4. **Retouches de l'écran « à froid »** (décision de Nico : Bluetooth d'abord, affichage ensuite) : lisibilité à 1,5 m sur le support du rameur, libellés, métriques utiles.
+   - Retour de Nico sur l'appli officielle WaterRower Connect (2026-11-15) :
+     - à garder : le **gros chrono central** (temps écoulé), entouré d'un **anneau de progression** (distance parcourue / 2000 m) ;
+     - à éviter : les 6 petits panneaux autour, avec des chiffres minuscules ;
+     - inutiles : les **calories**, et le temps écoulé en double dans un panneau.
 5. Questions en suspens :
    - Distance affichée par le S4 en fin de 2e essai, à comparer aux 174 m reçus.
    - Un coup très léger (≈ 25 W) juste après un arrêt compte comme une reprise : comportement à confirmer.
