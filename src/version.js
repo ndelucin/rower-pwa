@@ -1,6 +1,6 @@
 // Build stamp shown discreetly on the start screen, to know which version runs on the phone.
 // Rewritten by scripts/stamp-version.js before each commit: do not edit by hand.
-export const BUILD = { number: 40, at: '2026-11-15T21:30:26.928Z' };
+export const BUILD = { number: 41, at: '2026-11-15T21:37:03.763Z' };
 
 /** "build 14 · 15/11 21:34" (local time of the device). */
 export function formatBuild({ number, at }, locale = 'fr-FR') {

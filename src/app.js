@@ -178,7 +178,8 @@ function shareSession(summary) {
   try {
     const file = exportFile(summary);
     if (navigator.canShare?.({ files: [file] })) {
-      return navigator.share({ files: [file], title: 'Séance RowerMonitor' })
+      // No `title`: the Drive share target would use it as the file name instead of the file's own name.
+      return navigator.share({ files: [file] })
         .then(() => { logEvent('séance partagée'); return 'Fichier partagé.'; })
         .catch((err) => {
           logEvent(err.name === 'AbortError' ? 'partage annulé' : `partage impossible : ${err.name} ${err.message}`);
