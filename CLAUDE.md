@@ -73,6 +73,7 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
      - à garder : le **gros chrono central** (temps écoulé), entouré d'un **anneau de progression** (distance parcourue / 2000 m) ;
      - à éviter : les 6 petits panneaux autour, avec des chiffres minuscules ;
      - inutiles : les **calories**, et le temps écoulé en double dans un panneau.
+   - Maquette retenue (séance libre) : chrono central + anneau distance / 2000 m ; autour, 4 grandes valeurs : **split /500 m**, **puissance (W)**, **cadence**, **distance**. Vitesse en m/s écartée (même information que le split, moins lisible, ne correspond pas aux consignes des programmes). Courbe du split en bas : à décider.
 5. Questions en suspens :
    - Distance affichée par le S4 en fin de 2e essai, à comparer aux 174 m reçus.
    - Un coup très léger (≈ 25 W) juste après un arrêt compte comme une reprise : comportement à confirmer.
