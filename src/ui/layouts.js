@@ -28,7 +28,7 @@ export const LAYOUTS = {
     center: ring({
       arcs: (m) => distanceArc(sessionOf(m).distance ?? 0),
       label: (m) => (isPaused(m) ? 'En pause' : 'Temps écoulé'),
-      main: (m) => formatDuration(sessionOf(m).elapsed ?? 0),
+      main: (m) => formatDuration(sessionOf(m).displayElapsed ?? sessionOf(m).elapsed ?? 0),
       note: (m) => NOTE[sessionOf(m).status] ?? '',
       dimmed: isPaused,
       action: holdButton({ label: 'Terminer la séance (appui long)', icon: 'stop', cls: 'stop', onHold: onEnd }),

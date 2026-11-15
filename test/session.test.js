@@ -31,7 +31,7 @@ const idle = (session, { from, to, count, dist, state = 'stopped' }) => {
 test('waiting until the first stroke; baselines are taken there, the first stroke counts as 1', () => {
   const s = createSession();
   let snap = s.update({ state: 'waiting', strokeCount: 40, totalDistance: 1000 }, 0);
-  assert.deepEqual(snap, { status: 'waiting', elapsed: 0, distance: 0, activeDistance: 0, avgSplit: null, strokes: 0 });
+  assert.deepEqual(snap, { status: 'waiting', elapsed: 0, displayElapsed: 0, distance: 0, activeDistance: 0, avgSplit: null, strokes: 0 });
   snap = s.update({ state: 'waiting', strokeCount: 40, totalDistance: 1002 }, 2000); // handle moved, no stroke
   assert.equal(snap.distance, 0);
   snap = s.update({ state: 'rowing', strokeCount: 41, totalDistance: 1003, instPower: 100 }, 5000);
@@ -231,4 +231,18 @@ test('real session of the v1 screen trial (2026-11-15): replay gives the summary
   assert.equal(Math.round(s.avgPower), 106);
   assert.equal(Math.round(s.avgSpm), 20);
   assert.equal(Math.floor(s.best500), 131);
+});
+
+test('displayed chrono never goes backwards at a dated-back pause, the summary keeps the real time', () => {
+  const s = createSession();
+  s.update({ strokeCount: 0, totalDistance: 0, instPower: 0, state: 'waiting' }, 0);
+  s.update({ strokeCount: 1, totalDistance: 5, instPower: 150, state: 'rowing' }, 1000);
+  s.update({ strokeCount: 4, totalDistance: 40, instPower: 150, state: 'rowing' }, 10000); // last stroke
+  const before = s.update({ strokeCount: 4, totalDistance: 44, instPower: 150, state: 'rowing' }, 14000);
+  const paused = s.update({ strokeCount: 4, totalDistance: 45, instPower: null, state: 'stopped' }, 14500);
+  assert.equal(paused.status, 'paused');
+  assert.equal(paused.elapsed, 9);                       // 1 s -> 10 s (last stroke)
+  assert.ok(paused.displayElapsed >= before.displayElapsed); // 13.5 s shown, no jump back
+  assert.equal(paused.displayElapsed, 13.5);
+  assert.equal(s.end(20000).duration, 9);
 });

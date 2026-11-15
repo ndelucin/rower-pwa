@@ -52,6 +52,9 @@ export function createSession({ restore } = {}) {
   // Closes the running segment at the last stroke, and drops samples taken after it.
   function closeSegment() {
     const until = Math.max(s.segStart, s.lastStrokeAt ?? s.segStart);
+    // Seconds shown on screen between the last stroke and the stop detection: removed from the
+    // session, but kept in the displayed chrono so that it never goes backwards.
+    s.hiddenMs = (s.hiddenMs ?? 0) + Math.max(0, s.lastNow - until);
     s.activeMs += until - s.segStart;
     s.activeDist += Math.max(0, s.strokeDist - s.segStartDist);
     s.segStart = s.segStartDist = null;
@@ -145,6 +148,9 @@ export function createSession({ restore } = {}) {
       return {
         status: s.status,
         elapsed,
+        // Chrono to display: never goes backwards when a pause is dated back to the last stroke
+        // (docs/ECRAN.md). The summary uses `elapsed`.
+        displayElapsed: s.status === 'waiting' ? 0 : elapsed + (s.hiddenMs ?? 0) / 1000,
         distance: s.distance,
         activeDistance: activeDist,
         avgSplit: avgSplit(elapsed, activeDist),
@@ -154,6 +160,7 @@ export function createSession({ restore } = {}) {
 
     summary() {
       const { elapsed: duration, distance, activeDistance: activeDist, strokes } = api.snapshot();
+      // (displayElapsed is screen-only: not part of the summary)
       const mean = (k) => {
         const v = s.samples.map((x) => x[k]).filter((x) => x != null);
         return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
