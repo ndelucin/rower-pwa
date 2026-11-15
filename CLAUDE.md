@@ -22,10 +22,17 @@ docs/ BRIEF.md
 
 ## Commandes
 - Serveur local : `python3 -m http.server 8080` puis http://localhost:8080
+  - `?sim=hiit` (ou `steady`, `rest`) démarre directement le simulateur ; `&speed=10` accélère la séance (10 s simulées par seconde).
 - Tests unitaires : `npm test` (= `node --test test/*.test.js`, runner intégré à Node, sans dépendance). `test/frame-builder.js` fabrique des trames FTMS pour les tests.
 - Test sur le téléphone (USB) : `adb reverse tcp:8080 tcp:8080`, puis ouvrir `http://localhost:8080` dans Chrome Android (localhost = contexte sécurisé, donc Web Bluetooth et service worker fonctionnent sans HTTPS).
 - Débogage : `chrome://inspect` sur le Mac.
 - Démo du faux rameur en terminal : `node scripts/sim-demo.js [rest|steady|hiit] [secondes] [pas]`
+
+## Interface : gabarit + composants + configurations
+- `index.html` contient le gabarit commun : zones `banner`, `status`, `main`, `side`, `progress`.
+- Un composant est une fabrique `{ mount(el), update(model) }`. `mount` construit le DOM une fois, `update` ne change que les textes. `model = { values, history, status, sourceLabel }`.
+- Un type de séance = une entrée de `LAYOUTS` (zone → composant). Ajouter un type ne touche ni le gabarit ni les composants existants.
+- Fonctions d'affichage pures (formats, tracé de courbe) dans `src/ui/format.js`, testées sous Node.
 
 ## Contrat « source de données »
 `src/sim.js` (`createSimSource`) et le futur `src/ble.js` exposent la **même interface**, pour que l'appli ne sache pas si elle parle au vrai rameur ou au simulateur : un `EventTarget` avec `connect()`, `disconnect()`, des événements `status` (`connecting` | `connected` | `disconnected`) et `data` (un `DataView` par notification Rower Data).
@@ -39,5 +46,6 @@ docs/ BRIEF.md
 Versions et périmètre : brief § 16. Version en cours : **v1**.
 - [x] Décodeur Rower Data `src/ftms.js` + tests (trames de référence du brief § 2, trames fragmentées, tronquées)
 - [x] Encodeur `src/ftms-encoder.js` (avec découpage en trames de 20 octets) + faux rameur `src/sim.js` (scénarios repos / continu / HIIT, bruit reproductible)
-- [ ] Squelette PWA, écran séance libre, `ble.js`, Wake Lock, export JSON, GitHub Pages
+- [x] Écran séance libre en paysage : gabarit `index.html` (zones `data-zone`), composants `src/ui/components.js`, configuration par type `src/ui/layouts.js`, câblage `src/app.js`
+- [ ] Squelette PWA (manifeste, SW, icônes), `ble.js`, Wake Lock, export JSON, GitHub Pages
 - À vérifier sur le vrai matériel : une trame complète (flags `0x0BFE`) fait 27 octets, plus que les 20 octets du MTU BLE par défaut. Le module la découpe-t-il (bit More Data) ?

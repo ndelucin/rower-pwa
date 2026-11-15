@@ -144,7 +144,8 @@ export function createSimSource({ intervalMs = 1000, ...simOptions } = {}) {
     emit('status', 'connecting');
     sim = createSimulator(simOptions);
     timer = setInterval(() => {
-      for (const frame of sim.tick(intervalMs / 1000)) emit('data', frame);
+      // Always 1 simulated second per tick; a shorter intervalMs fast-forwards the session.
+      for (const frame of sim.tick(1)) emit('data', frame);
     }, intervalMs);
     emit('status', 'connected');
   };
