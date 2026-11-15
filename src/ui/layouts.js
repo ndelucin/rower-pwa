@@ -1,7 +1,7 @@
 // One configuration per screen: which component goes into which zone of the common template
 // (index.html: left, center, right, bar, conn). See docs/ECRAN.md.
 // Adding a session type = adding an entry here; the template never changes.
-import { metricColumn, ring, holdButton, splitBar, summaryActions, connection } from './components.js';
+import { metricColumn, ring, tapButton, splitBar, summaryActions, connection } from './components.js';
 import { formatPace, formatDuration, formatNumber, formatDistance } from './format.js';
 
 const RING_DISTANCE = 2000; // m: one full turn of the ring in a free session (reference rowing distance)
@@ -19,7 +19,7 @@ const distanceArc = (d) => {
 const NOTE = { waiting: 'Premier coup pour démarrer' };
 
 export const LAYOUTS = {
-  /** Free session. onEnd() is called after a long press on ■ (only shown while paused). */
+  /** Free session. onEnd() is called by a tap on ⏸ (only shown while paused): it ends the session at once. */
   free: ({ onEnd } = {}) => ({
     left: metricColumn([
       { label: 'Split /500 m', tone: 'pace', value: (m) => formatPace(inst(m, 'instPace')) },
@@ -31,7 +31,7 @@ export const LAYOUTS = {
       main: (m) => formatDuration(sessionOf(m).displayElapsed ?? sessionOf(m).elapsed ?? 0),
       note: (m) => NOTE[sessionOf(m).status] ?? '',
       dimmed: isPaused,
-      action: holdButton({ label: 'Terminer la séance (appui long)', icon: 'stop', cls: 'stop', onHold: onEnd }),
+      action: tapButton({ label: 'Terminer la séance', icon: 'pause', cls: 'stop', onTap: onEnd }),
       actionVisible: isPaused,
     }),
     right: metricColumn([

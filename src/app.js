@@ -86,20 +86,27 @@ function logSeries(v) {
   if (diag.series.length > 600) diag.series.shift();
 }
 
-async function enterFullscreenLandscape() {
-  // Needs a user gesture; orientation lock only works in fullscreen on Android. Best effort.
-  if (document.fullscreenElement) return;
+// The start screen follows the phone (portrait by default); the session screen is landscape.
+// Once connected we ask for landscape ourselves. Chrome Android allows the lock in an installed
+// PWA (fullscreen display) or in fullscreen; otherwise the CSS asks the user to rotate the phone.
+async function lockLandscape() {
+  const orientation = window.screen.orientation;
   try {
-    await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
-    await window.screen.orientation?.lock?.('landscape');
-  } catch { /* desktop browser or refused: the CSS layout still works */ }
+    await orientation?.lock?.('landscape');
+    return;
+  } catch { /* not allowed yet: try fullscreen first */ }
+  try {
+    if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
+    await orientation?.lock?.('landscape');
+  } catch { /* desktop browser or refused: the rotate hint shows in portrait */ }
 }
+const unlockOrientation = () => { try { window.screen.orientation?.unlock?.(); } catch { /* unsupported */ } };
 
 // ---------- Screens ----------
 const startEl = document.getElementById('start');
 const screenEl = document.getElementById('screen');
-// A tap on the session screen (re)enters fullscreen, e.g. after the Bluetooth chooser.
-screenEl.addEventListener('click', enterFullscreenLandscape);
+// A tap on the session screen retries the landscape lock (a user gesture may be needed).
+screenEl.addEventListener('click', lockLandscape);
 
 function show(layout) {
   startEl.hidden = true;
@@ -121,6 +128,7 @@ function goHome() {
   snapshot = {};
   clearInterval(draftTimer);
   keepAwake.stop();
+  unlockOrientation();
   source?.disconnect();
   source = null;
   screenEl.hidden = true;
@@ -141,6 +149,7 @@ function startSession(label) {
   session = createSession();
   snapshot = session.snapshot();
   show(LAYOUTS.free({ onEnd: finishSession }));
+  lockLandscape();
   keepAwake.start();
   clearInterval(draftTimer);
   draftTimer = setInterval(saveDraft, DRAFT_EVERY_MS);
@@ -208,7 +217,7 @@ const BLE_ERRORS = {
 
 async function startRower() {
   // The device chooser needs the user gesture: requestDevice must be the first thing called.
-  // Fullscreen comes after, with a tap on the session screen.
+  // Landscape comes after the connection (startSession).
   const src = createBleSource();
   bindSource(src);
   startMsg.textContent = 'Recherche du rameur…';
@@ -246,7 +255,6 @@ if (new URLSearchParams(location.search).has('dev')) document.getElementById('si
 showLastSession();
 
 document.querySelectorAll('[data-sim]').forEach((btn) => btn.addEventListener('click', () => {
-  enterFullscreenLandscape();
   startSimulator(btn.dataset.sim);
 }));
 

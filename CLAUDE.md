@@ -10,7 +10,7 @@ Documents de référence, à relire avant toute décision de conception :
 
 ## Principes non négociables
 - **HTML / CSS / JS vanilla, modules ES, aucune étape de build, aucune dépendance runtime.** Pas de framework ni de librairie graphique (rendu natif HTML / CSS / SVG).
-- **Cible : Galaxy S23, Chrome Android** (Web Bluetooth ; jamais Samsung Internet, le navigateur par défaut). Paysage plein écran.
+- **Cible : Galaxy S23, Chrome Android** (Web Bluetooth ; jamais Samsung Internet, le navigateur par défaut). Accueil en portrait (par défaut) ou paysage ; **écran de séance en paysage plein écran** (bascule automatique à la connexion).
   - Viewport CSS en paysage : **780 × 360** en plein écran, environ **780 × 300** avec la barre d'adresse. Vérifier toute mise en page aux deux tailles.
   - Densité × 3 ; caméra perforée sur le côté → marges `env(safe-area-inset-*)` avec `viewport-fit=cover`.
   - Tailles en `min(vw, vh)` pour rester lisible dans les deux cas, à 1,5 m.
@@ -42,7 +42,7 @@ scripts/  phone-eval.js  sim-demo.js
 ## Commandes
 - Serveur local : `python3 -m http.server 8080`, puis http://localhost:8080 (`?sw=1` active le service worker en local ; le panneau navigateur de l'app Claude refuse les service workers : tester dans Chrome).
   - `?dev` affiche les boutons du simulateur sur l'accueil ; `?sim=steady` (ou `hiit`, `startstop`, `rest`) démarre directement le simulateur ; `&speed=10` accélère (10 s simulées par seconde).
-  - Maquettes : http://localhost:8080/docs/maquette-seance-libre.html (et `maquette-hiit.html`, `maquette-phases.html`).
+  - Maquettes : http://localhost:8080/docs/maquette-seance-libre.html (et `maquette-accueil.html`, `maquette-hiit.html`, `maquette-phases.html`).
 - Tests : `npm test` (= `node --test test/*.test.js`, runner intégré à Node, sans dépendance). Trames de test : `encodeRowerData` (`src/ftms-encoder.js`) et `test/helpers.js`.
 - Capture d'une page à la taille du S23, sans téléphone :
   `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars --force-device-scale-factor=3 --window-size=780,300 --screenshot=out.png "http://localhost:8080/?sim=steady"`
@@ -78,7 +78,7 @@ Versions et périmètre : brief § 16. Version en cours : **v1**, presque termin
 - [x] Écrans décidés sur maquettes : [docs/ECRAN.md](docs/ECRAN.md)
 - [x] Écran de séance libre, pause automatique (`session.js`), bilan, copie de secours et historique (`store.js`) : [docs/PLAN-ecran-v1.md](docs/PLAN-ecran-v1.md). Essai réel du 2026-11-15 concluant
 - [x] Squelette PWA ([docs/PLAN-pwa.md](docs/PLAN-pwa.md)) : RowerMonitor, `sw.js` (réseau d'abord, mise à jour silencieuse, hors ligne). **Installée sur le S23 : plein écran paysage et icône vérifiés**
-- [x] Écran d'accueil : bouton de connexion, dernière séance, simulateur caché hors `?dev`
+- [x] Écran d'accueil : logo et nom centrés, fond dégradé, portrait ou paysage, bouton de connexion, dernière séance, simulateur caché hors `?dev` ; bascule auto en paysage à la connexion ([docs/maquette-accueil.html](docs/maquette-accueil.html)). Fin de séance : ⏸ en pause, appui immédiat ; bilan « Enregistrer la séance » / « Ignorer la séance »
 - [x] Dépôt public + GitHub Pages (2026-11-15) : https://ndelucin.github.io/rower-pwa/
 - [x] Reconnexion au rameur déjà autorisé sans le sélecteur Bluetooth de Chrome (`getDevices`), repli sur le sélecteur ; testée sous Node, **validée sur le S23 le 2026-11-15** (à condition d'activer le flag Chrome, voir ci-dessous)
 

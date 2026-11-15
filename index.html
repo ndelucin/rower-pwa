@@ -21,15 +21,18 @@
     <div class="zone-conn" data-zone="conn"></div>
   </main>
 
-  <!-- Start screen (docs/ECRAN.md, "Accueil"): v1 = free session only, the choice of session type comes in v2. -->
+  <!-- Start screen (docs/ECRAN.md, "Accueil"): v1 = free session only, the choice of session type comes in v2.
+       Portrait (default) and landscape; the session screen switches to landscape once connected. -->
   <div id="start" class="start">
-    <header class="brand"><img src="icons/icon.svg" alt=""><span>RowerMonitor</span></header>
     <div class="start-main">
+      <div class="hero">
+        <svg class="hero-logo" viewBox="0 0 64 32" aria-hidden="true"><defs><linearGradient id="ecg" x1="0" x2="1"><stop offset="0" stop-color="#4fc3f7" stop-opacity="0"/><stop offset=".25" stop-color="#4fc3f7"/><stop offset=".75" stop-color="#4fc3f7"/><stop offset="1" stop-color="#4fc3f7" stop-opacity="0"/></linearGradient></defs><path d="M1 18H13L16.5 14.5L19.5 18H25L29 4L35 30L39 18H45L48.5 13.5L52 18H63" fill="none" stroke="url(#ecg)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h1 class="wordmark"><b>Rower</b><span>Monitor</span></h1>
+      </div>
       <button id="btn-ble" class="btn-connect" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10-5 5V2l5 5L7 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Connecter le rameur
       </button>
-      <p class="start-hint">Réveille le S4 (appuie sur un bouton) et ferme WaterRower Connect</p>
       <p id="start-msg" class="start-msg" role="status"></p>
     </div>
     <p id="last-session" class="last-session"></p>

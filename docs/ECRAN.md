@@ -38,11 +38,13 @@ Maquettes de référence (pages statiques, à ouvrir sur le serveur local) :
 - Programmes (v2) : **zone cible verte** pendant les efforts.
 
 ## Accueil (v1)
-- En haut à gauche, l'icône et le nom **RowerMonitor**.
-- Au centre, un **gros bouton « Connecter le rameur »** (bleu), avec en dessous le rappel « Réveille le S4 (appuie sur un bouton) et ferme WaterRower Connect », et la ligne des messages d'erreur.
-- En bas, **la dernière séance** de l'historique : « Dernière séance : hier · 20:12 · 4 988 m · 2:00 /500 m ».
-- Le **sélecteur Bluetooth de Chrome** (fenêtre « … tente de s'associer ») ne peut être ni stylé ni évité par une page : il n'apparaît qu'à la première connexion. Ensuite, « Connecter » essaie d'abord le rameur déjà autorisé (`navigator.bluetooth.getDevices()`, selon la version de Chrome) ; si ça échoue, le sélecteur revient (ou un message demande de toucher à nouveau « Connecter »).
-- Parcours : Connecter → choix du rameur par Chrome (première fois seulement) → **directement l'écran de séance** (en attente du premier coup). Pas de choix du type de séance en v1 (séance libre seulement) : il viendra avec la v2.
+Maquette : [maquette-accueil.html](maquette-accueil.html) (portrait et paysage, tailles réelles du S23).
+- **Portrait par défaut**, paysage possible : l'accueil suit le téléphone (manifeste `orientation: any`).
+- **Fond « premium »** : dégradé bleu nuit, halo bleu derrière le bouton, anneaux très discrets qui rappellent l'anneau de séance (CSS pur, pas d'image).
+- **Au centre, en grand** : le logo (ligne de battement de cœur, en SVG dans la page, créé pour l'appli), puis le nom **RowerMonitor** (« Rower » demi-gras blanc, « Monitor » fin bleu ; polices système, aucune dépendance), puis le **gros bouton « Connecter le rameur »** (pleine largeur en portrait) et la ligne des messages d'erreur. Plus de phrase d'aide sous le bouton : le conseil « réveille le S4… » ne vit que dans les messages d'erreur.
+- En bas, **la dernière séance** de l'historique : « Dernière séance : hier · 20:12 · 4 988 m · 2:00 /500 m » (sur deux lignes en portrait).
+- Le **sélecteur Bluetooth de Chrome** (fenêtre « … tente de s'associer ») ne peut être ni stylé ni évité par une page. « Connecter » essaie d'abord le rameur déjà autorisé (`navigator.bluetooth.getDevices()`) ; si ça échoue, le sélecteur s'ouvre. **Sur le S23, `getDevices()` demande d'activer `chrome://flags/#enable-web-bluetooth-new-permissions-backend`** ; la 1ʳᵉ connexion après activation passe par le sélecteur.
+- Parcours : Connecter → (choix du rameur par Chrome si besoin) → **dès que la connexion est établie, bascule automatique en paysage** (`screen.orientation.lock`, avec repli sur le plein écran) → écran de séance en attente du premier coup. Retour à l'accueil : l'orientation est libérée. Si le verrouillage est refusé (onglet Chrome non installé), « Tourne le téléphone en paysage » s'affiche en portrait. Pas de choix du type de séance en v1 : il viendra avec la v2.
 - Les boutons du **simulateur** n'apparaissent qu'avec `?dev` dans l'adresse (en haut à droite).
 
 ## Séance libre (v1)
@@ -56,12 +58,12 @@ Maquettes de référence (pages statiques, à ouvrir sur le serveur local) :
   - Délai de détection **adaptatif** : 1,5 × l'intervalle entre les deux derniers coups, entre 4 et 8 s (≈ 4 s à 21 coups/min, 6 s à 15 coups/min). Sur les séances réelles : arrêt vu 4,3 à 4,7 s après le dernier coup, sans fausse pause.
   - **Le chrono affiché ne recule jamais** : il s'arrête là où il est quand la pause est détectée. Le bilan, lui, retire ces quelques secondes (seul le temps de rame compte) : sa durée est donc un peu plus courte que le dernier chrono affiché.
 - Le S4 n'a pas de pause : le chrono, la distance et les moyennes de la séance sont calculés par la PWA. La distance et les coups comptent à partir du premier coup ; le split moyen n'utilise que la distance parcourue en ramant (pas l'inertie pendant les pauses).
-- En pause, **pas d'overlay** : chrono grisé, libellé « EN PAUSE », valeurs instantanées à `--`, curseur masqué, et un seul bouton rond **■** sous le chrono (fond sombre, carré et liseré rouge adouci).
-- **Terminer = appui long ~1,5 s sur ■**, avec un anneau qui se remplit autour du bouton (pas de fenêtre de confirmation).
+- En pause, **pas d'overlay** : chrono grisé, libellé « EN PAUSE », valeurs instantanées à `--`, curseur masqué, et un seul bouton rond **⏸** sous le chrono (fond sombre, symbole et liseré rouge adouci).
+- **Terminer = un appui sur ⏸**, effet immédiat (pas d'appui long ni de confirmation) : on arrive sur le bilan, où la séance peut encore être ignorée. Le bouton n'existe qu'en pause.
 - Déconnexion Bluetooth : pause automatique + bandeau « Reconnexion… ».
 - **Copie de secours** de la séance en cours (IndexedDB) toutes les quelques secondes : rien n'est perdu en cas de crash, de batterie vide ou de rechargement.
 - **Écran bilan** : même gabarit. Durée au centre (« SÉANCE TERMINÉE »), autour : split moyen, puissance moyenne, cadence moyenne, distance ; meilleur 500 m.
-- **Deux actions seulement** : **Ajouter au board** (export vers rowerboard, à coder plus tard ; en attendant, la séance est rangée dans l'historique local) ou **Ignorer la séance** (supprime la séance, appui long).
+- **Deux actions seulement** : **Enregistrer la séance** (la range dans l'historique local ; l'export vers rowerboard viendra plus tard) ou **Ignorer la séance** (supprime la séance ; appui long, rempli progressivement, sans mention à l'écran).
 
 ## Séances programmées (v2)
 - Un programme est une suite de **phases** : un **segment seul** (échauffement, récup longue, retour au calme…) ou un **bloc d'intervalles répétés**. Le moteur regroupe tout seul les segments consécutifs qui se répètent ; le format de programme du brief § 6 ne change pas.

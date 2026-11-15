@@ -115,13 +115,37 @@ export function holdButton({ label, text = '', icon = null, onHold, duration = 1
 }
 
 /**
+ * Round icon button with an immediate effect (plain tap, no confirmation).
+ * Same interface as holdButton: exposes setVisible(bool).
+ */
+export function tapButton({ label, icon = 'pause', onTap, cls = '' }) {
+  let btn;
+  return {
+    mount(el) {
+      btn = h('button', `tap ${cls}`.trim());
+      btn.type = 'button';
+      btn.setAttribute('aria-label', label);
+      if (icon === 'pause') {
+        const s = svg('svg', { viewBox: '0 0 10 10', class: 'tap-icon', 'aria-hidden': 'true' });
+        s.append(svg('rect', { x: 2, y: 1.5, width: 2, height: 7, rx: 0.5 }), svg('rect', { x: 6, y: 1.5, width: 2, height: 7, rx: 0.5 }));
+        btn.append(s);
+      }
+      btn.addEventListener('click', () => onTap?.());
+      el.append(btn);
+    },
+    update() {},
+    setVisible(visible) { btn.hidden = !visible; },
+  };
+}
+
+/**
  * Central ring: SVG arcs around a label, a big main text (chrono) and an optional line.
  *  arcs(model)    -> [{ from, to, tone }] fractions of a turn (tone: 'pace' | 'power' | 'rest')
  *  label(model)   -> small caps text above
  *  main(model)    -> big text (chrono / countdown)
  *  note(model)    -> small line under the main text ('' to leave empty)
  *  dimmed(model)  -> true greys the main text (paused)
- *  action         -> optional component (e.g. holdButton) under the main text, shown when actionVisible(model)
+ *  action         -> optional component (e.g. tapButton) under the main text, shown when actionVisible(model)
  */
 export function ring({ arcs, label, main, note = () => '', dimmed = () => false, action = null, actionVisible = () => true }) {
   let root, arcGroup, labelEl, mainEl, noteEl;
@@ -229,18 +253,17 @@ export function splitBar({ slow = 150, fast = 110, ticks = [140, 130, 120], targ
   };
 }
 
-/** Summary actions (bar zone of the summary screen): tap to keep, long press to discard. */
+/** Summary actions (bar zone of the summary screen): tap to save the session, long press (fill shown) to discard it. */
 export function summaryActions({ onKeep, onDiscard }) {
-  const discard = holdButton({ label: 'Ignorer la séance (appui long)', text: 'Ignorer la séance', shape: 'pill', cls: 'discard', onHold: onDiscard });
+  const discard = holdButton({ label: 'Ignorer la séance', text: 'Ignorer la séance', shape: 'pill', cls: 'discard', onHold: onDiscard });
   return {
     mount(el) {
       const row = h('div', 'actions');
-      const keep = h('button', 'keep', 'Ajouter au board');
+      const keep = h('button', 'keep', 'Enregistrer la séance');
       keep.type = 'button';
       keep.addEventListener('click', () => onKeep?.());
       const discardWrap = h('div', 'discard-wrap');
       discard.mount(discardWrap);
-      discardWrap.append(h('div', 'hint', 'appui long'));
       row.append(discardWrap, keep);
       el.append(row);
     },

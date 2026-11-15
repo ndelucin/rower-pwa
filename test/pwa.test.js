@@ -7,10 +7,10 @@ const root = new URL('../', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('manifest.webmanifest', root)));
 const isRelative = (p) => !/^(\/|[a-z]+:)/i.test(p);
 
-test('manifest: installable, fullscreen landscape, relative paths', () => {
+test('manifest: installable, fullscreen, free orientation (landscape is locked by the app), relative paths', () => {
   assert.equal(manifest.name, 'RowerMonitor');
   assert.equal(manifest.display, 'fullscreen');
-  assert.equal(manifest.orientation, 'landscape');
+  assert.equal(manifest.orientation, 'any'); // portrait start screen; app.js locks landscape for the session
   for (const p of [manifest.start_url, manifest.scope]) assert.ok(isRelative(p), p);
   const sizes = manifest.icons.map((i) => i.sizes);
   assert.ok(sizes.includes('192x192') && sizes.includes('512x512'), 'Chrome needs 192 and 512 icons');
