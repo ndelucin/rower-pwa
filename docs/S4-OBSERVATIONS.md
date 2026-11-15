@@ -22,3 +22,9 @@ Données brutes décodées, une ligne par seconde S4 : [`test/fixtures/s4-2026-1
 5. **Le chrono et l'allure moyenne continuent** pendant l'arrêt (le S4 n'a pas de pause) ; la distance progresse encore de quelques mètres (inertie de la roue à eau).
 
 → L'appli ne doit pas afficher les valeurs instantanées telles quelles : il faut une **détection d'arrêt** côté PWA (par exemple : coups qui n'augmentent plus depuis quelques secondes, ou puissance nulle) qui affiche `--`, et le moteur de séance doit gérer la pause lui-même (brief § 6).
+
+## Détection d'arrêt validée (2026-11-15, séance start-stop)
+- Trames brutes : [`test/fixtures/s4-2026-11-15-startstop-raw.json`](../test/fixtures/s4-2026-11-15-startstop-raw.json) (254 trames, 137 s, 4 périodes d'effort).
+- Chaque arrêt est détecté **6 s après le dernier coup**, chaque reprise **au premier coup** ; rejouée dans les tests, la séance donne exactement les mêmes transitions que celles vues sur le téléphone.
+- Le chrono du S4 démarre au mouvement de la poignée : ici **11 s** avant le premier coup compté.
+- Un coup très léger (25 W) juste après un arrêt est compté comme une reprise : c'est le comportement voulu.

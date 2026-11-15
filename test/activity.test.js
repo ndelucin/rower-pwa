@@ -50,6 +50,24 @@ test('real session: the phantom stroke after 13 s of rest does not restart the s
   assert.equal(v.strokeRate, null);
 });
 
+test('real start-stop session, raw frames through the whole chain (decode -> merge -> filter)', async () => {
+  const { parseRowerData, createRowerState } = await import('../src/ftms.js');
+  const { raw } = JSON.parse(readFileSync(new URL('./fixtures/s4-2026-11-15-startstop-raw.json', import.meta.url)));
+  const state = createRowerState();
+  const filter = createActivityFilter();
+  const transitions = [];
+  for (const [ms, hex] of raw) {
+    const bytes = Uint8Array.from(hex.split(' ').map((h) => parseInt(h, 16)));
+    const v = filter.update(state.apply(parseRowerData(bytes)), ms);
+    if (v.state !== transitions.at(-1)?.split('@')[0]) transitions.push(`${v.state}@${v.strokeCount}`);
+  }
+  // What Nico saw on the phone: 4 rowing periods, each stop detected.
+  assert.deepEqual(transitions, [
+    'waiting@0', 'rowing@1', 'stopped@8', 'rowing@9', 'stopped@13',
+    'rowing@14', 'stopped@16', 'rowing@17', 'stopped@17',
+  ]);
+});
+
 test('slow strokes (every 5 s) still count as rowing', () => {
   const f = createActivityFilter();
   f.update({ strokeCount: 0, instPower: 0 }, 0);
