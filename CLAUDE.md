@@ -28,8 +28,8 @@ src/  ftms.js          décodeur Rower Data (pur)
       ble.js           connexion Web Bluetooth + reconnexion
       activity.js      détection d'arrêt (attente / en cours / arrêt)
       wakelock.js      écran maintenu allumé
-      session.js*      chrono, pause auto, cumuls et bilan de la séance (pur)
-      store.js*        IndexedDB : copie de secours, historique
+      session.js       chrono, pause auto, cumuls et bilan de la séance (pur)
+      store.js         IndexedDB : copie de secours, historique
       engine.js*  audio.js*  export.js*   (v2 et suivantes)
       app.js           câblage
       ui/  components.js  layouts.js  format.js  styles.css
@@ -41,7 +41,7 @@ scripts/  phone-eval.js  sim-demo.js
 
 ## Commandes
 - Serveur local : `python3 -m http.server 8080`, puis http://localhost:8080.
-  - `?sim=steady` (ou `hiit`, `rest`) démarre directement le simulateur ; `&speed=10` accélère (10 s simulées par seconde).
+  - `?sim=steady` (ou `hiit`, `startstop`, `rest`) démarre directement le simulateur ; `&speed=10` accélère (10 s simulées par seconde).
   - Maquettes : http://localhost:8080/docs/maquette-seance-libre.html (et `maquette-hiit.html`, `maquette-phases.html`).
 - Tests : `npm test` (= `node --test test/*.test.js`, runner intégré à Node, sans dépendance). Trames de test : `encodeRowerData` (`src/ftms-encoder.js`) et `test/helpers.js`.
 - Capture d'une page à la taille du S23, sans téléphone :
@@ -76,7 +76,7 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
 - [x] Détection d'arrêt `activity.js`, testée en rejouant deux séances réelles
 - [x] Écran maintenu allumé (`wakelock.js`), vérifié sur le S23
 - [x] Écrans de séance décidés sur maquettes : [docs/ECRAN.md](docs/ECRAN.md)
-- [ ] Nouvel écran de séance libre, pause auto, bilan, copie de secours : [docs/PLAN-ecran-v1.md](docs/PLAN-ecran-v1.md)
+- [x] Nouvel écran de séance libre, pause auto (`session.js`), bilan, copie de secours (`store.js`) : [docs/PLAN-ecran-v1.md](docs/PLAN-ecran-v1.md). Vérifié au simulateur (scénario `startstop`) ; **reste l'essai sur le vrai rameur**
 - [ ] Squelette PWA installable : manifeste (`display: fullscreen`, `orientation: landscape`, chemins relatifs), icônes, service worker avec « nouvelle version disponible »
 - [ ] Export JSON `rower-session/1` (« Ajouter au board » du bilan)
 - [ ] GitHub Pages : implique de passer le dépôt en public (décision de Nico)
@@ -84,5 +84,6 @@ Versions et périmètre : brief § 16. Version en cours : **v1**.
 ## Questions en suspens
 - Distance affichée par le S4 en fin de 2ᵉ essai, à comparer aux 174 m reçus.
 - Un coup très léger (≈ 25 W) juste après un arrêt compte comme une reprise : à confirmer sur le rameur (avec la pause auto, il ferait repartir le chrono).
+- À la détection d'un arrêt, le chrono recule des ~6 s de détection (la pause est datée du dernier coup) : à juger sur le rameur.
 - Rowerboard : dans les fichiers TCX du S4, les watts donnent un split ~13 s plus lent que la distance (médiane 2:21 contre 2:08). Ça peut fausser les watts du dashboard.
 - Rattrapage `brew bundle` : le Mac diverge de `~/Brewfile` (node, git, gh, pyenv, quelques apps) ; `~/Brewfile` n'est versionné nulle part.

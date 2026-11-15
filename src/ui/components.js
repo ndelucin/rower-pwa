@@ -1,8 +1,13 @@
 // UI components. Each factory returns { mount(el), update(model) }:
 //  - mount builds the DOM once inside its zone,
-//  - update only changes text / attributes (called on every new frame, ~1-2 times per second).
-// model = { values, history, status, sourceLabel } (see app.js).
-import { sparklinePath } from './format.js';
+//  - update only changes texts / attributes (called on every new frame, ~1-2 times per second).
+// model = { values, session, status, sourceLabel }:
+//  values  = output of activity.update() (instPace, instPower, strokeRate… null when not rowing),
+//  session = snapshot() of src/session.js (or its summary() on the summary screen),
+//  status  = connection: 'connecting' | 'connected' | 'disconnected'.
+import { ringArcs, splitBarPosition, formatPace } from './format.js';
+
+const NS = 'http://www.w3.org/2000/svg';
 
 const h = (tag, cls, text) => {
   const el = document.createElement(tag);
@@ -10,85 +15,257 @@ const h = (tag, cls, text) => {
   if (text != null) el.textContent = text;
   return el;
 };
+const svg = (tag, attrs = {}) => {
+  const el = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
+};
 const setText = (el, text) => { if (el.textContent !== text) el.textContent = text; };
+const setAttr = (el, name, value) => { if (el.getAttribute(name) !== String(value)) el.setAttribute(name, value); };
 
-/** Banner: session title on the left, a live detail (e.g. elapsed time) next to it. */
-export function banner({ title, detail }) {
-  let detailEl;
+/**
+ * Column of big metrics (left / right zones).
+ * items: [{ label, unit, tone: 'pace' | 'power' | undefined, value(model) -> string }]
+ */
+export function metricColumn(items, { align = 'left' } = {}) {
+  const valueEls = [];
   return {
     mount(el) {
-      el.append(h('span', 'banner-name', title), (detailEl = h('span', 'banner-detail')));
-    },
-    update(m) { setText(detailEl, detail(m.values)); },
-  };
-}
-
-const STATUS_TEXT = { connecting: 'Connexion…', connected: null, disconnected: 'Déconnecté' };
-
-/** Connection indicator, always visible (brief § 5). */
-export function statusPill() {
-  let pill;
-  return {
-    mount(el) { el.append((pill = h('span', 'status'))); },
-    update(m) {
-      pill.dataset.state = m.status;
-      setText(pill, STATUS_TEXT[m.status] ?? m.sourceLabel);
-    },
-  };
-}
-
-/** One very large number (main zone). */
-export function bigMetric({ label, value, unit = '' }) {
-  let valueEl;
-  return {
-    mount(el) {
-      el.append(h('div', 'big-label', label), (valueEl = h('div', 'big-value')), h('div', 'big-unit', unit));
-    },
-    update(m) { setText(valueEl, value(m.values)); },
-  };
-}
-
-/** 2 x 2 grid of secondary metrics. items: [{ label, unit, value(values) }] */
-export function metricGrid(items) {
-  const cells = [];
-  return {
-    mount(el) {
+      const col = h('div', `col col-${align}`);
       for (const it of items) {
-        const v = h('div', 'metric-value');
-        const cell = h('div', 'metric');
-        cell.append(h('div', 'metric-label', it.label), v, h('div', 'metric-unit', it.unit ?? ''));
-        el.append(cell);
-        cells.push(v);
+        const metric = h('div', `metric${it.tone ? ` tone-${it.tone}` : ''}`);
+        const value = h('div', 'value');
+        const text = document.createTextNode('');
+        value.append(text);
+        if (it.unit) value.append(h('span', 'unit', it.unit));
+        metric.append(h('div', 'label', it.label), value);
+        col.append(metric);
+        valueEls.push(text);
       }
+      el.append(col);
     },
-    update(m) { items.forEach((it, i) => setText(cells[i], it.value(m.values))); },
+    update(m) {
+      items.forEach((it, i) => {
+        const text = it.value(m);
+        if (valueEls[i].data === text) return;
+        valueEls[i].data = text;
+        // 6+ characters (e.g. "12 345" m) would overflow the column at full size.
+        valueEls[i].parentNode.classList.toggle('long', text.length > 5);
+      });
+    },
   };
 }
 
 /**
- * Mini-curve of the split over the last `window` seconds (faster = higher).
- * Only one curve: on a WaterRower the power is computed from the speed, so a power curve
- * would be the same shape and add nothing.
+ * Hold-to-confirm button: the callback fires after `duration` ms of continuous press
+ * (pointer events; releasing early cancels). A ring (round shape) or a
+ * fill (pill shape) shows the progress.
+ * Exposes `element` after mount, and setVisible(bool).
  */
-export function sparkline({ window = 180 } = {}) {
-  const NS = 'http://www.w3.org/2000/svg';
-  const W = 1000, H = 100;
-  let pacePath;
+export function holdButton({ label, text = '', icon = null, onHold, duration = 1500, shape = 'round', cls = '' }) {
+  let btn, timer = null;
+  const cancel = () => {
+    clearTimeout(timer);
+    timer = null;
+    btn?.classList.remove('holding');
+  };
+  const api = {
+    element: null,
+    mount(el) {
+      btn = h('button', `hold hold-${shape} ${cls}`.trim());
+      btn.type = 'button';
+      btn.setAttribute('aria-label', label);
+      btn.style.setProperty('--hold-ms', `${duration}ms`);
+      if (shape === 'round') {
+        const ring = svg('svg', { viewBox: '0 0 100 100', class: 'hold-ring', 'aria-hidden': 'true' });
+        ring.append(svg('circle', { cx: 50, cy: 50, r: 46, pathLength: 100 }));
+        btn.append(ring);
+      } else {
+        btn.append(h('span', 'hold-fill'));
+      }
+      if (icon === 'stop') {
+        const s = svg('svg', { viewBox: '0 0 10 10', class: 'hold-icon', 'aria-hidden': 'true' });
+        s.append(svg('rect', { x: 1.5, y: 1.5, width: 7, height: 7, rx: 0.8 }));
+        btn.append(s);
+      }
+      if (text) btn.append(h('span', 'hold-text', text));
+
+      btn.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        try { btn.setPointerCapture?.(e.pointerId); } catch { /* unknown pointer: hold still works */ }
+        cancel();
+        // Force a reflow so the CSS transition restarts from empty.
+        void btn.offsetWidth;
+        btn.classList.add('holding');
+        timer = setTimeout(() => { cancel(); onHold?.(); }, duration);
+      });
+      for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) btn.addEventListener(type, cancel);
+      btn.addEventListener('contextmenu', (e) => e.preventDefault()); // long press opens a menu on Android
+      api.element = btn;
+      el.append(btn);
+    },
+    update() {},
+    setVisible(visible) {
+      if (btn.hidden === !visible) return;
+      btn.hidden = !visible;
+      if (!visible) cancel();
+    },
+  };
+  return api;
+}
+
+/**
+ * Central ring: SVG arcs around a label, a big main text (chrono) and an optional line.
+ *  arcs(model)    -> [{ from, to, tone }] fractions of a turn (tone: 'pace' | 'power' | 'rest')
+ *  label(model)   -> small caps text above
+ *  main(model)    -> big text (chrono / countdown)
+ *  note(model)    -> small line under the main text ('' to leave empty)
+ *  dimmed(model)  -> true greys the main text (paused)
+ *  action         -> optional component (e.g. holdButton) under the main text, shown when actionVisible(model)
+ */
+export function ring({ arcs, label, main, note = () => '', dimmed = () => false, action = null, actionVisible = () => true }) {
+  let root, arcGroup, labelEl, mainEl, noteEl;
+  const arcEls = [];
   return {
     mount(el) {
-      const svg = document.createElementNS(NS, 'svg');
-      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      svg.setAttribute('preserveAspectRatio', 'none');
-      svg.classList.add('spark');
-      pacePath = document.createElementNS(NS, 'path');
-      pacePath.classList.add('spark-pace');
-      svg.append(pacePath);
-      el.append(svg, h('div', 'spark-legend', `Split · ${Math.round(window / 60)} dernières min · plus haut = plus rapide`));
-      el.lastChild.classList.add('lg-pace');
+      root = h('div', 'ring');
+      const s = svg('svg', { viewBox: '0 0 100 100', 'aria-hidden': 'true' });
+      s.append(svg('circle', { cx: 50, cy: 50, r: 46, class: 'ring-track' }));
+      arcGroup = svg('g');
+      s.append(arcGroup);
+      const center = h('div', 'ring-center');
+      center.append((labelEl = h('div', 'label')), (mainEl = h('div', 'chrono')), (noteEl = h('div', 'note')));
+      if (action) {
+        const controls = h('div', 'controls');
+        action.mount(controls);
+        center.append(controls);
+      }
+      root.append(s, center);
+      el.append(root);
     },
     update(m) {
-      const recent = m.history.slice(-window);
-      pacePath.setAttribute('d', sparklinePath(recent.map((s) => s.pace), { width: W, height: H, invert: true, minSpan: 40 }));
+      const list = arcs(m);
+      const geo = ringArcs(list);
+      while (arcEls.length < list.length) {
+        const c = svg('circle', { cx: 50, cy: 50, r: 46, class: 'ring-arc' });
+        arcGroup.append(c);
+        arcEls.push(c);
+      }
+      arcEls.forEach((c, i) => {
+        const g = geo[i];
+        c.style.display = g && g.length > 0 ? '' : 'none';
+        if (!g) return;
+        setAttr(c, 'stroke-dasharray', g.dasharray);
+        setAttr(c, 'stroke-dashoffset', g.dashoffset);
+        setAttr(c, 'class', `ring-arc tone-${list[i].tone ?? 'pace'}`);
+      });
+      setText(labelEl, label(m));
+      setText(mainEl, main(m));
+      setText(noteEl, note(m));
+      root.classList.toggle('dimmed', !!dimmed(m));
+      if (action) {
+        action.setVisible?.(!!actionVisible(m));
+        action.update(m);
+      }
+    },
+  };
+}
+
+/**
+ * Split bar: fixed scale from `slow` (left) to `fast` (right), seconds per 500 m.
+ * Cursor = values.instPace (hidden when null or paused), white line = session.avgSplit.
+ * Off scale: stuck to the edge with ◀ / ▶. target(model) -> { from, to } (s/500 m) | null
+ * draws a green target zone (programmed sessions, v2).
+ */
+export function splitBar({ slow = 150, fast = 110, ticks = [140, 130, 120], target = () => null } = {}) {
+  let zone, avg, avgArrow, cursor, cursorArrow;
+  const pos = (s) => splitBarPosition(s, { slow, fast });
+  const place = (el, arrow, p) => {
+    el.hidden = !p;
+    if (!p) return;
+    el.style.left = `${(p.ratio * 100).toFixed(2)}%`;
+    el.dataset.clamp = p.clamp ?? '';
+    setText(arrow, p.clamp === 'left' ? '◀' : p.clamp === 'right' ? '▶' : '');
+  };
+  return {
+    mount(el) {
+      const bar = h('div', 'splitbar');
+      const track = h('div', 'track');
+      zone = h('div', 'target');
+      zone.hidden = true;
+      track.append(zone);
+      for (const t of ticks) {
+        const tick = h('div', 'tick');
+        tick.style.left = `${pos(t).ratio * 100}%`;
+        track.append(tick);
+      }
+      avg = h('div', 'avg');
+      avg.append((avgArrow = h('span', 'arrow')));
+      cursor = h('div', 'cursor');
+      cursor.append((cursorArrow = h('span', 'arrow')));
+      track.append(avg, cursor);
+      const scale = h('div', 'scale');
+      for (const s of [slow, ...ticks, fast]) {
+        const span = h('span', null, formatPace(s));
+        span.style.left = `${pos(s).ratio * 100}%`;
+        scale.append(span);
+      }
+      bar.append(track, scale);
+      el.append(bar);
+    },
+    update(m) {
+      const paused = m.session?.status === 'paused';
+      place(cursor, cursorArrow, paused ? null : pos(m.values?.instPace));
+      place(avg, avgArrow, pos(m.session?.avgSplit));
+      const t = target(m);
+      zone.hidden = !t;
+      if (t) {
+        const a = pos(Math.max(t.from, t.to)).ratio; // slower bound on the left
+        const b = pos(Math.min(t.from, t.to)).ratio;
+        zone.style.left = `${a * 100}%`;
+        zone.style.width = `${(b - a) * 100}%`;
+      }
+    },
+  };
+}
+
+/** Summary actions (bar zone of the summary screen): tap to keep, long press to discard. */
+export function summaryActions({ onKeep, onDiscard }) {
+  const discard = holdButton({ label: 'Ignorer la séance (appui long)', text: 'Ignorer la séance', shape: 'pill', cls: 'discard', onHold: onDiscard });
+  return {
+    mount(el) {
+      const row = h('div', 'actions');
+      const keep = h('button', 'keep', 'Ajouter au board');
+      keep.type = 'button';
+      keep.addEventListener('click', () => onKeep?.());
+      const discardWrap = h('div', 'discard-wrap');
+      discard.mount(discardWrap);
+      discardWrap.append(h('div', 'hint', 'appui long'));
+      row.append(discardWrap, keep);
+      el.append(row);
+    },
+    update() {},
+  };
+}
+
+/**
+ * Connection indicator: a small green dot in the corner when connected; a clearly visible
+ * "Reconnexion…" band otherwise (connecting / disconnected during a session).
+ */
+export function connection({ bandText = 'Reconnexion…' } = {}) {
+  let dot, band;
+  return {
+    mount(el) {
+      dot = h('div', 'conn-dot');
+      band = h('div', 'conn-band', bandText);
+      band.setAttribute('role', 'status');
+      el.append(dot, band);
+    },
+    update(m) {
+      const ok = m.status === 'connected';
+      dot.hidden = !ok;
+      band.hidden = ok;
+      if (m.sourceLabel) setAttr(dot, 'title', m.sourceLabel);
     },
   };
 }

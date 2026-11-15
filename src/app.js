@@ -1,21 +1,28 @@
-// Wiring: data source -> decoder -> merged state -> screen.
+// Wiring: data source -> decoder -> merged state -> activity filter -> session -> screen.
 // The source is either the simulator or the real rower (ble.js): same contract, see CLAUDE.md.
+// Screens and their behaviour: docs/ECRAN.md ; plan: docs/PLAN-ecran-v1.md.
 import { parseRowerData, createRowerState } from './ftms.js';
 import { createSimSource } from './sim.js';
 import { createBleSource, isBleAvailable } from './ble.js';
 import { LAYOUTS, mountLayout } from './ui/layouts.js';
 import { createKeepAwake } from './wakelock.js';
 import { createActivityFilter } from './activity.js';
+import { createSession } from './session.js';
+import { createStore } from './store.js';
 
-const HISTORY_MAX = 3600; // one sample per second of session time
+const DRAFT_EVERY_MS = 5000; // backup copy of the running session
 
-const rower = createRowerState();
-const activity = createActivityFilter(); // hides the S4's stale values when not rowing
-let display = {};                        // what the screen shows: rower state after the activity filter
-const history = [];       // [{ t, pace, power }] for the mini-curve
+let source = null;
+let rower = createRowerState();
+let activity = createActivityFilter(); // hides the S4's stale values when not rowing
+let session = null;                    // createSession(), null outside a session
+let values = {};                       // rower state after the activity filter
+let snapshot = {};                     // session.snapshot() or, on the summary screen, session.summary()
 let status = 'disconnected';
 let sourceLabel = '';
 let view = null;
+let draftTimer = null;
+const store = createStore();
 
 // ---------- Diagnostic journal, readable from the Mac (scripts/phone-eval.js) ----------
 const diag = (window.__rower = {
@@ -31,6 +38,7 @@ const diag = (window.__rower = {
   firstAt: null,        // reception time of the first / latest frame (frequency)
   lastAt: null,
   snapshot: () => rower.snapshot(),
+  session: () => session?.snapshot(),
   screenKeptOn: () => keepAwake.active,
 });
 const hex = (dv) => [...new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength)]
@@ -59,25 +67,22 @@ function logFrame(dv, parsed) {
 const keepAwake = createKeepAwake({ log: logEvent });
 
 // ---------- Rendering ----------
-// Several notifications can arrive within the same frame (split messages):
-// render at most once per animation frame.
+// Several notifications can arrive within the same frame: render at most once per animation frame.
 let renderPending = false;
 function scheduleRender() {
   if (renderPending || !view) return;
   renderPending = true;
   requestAnimationFrame(() => {
     renderPending = false;
-    view.update({ values: display, history, status, sourceLabel });
+    view.update({ values, session: snapshot, status, sourceLabel });
   });
 }
 
-function record(values) {
-  const t = values.elapsedTime;
-  if (t == null || history.at(-1)?.t === t) return;
-  history.push({ t, pace: values.instPace, power: values.instPower });
-  diag.series.push({ at: new Date().toISOString().slice(11, 19), ...values });
+function logSeries(v) {
+  // One line per S4 second, to compare with the real device behaviour (scripts/phone-eval.js).
+  if (v.elapsedTime == null || diag.series.at(-1)?.elapsedTime === v.elapsedTime) return;
+  diag.series.push({ at: new Date().toISOString().slice(11, 19), ...v, session: snapshot.status });
   if (diag.series.length > 600) diag.series.shift();
-  if (history.length > HISTORY_MAX) history.shift();
 }
 
 async function enterFullscreenLandscape() {
@@ -89,38 +94,98 @@ async function enterFullscreenLandscape() {
   } catch { /* desktop browser or refused: the CSS layout still works */ }
 }
 
-// ---------- Sources ----------
-function bindSource(source) {
-  source.addEventListener('status', (e) => { status = e.detail; logEvent(`état : ${e.detail}`); scheduleRender(); });
-  source.addEventListener('log', (e) => logEvent(e.detail));
-  source.addEventListener('data', (e) => {
-    const parsed = parseRowerData(e.detail);
-    logFrame(e.detail, parsed);
-    display = activity.update(rower.apply(parsed), Date.now());
-    record(display);
-    scheduleRender();
-  });
+// ---------- Screens ----------
+const startEl = document.getElementById('start');
+const screenEl = document.getElementById('screen');
+// A tap on the session screen (re)enters fullscreen, e.g. after the Bluetooth chooser.
+screenEl.addEventListener('click', enterFullscreenLandscape);
+
+function show(layout) {
+  startEl.hidden = true;
+  screenEl.hidden = false;
+  view = mountLayout(screenEl, layout);
+  scheduleRender();
 }
 
-function showSession(label) {
+function goHome() {
+  view = null;
+  session = null;
+  snapshot = {};
+  clearInterval(draftTimer);
+  keepAwake.stop();
+  source?.disconnect();
+  source = null;
+  screenEl.hidden = true;
+  startEl.hidden = false;
+}
+
+const saveDraft = () => {
+  if (!session || session.snapshot().status === 'waiting') return;
+  store.saveDraft({ sourceLabel, savedAt: Date.now(), session: session.toJSON() })
+    .catch((err) => logEvent(`copie de secours impossible : ${err.message}`));
+};
+
+function startSession(label) {
   sourceLabel = label;
-  document.getElementById('start').hidden = true;
-  const screenEl = document.getElementById('screen');
-  screenEl.hidden = false;
-  view = mountLayout(screenEl, LAYOUTS.free());
-  // A tap on the session screen (re)enters fullscreen, e.g. after the Bluetooth chooser.
-  screenEl.addEventListener('click', enterFullscreenLandscape);
+  rower = createRowerState();
+  activity = createActivityFilter();
+  session = createSession();
+  snapshot = session.snapshot();
+  show(LAYOUTS.free({ onEnd: finishSession }));
   keepAwake.start();
-  scheduleRender();
+  clearInterval(draftTimer);
+  draftTimer = setInterval(saveDraft, DRAFT_EVERY_MS);
+}
+
+function finishSession() {
+  clearInterval(draftTimer);
+  saveDraft(); // the draft survives until the summary is kept or discarded
+  showSummary(session.end(Date.now()));
+}
+
+function showSummary(summary) {
+  session = null; // the session is over: frames still arriving must not touch the summary
+  snapshot = summary;
+  show(LAYOUTS.summary({
+    onKeep: () => store.saveSession(summary)
+      .then(() => store.deleteDraft())
+      .catch((err) => logEvent(`enregistrement impossible : ${err.message}`))
+      .finally(goHome),
+    onDiscard: () => store.deleteDraft()
+      .catch((err) => logEvent(`suppression impossible : ${err.message}`))
+      .finally(goHome),
+  }));
+}
+
+// ---------- Sources ----------
+function bindSource(src) {
+  source = src;
+  src.addEventListener('status', (e) => {
+    status = e.detail;
+    logEvent(`état : ${e.detail}`);
+    if (status === 'disconnected' && session) snapshot = session.suspend(Date.now());
+    scheduleRender();
+  });
+  src.addEventListener('log', (e) => logEvent(e.detail));
+  src.addEventListener('data', (e) => {
+    if (src !== source) return; // a source left behind after goHome()
+    const parsed = parseRowerData(e.detail);
+    logFrame(e.detail, parsed);
+    const now = Date.now();
+    values = activity.update(rower.apply(parsed), now);
+    if (session) snapshot = session.update(values, now);
+    logSeries(values);
+    scheduleRender();
+  });
 }
 
 function startSimulator(scenario) {
   const params = new URLSearchParams(location.search);
   const speed = Number(params.get('speed')) || 1;  // ?speed=10 to fast-forward while developing
-  const source = createSimSource({ scenario, intervalMs: 1000 / speed, maxFrameBytes: 20 });
-  bindSource(source);
-  showSession(`Simulateur · ${scenario}`);
-  source.connect();
+  const src = createSimSource({ scenario, intervalMs: 1000 / speed, maxFrameBytes: 20 });
+  bindSource(src);
+  startSession(`Simulateur · ${scenario}`);
+  src.connect();
 }
 
 const startMsg = document.getElementById('start-msg');
@@ -134,16 +199,17 @@ const BLE_ERRORS = {
 async function startRower() {
   // The device chooser needs the user gesture: requestDevice must be the first thing called.
   // Fullscreen comes after, with a tap on the session screen.
-  const source = createBleSource();
-  bindSource(source);
+  const src = createBleSource();
+  bindSource(src);
   startMsg.textContent = 'Recherche du rameur…';
   try {
-    await source.connect();
+    await src.connect();
     startMsg.textContent = '';
-    showSession(source.deviceName() ?? 'Rameur');
+    startSession(src.deviceName() ?? 'Rameur');
   } catch (err) {
     logEvent(`erreur : ${err.name} ${err.message}`);
     startMsg.textContent = BLE_ERRORS[err.name] ?? `Erreur : ${err.message}`;
+    source = null;
   }
 }
 
@@ -161,6 +227,17 @@ document.querySelectorAll('[data-sim]').forEach((btn) => btn.addEventListener('c
   startSimulator(btn.dataset.sim);
 }));
 
-// ?sim=hiit starts directly (handy during development)
+// A session interrupted by a crash or a reload: show its summary, to keep it or discard it.
+// Otherwise, ?sim=steady starts the simulator directly (handy during development).
 const autoSim = new URLSearchParams(location.search).get('sim');
-if (autoSim) startSimulator(autoSim);
+// IndexedDB that never answers (seen in headless Chrome) must not block the start: 1.5 s at most.
+Promise.race([store.loadDraft(), new Promise((resolve) => setTimeout(resolve, 1500, null))])
+  .catch(() => null)
+  .then((draft) => {
+    if (draft) {
+      logEvent('séance interrompue retrouvée');
+      sourceLabel = draft.sourceLabel;
+      session = createSession({ restore: draft.session });
+      showSummary(session.end(draft.savedAt));
+    } else if (autoSim) startSimulator(autoSim);
+  });

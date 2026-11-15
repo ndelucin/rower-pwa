@@ -9,15 +9,14 @@
   <script type="module" src="src/app.js"></script>
 </head>
 <body>
-  <!-- Common session template (brief § 7). Zones are filled by the layout of the session type. -->
+  <!-- Common session template (docs/ECRAN.md): two metrics on each side, the ring in the centre,
+       the split bar at the bottom, a connection indicator. Zones are filled by src/ui/layouts.js. -->
   <main id="screen" class="screen" hidden>
-    <header class="banner">
-      <div class="banner-title" data-zone="banner"></div>
-      <div data-zone="status"></div>
-    </header>
-    <section class="main" data-zone="main"></section>
-    <section class="side" data-zone="side"></section>
-    <footer class="progress" data-zone="progress"></footer>
+    <section class="zone-left" data-zone="left"></section>
+    <section class="zone-center" data-zone="center"></section>
+    <section class="zone-right" data-zone="right"></section>
+    <footer class="zone-bar" data-zone="bar"></footer>
+    <div class="zone-conn" data-zone="conn"></div>
   </main>
 
   <div id="start" class="start">
@@ -28,6 +27,7 @@
       <span>Simulateur :</span>
       <button data-sim="steady">Continu</button>
       <button data-sim="hiit">HIIT</button>
+      <button data-sim="startstop">Arrêts</button>
       <button data-sim="rest">Repos</button>
     </div>
   </div>

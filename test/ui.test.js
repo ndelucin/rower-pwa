@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatDuration, formatNumber, sparklinePath } from '../src/ui/format.js';
+import {
+  formatDuration, formatNumber, formatDistance, splitBarPosition, ringArcs, ringCircumference,
+} from '../src/ui/format.js';
 
 test('formatDuration', () => {
   assert.equal(formatDuration(0), '0:00');
@@ -15,19 +17,51 @@ test('formatNumber', () => {
   assert.equal(formatNumber(null), '--');
 });
 
-test('sparklinePath: scale, inversion and gaps', () => {
-  assert.equal(sparklinePath([], {}), '');
-  assert.equal(sparklinePath([0, 10], { width: 100, height: 100, pad: 0 }), 'M0.0 100.0 L100.0 0.0');
-  assert.equal(sparklinePath([0, 10], { width: 100, height: 100, pad: 0, invert: true }), 'M0.0 0.0 L100.0 100.0');
-  // a null (no data, e.g. a pause) lifts the pen: two separate segments
-  assert.equal(
-    sparklinePath([0, 10, null, 0, 10], { width: 4, height: 10, pad: 0 }),
-    'M0.0 10.0 L1.0 0.0 M3.0 10.0 L4.0 0.0',
-  );
-  // minSpan: 130 ± 2 s drawn on a 40 s scale stays in the middle band instead of filling the height
-  const ys = sparklinePath([128, 132], { width: 1, height: 100, pad: 0, minSpan: 40 })
-    .match(/ (\d+\.\d)/g).map(Number);
-  assert.deepEqual(ys, [55, 45]);
-  // flat series does not divide by zero
-  assert.match(sparklinePath([5, 5, 5], { width: 2, height: 10, pad: 0 }), /^M0\.0 5\.0 L1\.0 5\.0 L2\.0 5\.0$/);
+test('formatDistance: thousands separator, floor, null', () => {
+  assert.equal(formatDistance(0), '0');
+  assert.equal(formatDistance(999.9), '999');
+  assert.equal(formatDistance(1250.7), '1 250');
+  assert.equal(formatDistance(10000), '10 000');
+  assert.equal(formatDistance(null), '--');
+});
+
+test('splitBarPosition: 2:30 on the left, 1:50 on the right', () => {
+  const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} != ${b}`);
+  assert.deepEqual(splitBarPosition(150), { ratio: 0, clamp: null });
+  assert.deepEqual(splitBarPosition(110), { ratio: 1, clamp: null });
+  near(splitBarPosition(130).ratio, 0.5);
+  near(splitBarPosition(126).ratio, 0.6); // 2:06 -> 60 % (mock-up)
+  assert.equal(splitBarPosition(126).clamp, null);
+});
+
+test('splitBarPosition: off scale sticks to the edge with an arrow side', () => {
+  assert.deepEqual(splitBarPosition(165), { ratio: 0, clamp: 'left' });
+  assert.deepEqual(splitBarPosition(100), { ratio: 1, clamp: 'right' });
+  assert.equal(splitBarPosition(null), null);
+  assert.equal(splitBarPosition(NaN), null);
+  // custom scale
+  assert.deepEqual(splitBarPosition(120, { slow: 140, fast: 100 }), { ratio: 0.5, clamp: null });
+});
+
+test('ringArcs: single arc from a fraction', () => {
+  const c = ringCircumference(46);
+  assert.ok(Math.abs(c - 289.03) < 0.01);
+  // 1250 / 2000 m = 62.5 % -> 180.6 (mock-up)
+  const [arc] = ringArcs([{ from: 0, to: 0.625 }]);
+  assert.equal(arc.dasharray, '180.64 289.03');
+  assert.equal(arc.dashoffset, 0);
+  assert.equal(ringArcs([{ from: 0, to: 0 }])[0].length, 0);
+  // fractions are clamped to [0, 1]
+  assert.equal(ringArcs([{ from: -1, to: 2 }])[0].dasharray, '289.03 289.03');
+});
+
+test('ringArcs: several arcs with a gap (v2 interval frieze)', () => {
+  const arcs = ringArcs([{ from: 0, to: 0.5 }, { from: 0.5, to: 1 }], { r: 50, gap: 0.01 });
+  const c = ringCircumference(50);
+  assert.equal(arcs.length, 2);
+  assert.ok(Math.abs(arcs[0].length - 0.49 * c) < 0.01);
+  assert.equal(arcs[0].dashoffset, 0);
+  assert.ok(Math.abs(arcs[1].dashoffset + 0.5 * c) < 0.01);
+  // an arc shorter than the gap is not drawn (no negative length)
+  assert.equal(ringArcs([{ from: 0, to: 0.005 }], { gap: 0.01 })[0].length, 0);
 });

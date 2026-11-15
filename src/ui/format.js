@@ -17,35 +17,40 @@ export function formatNumber(value, decimals = 0) {
   return decimals ? value.toFixed(decimals) : String(Math.round(value));
 }
 
-/**
- * SVG path ("M x y L x y ...") for a mini-curve. Points are evenly spaced over `width`;
- * null values create a gap (new "M"). invert: true draws small values at the top
- * (used for the split: lower = faster = higher on screen). minSpan: smallest value range drawn.
- */
-export function sparklinePath(values, { width = 100, height = 100, invert = false, pad = 0.1, minSpan = 2 } = {}) {
-  const known = values.filter((v) => v != null && Number.isFinite(v));
-  if (known.length === 0) return '';
-  let min = Math.min(...known);
-  let max = Math.max(...known);
-  // minSpan: the vertical scale never zooms in more than this, so small noise stays small on screen.
-  if (max - min < minSpan) {
-    const mid = (min + max) / 2;
-    min = mid - minSpan / 2;
-    max = mid + minSpan / 2;
-  }
-  const span = max - min;
-  min -= span * pad;
-  max += span * pad;
+/** 1250.7 -> "1 250" (narrow no-break space as thousands separator) ; null -> "--" */
+export function formatDistance(meters) {
+  if (meters == null || !Number.isFinite(meters)) return '--';
+  return String(Math.max(0, Math.floor(meters))).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
 
-  const step = values.length > 1 ? width / (values.length - 1) : 0;
-  let d = '';
-  let penDown = false;
-  values.forEach((v, i) => {
-    if (v == null || !Number.isFinite(v)) { penDown = false; return; }
-    const ratio = (v - min) / (max - min);
-    const y = invert ? ratio * height : (1 - ratio) * height;
-    d += `${penDown ? 'L' : 'M'}${(i * step).toFixed(1)} ${y.toFixed(1)} `;
-    penDown = true;
+/**
+ * Position of a split (s/500 m) on the fixed split bar: slow on the left, fast on the right.
+ * Returns { ratio in [0, 1], clamp: 'left' | 'right' | null } ; null when there is no split.
+ */
+export function splitBarPosition(split, { slow = 150, fast = 110 } = {}) {
+  if (split == null || !Number.isFinite(split)) return null;
+  const ratio = (slow - split) / (slow - fast);
+  if (ratio < 0) return { ratio: 0, clamp: 'left' };
+  if (ratio > 1) return { ratio: 1, clamp: 'right' };
+  return { ratio, clamp: null };
+}
+
+/** Circumference of a ring of radius r (SVG user units). */
+export const ringCircumference = (r = 46) => 2 * Math.PI * r;
+
+/**
+ * SVG stroke geometry for arcs on a ring (circle drawn from 12 o'clock, clockwise once the
+ * SVG is rotated by -90°). segments: [{ from, to }] as fractions of a full turn (0..1).
+ * gap: fraction of a turn left empty at the end of each arc (to separate v2 intervals).
+ * Returns, per segment, the values for stroke-dasharray / stroke-dashoffset.
+ */
+export function ringArcs(segments, { r = 46, gap = 0 } = {}) {
+  const c = ringCircumference(r);
+  const round = (x) => Math.round(x * 100) / 100;
+  return segments.map(({ from, to }) => {
+    const a = Math.min(Math.max(from, 0), 1);
+    const b = Math.min(Math.max(to, a), 1);
+    const length = Math.max((b - a - gap) * c, 0);
+    return { dasharray: `${round(length)} ${round(c)}`, dashoffset: round(-a * c) || 0, length: round(length) };
   });
-  return d.trim();
 }

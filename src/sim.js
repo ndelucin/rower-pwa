@@ -20,6 +20,15 @@ export const SCENARIOS = {
     { label: 'retour au calme', duration: 120, split: 155, spm: 18 },
     { label: 'repos', duration: Infinity, split: null, spm: 0 },
   ],
+  // Efforts separated by complete stops: exercises the automatic pause / resume.
+  startstop: [
+    { label: 'repos', duration: 5, split: null, spm: 0 },
+    ...Array.from({ length: 4 }, () => [
+      { label: 'effort', duration: 45, split: 128, spm: 22 },
+      { label: 'arrêt', duration: 20, split: null, spm: 0 },
+    ]).flat(),
+    { label: 'repos', duration: Infinity, split: null, spm: 0 },
+  ],
 };
 
 // Small seeded PRNG (mulberry32): same seed => same session, so tests are reproducible.

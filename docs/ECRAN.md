@@ -38,13 +38,14 @@ Maquettes de référence (pages statiques, à ouvrir sur le serveur local) :
 - Programmes (v2) : **zone cible verte** pendant les efforts.
 
 ## Séance libre (v1)
-- Anneau = **distance parcourue / 2000 m** (distance de référence en aviron).
+- Anneau = **distance parcourue / 2000 m** (distance de référence en aviron) ; au-delà, il recommence un tour tous les 2000 m.
+- Avant le premier coup : chrono à 0:00 et « Premier coup pour démarrer » sous le chrono.
 - Au centre : « TEMPS ÉCOULÉ » et le chrono. Pas de distance dans l'anneau.
 - **Aucun bouton pendant l'effort.**
 
 ## Pause, fin de séance, bilan (v1)
 - **Pause automatique**, sans bouton : dès que la détection d'arrêt (`src/activity.js`) passe à « arrêt » (6 s sans coup), la séance est en pause, **datée du dernier coup** (aucun temps mort compté). **Reprise automatique au premier coup.**
-- Le S4 n'a pas de pause : le chrono, la distance et les moyennes de la séance sont calculés par la PWA.
+- Le S4 n'a pas de pause : le chrono, la distance et les moyennes de la séance sont calculés par la PWA. La distance et les coups comptent à partir du premier coup ; le split moyen n'utilise que la distance parcourue en ramant (pas l'inertie pendant les pauses).
 - En pause, **pas d'overlay** : chrono grisé, libellé « EN PAUSE », valeurs instantanées à `--`, curseur masqué, et un seul bouton rond **■** sous le chrono (fond sombre, carré et liseré rouge adouci).
 - **Terminer = appui long ~1,5 s sur ■**, avec un anneau qui se remplit autour du bouton (pas de fenêtre de confirmation).
 - Déconnexion Bluetooth : pause automatique + bandeau « Reconnexion… ».
