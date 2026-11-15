@@ -30,12 +30,14 @@ src/  ftms.js          décodeur Rower Data (pur)
       wakelock.js      écran maintenu allumé
       session.js       chrono, pause auto, cumuls et bilan de la séance (pur)
       store.js         IndexedDB : copie de secours, historique
-      engine.js*  audio.js*  export.js*   (v2 et suivantes)
+      export.js        fichier d'export `rower-session/1` et son nom (pur)
+      version.js       numéro de build affiché sur l'accueil (écrit par `npm run stamp`)
+      engine.js*  audio.js*   (v2 et suivantes)
       app.js           câblage
       ui/  components.js  layouts.js  format.js  styles.css
 test/  *.test.js  helpers.js  fixtures/ (séances réelles du S4)
-docs/  BRIEF.md  ECRAN.md  S4-OBSERVATIONS.md  PLAN-*.md  maquette-*.html
-scripts/  phone-eval.js  sim-demo.js
+docs/  BRIEF.md  ECRAN.md  S4-OBSERVATIONS.md  PLAN-*.md  maquette-*.html  artefact-dashboard.html
+scripts/  phone-eval.js  sim-demo.js  stamp-version.js
 ```
 `*` : à venir.
 
@@ -71,7 +73,7 @@ scripts/  phone-eval.js  sim-demo.js
 - Rien d'identifiant dans le dépôt (adresse Bluetooth du rameur, e-mail…).
 
 ## Avancement
-Versions et périmètre : brief § 16. Version en cours : **v1**, presque terminée (il manque l'export).
+Versions et périmètre : brief § 16. Version en cours : **v1**, fonctionnellement terminée (export compris) ; restent les vérifications sur le S23 listées plus bas.
 - [x] Décodeur `ftms.js`, encodeur `ftms-encoder.js` et faux rameur `sim.js`, testés
 - [x] Connexion Bluetooth `ble.js` (reconnexion automatique), validée sur le vrai rameur : trames de 27 octets en un seul envoi, jamais découpées
 - [x] Détection d'arrêt `activity.js` : seuil adaptatif (≈ 4 s), coup fantôme du S4 ignoré ; testée en rejouant trois séances réelles
@@ -82,11 +84,21 @@ Versions et périmètre : brief § 16. Version en cours : **v1**, presque termin
 - [x] Écran d'accueil : logo et nom centrés, fond dégradé, portrait ou paysage, bouton de connexion, dernière séance, simulateur caché hors `?dev` ; bascule auto en paysage à la connexion ([docs/maquette-accueil.html](docs/maquette-accueil.html)). Fin de séance : ⏸ en pause, appui immédiat ; bilan « Enregistrer la séance » / « Ignorer la séance »
 - [x] Dépôt public + GitHub Pages (2026-11-15) : https://ndelucin.github.io/rower-pwa/
 - [x] Reconnexion au rameur déjà autorisé sans le sélecteur Bluetooth de Chrome (`getDevices`), repli sur le sélecteur ; testée sous Node, **validée sur le S23 le 2026-11-15** (à condition d'activer le flag Chrome, voir ci-dessous)
+- [x] Export de séance vers Drive (2026-11-15) : « Enregistrer la séance » → copie locale + partage Android → dossier Drive → artefact Claude qui l'affiche. **Validé de bout en bout sur le S23** (voir « Export et dashboard »)
+- [x] Icône (ligne de battement de cœur bleue dans un anneau partiel jaune), numéro de build discret sur l'accueil, service worker qui revalide à chaque chargement
+
+## Export et dashboard
+- **Parcours** : appui sur « Enregistrer la séance » → copie locale (IndexedDB) **et**, dans le même geste, `navigator.share({ files })` → l'utilisateur choisit Drive et le dossier `Personnel / RowerMonitor / data` → un artefact Claude lit ce dossier. Au retour, l'accueil affiche le résultat sous le bouton (« Séance enregistrée. Fichier partagé. », ou la cause d'un échec).
+- **Le fichier est du JSON `rower-session/1` (brief § 11) enregistré en `.txt`** (`text/plain`, `rower-AAAA-MM-JJTHH-MM.txt`) : Chrome Android refuse de partager un `.json` (`NotAllowedError`). Ne pas passer de `title` à `share()` : le Drive l'utilise comme nom de fichier (toutes les séances se seraient appelées « Séance RowerMonitor »).
+- **Pas de secret dans la PWA** : c'est l'appli Drive du téléphone, déjà connectée, qui envoie. Une page extérieure ne peut pas écrire dans un artefact Claude ; l'artefact, lui, **lit** Drive avec la capacité `mcp` (connecteur « Google Drive », outils `search_files` et `download_file_content`, identifiants du spectateur, accord demandé une fois).
+- **Artefact « RowerBoard »** : source dans [docs/artefact-dashboard.html](docs/artefact-dashboard.html), publié avec l'outil Artifact (privé ; son URL n'est pas versionnée, le dépôt étant public). Dossier fixe `personnel/RowerMonitor/data` (constante `DEFAULT_FOLDER`, pas de champ de saisie), lecture de **tous** les fichiers du dossier, validés sur le contenu et non sur le nom ; exemples marqués « exemple » tant que le dossier est vide. Cartes, allure par séance, liste, courbes de split et de puissance.
+- **Non vérifié** : l'ouverture de l'artefact depuis le téléphone (les deux séances se sont bien affichées, sur un appareil que je n'ai pas noté).
+- Pas de lien vers l'artefact dans l'appli (décision du 2026-11-15) : l'adresse serait publique dans le dépôt.
 
 ## Reste à faire (dans l'ordre)
 1. **Reconnexion sans sélecteur : à revérifier sur l'appli installée** (le test du 2026-11-15 a eu lieu sur `http://localhost:8080` dans un onglet Chrome, avec le code du Mac). Prérequis sur le S23 : activer `chrome://flags/#enable-web-bluetooth-new-permissions-backend` puis relancer Chrome ; sans lui, `getDevices()` renvoie une liste vide et le sélecteur revient à chaque fois. La 1ʳᵉ connexion après activation passe par le sélecteur (l'ancienne autorisation n'est pas reprise), les suivantes sont directes. Le sélecteur revient aussi quand le S4 n'est pas joignable (`Device is no longer in range`, vu au 1ᵉʳ essai après rechargement de la page, S4 pourtant allumé : cause non élucidée, peut-être une connexion encore tenue par la page précédente). Journal : `window.__rower.events` via `scripts/phone-eval.js`.
 2. **Vraie séance de 20 min** avec 2-3 arrêts, appli installée : pause en ≈ 4 s, chrono qui ne recule pas, lisibilité à 1,5 m sur la durée, comparaison avec les séances rowerboard (médiane 2:08).
-3. **Export JSON `rower-session/1`** (brief § 11) derrière « Ajouter au board » : partage Android (Web Share) ou téléchargement. Décider d'abord : format strict du brief, ou ce que rowerboard peut importer le plus facilement (aujourd'hui il ne lit que les TCX du S4 ; l'import côté rowerboard est un travail dans l'autre dépôt, prévu en v4).
+3. **Rowerboard** (facultatif) : aujourd'hui il ne lit que les TCX du S4 ; lui faire lire les exports `rower-session/1` est un travail dans l'autre dépôt (prévu en v4). L'artefact Claude fait déjà office de dashboard.
 4. **v2** : moteur de programmes (`engine.js`, phases = segment seul ou bloc d'intervalles), écran HIIT déjà maquetté ([docs/maquette-hiit.html](docs/maquette-hiit.html), [docs/maquette-phases.html](docs/maquette-phases.html)), choix du type de séance sur l'accueil, signaux sonores.
 
 ## Questions en suspens

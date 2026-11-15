@@ -1,6 +1,6 @@
-<title>Journal de rame</title>
+<title>RowerBoard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap">
 <style>
   /* Layout: one column. Summary figures, the split trend across sessions, the session list, then the selected session's curves.
      Dark-first, the same blue night and cyan / amber pair as the RowerMonitor app. */
@@ -8,28 +8,43 @@
     --bg: #0a0d12; --panel: #121a24; --line: #223042; --text: #eef3f8; --muted: #8b99ab;
     --pace: #4fc3f7; --power: #ffb547; --ok: #5cd27a; --warn: #ffb547; --err: #ff7a70;
     --grid: #1c2938;
-    --font-display: "Space Grotesk", system-ui, sans-serif;
-    --font-body: "Inter", system-ui, sans-serif;
+    /* Same background as the RowerMonitor start screen: soft glow, faint concentric rings, blue-night gradient.
+       Fixed to the viewport (see body); rings are 11vmin apart like the app's 11 units. */
+    --bg-image:
+      radial-gradient(circle at 50% 30%, rgba(79,195,247,.16) 0, rgba(79,195,247,.05) 28%, transparent 55%),
+      repeating-radial-gradient(circle at 50% 30%, transparent 0 11vmin, rgba(79,195,247,.055) 11vmin calc(11vmin + 1.5px)),
+      radial-gradient(120% 90% at 50% 0%, #14253a 0, #0c1522 45%, #070a10 100%);
+    --font-display: Roboto, "Segoe UI", system-ui, sans-serif;
+    --font-body: Roboto, "Segoe UI", system-ui, sans-serif;
     color-scheme: dark;
   }
   @media (prefers-color-scheme: light) {
     :root:not([data-theme="dark"]) {
       --bg: #f4f7fa; --panel: #ffffff; --line: #d5dee8; --text: #0f1a26; --muted: #5b6b7e;
       --pace: #0a79ad; --power: #b36a00; --ok: #1d8a3f; --warn: #a45f00; --err: #c0392b; --grid: #e4ebf2;
+      --bg-image: none;
       color-scheme: light;
     }
   }
   :root[data-theme="light"] {
     --bg: #f4f7fa; --panel: #ffffff; --line: #d5dee8; --text: #0f1a26; --muted: #5b6b7e;
     --pace: #0a79ad; --power: #b36a00; --ok: #1d8a3f; --warn: #a45f00; --err: #c0392b; --grid: #e4ebf2;
+    --bg-image: none;
     color-scheme: light;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 var(--font-body);
+  body { margin: 0; background: var(--bg); background-image: var(--bg-image); background-attachment: fixed; color: var(--text); font: 15px/1.5 var(--font-body);
     padding-block: 20px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   main { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
   h1, h2 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
-  h1 { font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
+  /* Same wordmark as the app: heartbeat line, "Rower" semi-bold, then a light, tinted second word */
+  h1 { font-size: 30px; font-weight: 400; line-height: 1; letter-spacing: .03em; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .logo { width: 52px; height: 26px; flex: none; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--pace) 55%, transparent)); }
+  .logo path { fill: none; stroke: url(#ecg); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .logo stop { stop-color: var(--pace); }
+  .wordmark b { font-weight: 600; }
+  .wordmark span { font-weight: 300; color: var(--pace); margin-left: .12em; }
   h2 { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .top { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end; justify-content: space-between; }
   .source { color: var(--muted); font-size: 13px; margin-top: 2px; }
@@ -39,18 +54,14 @@
   button:hover, .filebtn:hover { border-color: var(--pace); }
   button:focus-visible, .filebtn:focus-within, tr:focus-visible { outline: 2px solid var(--pace); outline-offset: 2px; }
   .filebtn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-  .folder { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
-  .folder input { flex: 1 1 220px; min-width: 0; font: inherit; font-size: 14px; color: var(--text); background: var(--panel);
-    border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
-  .folder input:focus-visible { outline: 2px solid var(--pace); outline-offset: 2px; }
   .banner { border: 1px solid var(--line); border-left: 3px solid var(--warn); background: var(--panel); border-radius: 8px; padding: 10px 14px; font-size: 14px; }
   .banner.err { border-left-color: var(--err); }
   .banner b { font-weight: 600; }
-  .figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-  .fig { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
-  .fig .v { font-family: var(--font-display); font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.15; }
-  .fig .v small { font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 3px; }
-  .fig .l { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .figures { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .fig { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 14px 12px; min-width: 0; }
+  .fig .v { font-family: var(--font-display); font-size: 34px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; white-space: nowrap; }
+  .fig .v small { font-size: 16px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+  .fig .l { font-size: 16px; color: var(--muted); margin-top: 4px; }
   section { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0; }
   svg { display: block; width: 100%; height: auto; }
@@ -68,13 +79,17 @@
   .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
   details { color: var(--muted); font-size: 12px; }
   details pre { white-space: pre-wrap; word-break: break-word; margin: 6px 0 0; font: 12px ui-monospace, monospace; color: var(--muted); }
-  @media (max-width: 520px) { h1 { font-size: 24px; } .fig .v { font-size: 22px; } }
+  @media (max-width: 760px) { .figures { grid-template-columns: repeat(2, 1fr); } .fig:last-child { grid-column: 1 / -1; } }
+  @media (max-width: 520px) { h1 { font-size: 26px; } .logo { width: 44px; height: 22px; } .fig .v { font-size: 32px; } }
 </style>
 
 <main>
   <header class="top">
     <div>
-      <h1>Journal de rame</h1>
+      <h1 class="brand">
+        <svg class="logo" viewBox="0 0 64 32" aria-hidden="true"><defs><linearGradient id="ecg" x1="0" x2="1"><stop offset="0" stop-opacity="0"/><stop offset=".25"/><stop offset=".75"/><stop offset="1" stop-opacity="0"/></linearGradient></defs><path d="M1 18H13L16.5 14.5L19.5 18H25L29 4L35 30L39 18H45L48.5 13.5L52 18H63"/></svg>
+        <span class="wordmark"><b>Rower</b><span>Board</span></span>
+      </h1>
       <div class="source" id="source" role="status">Chargement…</div>
     </div>
     <div class="actions">
@@ -82,12 +97,6 @@
       <label class="filebtn">Importer un fichier<input id="file" type="file" accept=".txt,.json,text/plain,application/json" multiple></label>
     </div>
   </header>
-
-  <form class="folder" id="folder-form">
-    <label for="folder">Dossier Drive</label>
-    <input id="folder" type="text" autocomplete="off" spellcheck="false" placeholder="Chemin (personnel/RowerMonitor/data), nom ou lien Drive">
-    <button type="submit">Lire ce dossier</button>
-  </form>
 
   <div id="banner" hidden></div>
 
@@ -123,8 +132,8 @@
 <script>
 (() => {
   const SERVER = 'Google Drive';
-  const DEFAULT_FOLDER = 'personnel/RowerMonitor/data';   // where the share sheet saves the exports (path from My Drive)
-  const FOLDER_KEY = 'rower-folder';
+  // The folder read by the page (no input field: removed on request). Path from My Drive; a folder name or link also works.
+  const DEFAULT_FOLDER = 'personnel/RowerMonitor/data';
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -232,7 +241,7 @@
   }
 
   async function loadDrive(forceFresh) {
-    $('refresh').disabled = true; $('source').textContent = 'Lecture de Drive…';
+    $('refresh').disabled = true; $('source').hidden = false; $('source').textContent = 'Lecture de Drive…';
     diag.files = 0; diag.parsed = 0; diag.failed = []; diag.note = '';
     let folderName = '';
     const claude = window.claude;
@@ -243,7 +252,7 @@
     } else {
       try {
         const cacheOpt = forceFresh ? { cache: { refresh: true, staleTime: 60000, gcTime: 300000 } } : { cache: { staleTime: 60000, gcTime: 300000 } };
-        const spec = $('folder').value.trim() || DEFAULT_FOLDER;
+        const spec = DEFAULT_FOLDER;
         const folder = await resolveFolder(mcp, spec, cacheOpt);
         if (!folder) throw Object.assign(new Error(spec), { code: 'folder_not_found' });
         folderName = folder.name || 'dossier choisi';
@@ -275,7 +284,7 @@
         else if (!found.length) showBanner(true, 'Des fichiers ont été trouvés, mais aucun n’est une séance RowerMonitor lisible.', 'Voir les détails techniques en bas de page.');
       } catch (e) {
         const [t, fix] = e.code === 'folder_not_found'
-          ? [`Le dossier « ${e.message} » est introuvable dans votre Drive.`, 'Vérifiez son nom, ou collez le lien du dossier.']
+          ? [`Le dossier « ${e.message} » est introuvable dans votre Drive.`, 'Vérifiez que ce dossier existe dans votre Drive.']
           : ERR[e.code] || [`Lecture de Drive impossible (${e.code || 'erreur'}).`, 'Actualisez dans un instant.'];
         sourceLabel = e.code === 'folder_not_found' ? 'Dossier introuvable' : 'Drive non lu';
         showBanner(true, t, fix);
@@ -325,8 +334,10 @@
     usingExample = !real;
     const list = real ? sessions : examples();
     if (!list.some((s) => s.id === selected)) selected = list[0]?.id ?? null;
-    $('source').innerHTML = esc(`${sourceLabel || '—'} · ${list.length} séance${list.length > 1 ? 's' : ''}${loadedAt ? ` · lu à ${pad(loadedAt.getHours())}:${pad(loadedAt.getMinutes())}` : ''}`)
-      + (usingExample ? '<span class="ex">Exemple : aucune séance trouvée</span>' : '');
+    // The status line (source, count, read time) was removed on request. Only the badge that marks
+    // example data stays, so examples are never mistaken for real sessions.
+    $('source').innerHTML = usingExample ? '<span class="ex" style="margin-left:0">Exemples : aucune séance lue</span>' : '';
+    $('source').hidden = !usingExample;
 
     const totalDist = list.reduce((a, s) => a + (s.summary.distance || 0), 0);
     const totalTime = list.reduce((a, s) => a + (s.summary.duration || 0), 0);
@@ -334,11 +345,11 @@
     const recent = list.slice(0, 5).map((s) => s.summary.avgSplit).filter((x) => x != null);
     const avgRecent = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
     $('figures').innerHTML = [
-      [String(list.length), '', 'séances'],
-      [(totalDist / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 }), 'km', 'distance totale'],
-      [dur(totalTime), '', 'temps de rame'],
-      [best.length ? mmss(Math.min(...best)) : '--', '/500 m', 'meilleur 500 m'],
-      [mmss(avgRecent), '/500 m', 'split moyen, 5 dernières'],
+      [String(list.length), '', 'Séances'],
+      [(totalDist / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 }), 'km', 'Distance'],
+      [dur(totalTime), '', 'Temps'],
+      [best.length ? mmss(Math.min(...best)) : '--', '/500 m', 'Record'],
+      [mmss(avgRecent), '/500 m', 'Allure récente'],
     ].map(([v, u, l]) => `<div class="fig"><div class="v">${esc(v)}${u ? `<small>${esc(u)}</small>` : ''}</div><div class="l">${esc(l)}</div></div>`).join('');
 
     const chrono = [...list].reverse();
@@ -370,11 +381,6 @@
   $('rows').addEventListener('click', (e) => { const tr = e.target.closest('tr'); if (tr) { selected = tr.dataset.id; render(); } });
   $('rows').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { const tr = e.target.closest('tr'); if (tr) { e.preventDefault(); selected = tr.dataset.id; render(); } } });
   $('refresh').addEventListener('click', () => loadDrive(true));
-  $('folder-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    try { localStorage.setItem(FOLDER_KEY, $('folder').value.trim()); } catch { /* private window: the choice lasts until reload */ }
-    loadDrive(true);
-  });
   $('file').addEventListener('change', async (e) => {
     const found = [];
     for (const f of e.target.files) { try { const s = findSession(JSON.parse(await f.text())); if (s) found.push(s); } catch { /* not a session file */ } }
@@ -383,9 +389,6 @@
     e.target.value = '';
   });
 
-  let savedFolder = '';
-  try { savedFolder = localStorage.getItem(FOLDER_KEY) || ''; } catch { /* storage blocked: default folder */ }
-  $('folder').value = savedFolder || DEFAULT_FOLDER;
   render();
   loadDrive(false);
 })();
