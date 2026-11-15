@@ -101,3 +101,61 @@ test('first connection failure is reported to the caller', async () => {
   const source = createBleSource({ bluetooth: fake.bluetooth });
   await assert.rejects(source.connect(), { name: 'NetworkError' });
 });
+
+// ---------- Rower already allowed for this site: no chooser (navigator.bluetooth.getDevices) ----------
+function knownRowerBluetooth({ connectOk = true, connectDelayMs = 0 } = {}) {
+  const fake = fakeBluetooth();
+  const known = new EventTarget();
+  known.name = 'S4 BLE 50';
+  known.gatt = {
+    connected: false,
+    connect: () => new Promise((resolve, reject) => setTimeout(() => {
+      if (!connectOk) return reject(Object.assign(new Error('not in range'), { name: 'NetworkError' }));
+      known.gatt.connected = true;
+      resolve({ getPrimaryService: async () => ({ getCharacteristic: async () => {
+        const c = new EventTarget(); c.startNotifications = async () => c; return c;
+      } }) });
+    }, connectDelayMs)),
+    disconnect: () => { known.gatt.connected = false; },
+  };
+  fake.bluetooth.getDevices = async () => [{ name: 'Casque' }, known];
+  return fake;
+}
+
+test('already allowed rower: direct connection, the chooser is not opened', async () => {
+  const fake = knownRowerBluetooth();
+  const source = createBleSource({ bluetooth: fake.bluetooth });
+  const { statuses } = record(source);
+  await source.connect();
+  assert.equal(fake.requests.length, 0);
+  assert.deepEqual(statuses, ['connecting', 'connected']);
+  assert.equal(source.deviceName(), 'S4 BLE 50');
+});
+
+test('direct connection fails while the user gesture is still valid: the chooser opens', async () => {
+  const fake = knownRowerBluetooth({ connectOk: false });
+  const source = createBleSource({ bluetooth: fake.bluetooth, userActivation: { isActive: true } });
+  await source.connect();
+  assert.equal(fake.requests.length, 1);
+  assert.equal(source.deviceName(), 'S4 BLE 50');
+});
+
+test('direct connection too slow and gesture expired: GestureNeeded, the next tap opens the chooser', async () => {
+  const fake = knownRowerBluetooth({ connectDelayMs: 200 });
+  const first = createBleSource({ bluetooth: fake.bluetooth, userActivation: { isActive: false }, knownTimeoutMs: 50 });
+  const { statuses } = record(first);
+  await assert.rejects(first.connect(), { name: 'GestureNeeded' });
+  assert.equal(fake.requests.length, 0);
+  await new Promise((r) => setTimeout(r, 250)); // the abandoned attempt finishes: it must not announce "connected"
+  assert.ok(!statuses.includes('connected'));
+  const second = createBleSource({ bluetooth: fake.bluetooth, userActivation: { isActive: true } });
+  await second.connect();
+  assert.equal(fake.requests.length, 1, 'second tap: straight to the chooser');
+});
+
+test('no getDevices in this browser: the chooser as before', async () => {
+  const fake = fakeBluetooth();
+  assert.equal(fake.bluetooth.getDevices, undefined);
+  await createBleSource({ bluetooth: fake.bluetooth }).connect();
+  assert.equal(fake.requests.length, 1);
+});

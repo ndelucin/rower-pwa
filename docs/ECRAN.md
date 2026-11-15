@@ -41,7 +41,8 @@ Maquettes de référence (pages statiques, à ouvrir sur le serveur local) :
 - En haut à gauche, l'icône et le nom **RowerMonitor**.
 - Au centre, un **gros bouton « Connecter le rameur »** (bleu), avec en dessous le rappel « Réveille le S4 (appuie sur un bouton) et ferme WaterRower Connect », et la ligne des messages d'erreur.
 - En bas, **la dernière séance** de l'historique : « Dernière séance : hier · 20:12 · 4 988 m · 2:00 /500 m ».
-- Parcours : Connecter → choix du rameur par Chrome → **directement l'écran de séance** (en attente du premier coup). Pas de choix du type de séance en v1 (séance libre seulement) : il viendra avec la v2.
+- Le **sélecteur Bluetooth de Chrome** (fenêtre « … tente de s'associer ») ne peut être ni stylé ni évité par une page : il n'apparaît qu'à la première connexion. Ensuite, « Connecter » essaie d'abord le rameur déjà autorisé (`navigator.bluetooth.getDevices()`, selon la version de Chrome) ; si ça échoue, le sélecteur revient (ou un message demande de toucher à nouveau « Connecter »).
+- Parcours : Connecter → choix du rameur par Chrome (première fois seulement) → **directement l'écran de séance** (en attente du premier coup). Pas de choix du type de séance en v1 (séance libre seulement) : il viendra avec la v2.
 - Les boutons du **simulateur** n'apparaissent qu'avec `?dev` dans l'adresse (en haut à droite).
 
 ## Séance libre (v1)

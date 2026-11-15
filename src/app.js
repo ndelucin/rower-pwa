@@ -203,6 +203,7 @@ const BLE_ERRORS = {
   SecurityError: 'Bluetooth refusé : la page doit être servie en HTTPS ou depuis localhost.',
   NotAllowedError: 'Autorisation Bluetooth refusée.',
   NetworkError: 'Connexion au rameur impossible. Il est peut-être déjà connecté à une autre appli, ou en veille.',
+  GestureNeeded: 'Rameur pas trouvé directement. Réveille le S4, puis touche à nouveau « Connecter le rameur » pour le choisir.',
 };
 
 async function startRower() {
