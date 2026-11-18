@@ -5,7 +5,8 @@ Décisions prises avec Nico le 2026-11-15, sur maquettes. Elles **précisent ou 
 Maquettes de référence (pages statiques, à ouvrir sur le serveur local) :
 - [maquette-seance-libre.html](maquette-seance-libre.html) : séance libre (`?pause` pour l'état en pause) ;
 - [maquette-hiit.html](maquette-hiit.html) : séance programmée, un moment à la fois (`?s=1` à `?s=6`) ;
-- [maquette-phases.html](maquette-phases.html) : planche des 6 moments d'une séance programmée.
+- [maquette-phases.html](maquette-phases.html) : planche des 6 moments d'une séance programmée ;
+- [maquette-cinematique.html](maquette-cinematique.html) : le parcours v1 de bout en bout, cliquable (voir [cinematique.md](cinematique.md)).
 
 ## Gabarit commun
 

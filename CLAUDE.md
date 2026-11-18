@@ -6,7 +6,8 @@ Documents de référence, à relire avant toute décision de conception :
 - [docs/BRIEF.md](docs/BRIEF.md) : la spécification d'origine (source de vérité, sauf là où un document plus récent la précise) ;
 - [docs/ECRAN.md](docs/ECRAN.md) : les écrans de séance décidés sur maquettes, qui **remplacent le brief § 7** ;
 - [docs/S4-OBSERVATIONS.md](docs/S4-OBSERVATIONS.md) : le comportement réel du S4 en Bluetooth (valeurs périmées, coup fantôme, pas de pause…) ;
-- [docs/PLAN-ecran-v1.md](docs/PLAN-ecran-v1.md) : le plan en cours.
+- [docs/PLAN-ecran-v1.md](docs/PLAN-ecran-v1.md) : le plan en cours ;
+- [docs/cinematique.md](docs/cinematique.md) : le parcours des écrans de bout en bout (diagramme d'états, écarts à trancher) ; maquette cliquable [docs/maquette-cinematique.html](docs/maquette-cinematique.html).
 
 ## Principes non négociables
 - **HTML / CSS / JS vanilla, modules ES, aucune étape de build, aucune dépendance runtime.** Pas de framework ni de librairie graphique (rendu natif HTML / CSS / SVG).
