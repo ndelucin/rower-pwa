@@ -8,7 +8,7 @@
      sélecteurs circulaires durée / distance, correctifs des écarts 1, 2 et 3.
      Indépendante de src/. Tailles en unités de conteneur (1cqmin = --u du téléphone). -->
 <style>
-:root { --bg:#0a0d12; --panel:#141a23; --line:#222b38; --text:#f3f6fa; --muted:#8b97a9; --pace:#4fc3f7; --power:#ffb547; --dur:#4fc3f7; --dist:#b197fc; --btn:#e8edf4; --neutral:#aab4c3; --ok:#5cd27a; --warn:#ffb547; --err:#ff5d5d; color-scheme: dark; }
+:root { --bg:#0a0d12; --panel:#141a23; --line:#222b38; --text:#f3f6fa; --muted:#8b97a9; --pace:#4fc3f7; --power:#ffb547; --dur:#4fc3f7; --dist:#b197fc; --btn:#e8edf4; --neutral:#aab4c3; --work:#ffd23f; --rest:#4cd97b; --warm:#4fc3f7; --ok:#5cd27a; --warn:#ffb547; --err:#ff5d5d; color-scheme: dark; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin:0; background:#06080c; color:var(--text); font:14px/1.45 system-ui,-apple-system,Roboto,sans-serif; }
@@ -45,13 +45,13 @@ h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 14p
 .metric.dist .value{color:var(--dist)}
 .ring { position:relative; height:100%; aspect-ratio:1; align-self:center; justify-self:center; }
 .ring > svg { position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); } .ring circle { fill:none; stroke-width:5; }
-.ring .track { stroke:#1b2533; } .ring .arc { stroke:var(--pace); stroke-linecap:round; } .ring .arc.power { stroke:var(--power); } .ring .arc.dist { stroke:var(--dist); }
-.ring-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
-.ring-ico { position:absolute; top:12%; left:50%; transform:translateX(-50%); font-size:calc(8*var(--u)); line-height:1; font-style:normal; } .ring-ico.free { color:var(--neutral); } .ring-ico.dur { color:var(--dur); } .ring-ico.dist { color:var(--dist); } .ring-ico.intv { color:var(--power); }
+.ring .track { stroke:#1b2533; } .ring .arc { stroke:var(--pace); stroke-linecap:round; } .ring .arc.work { stroke:var(--work); } .ring .arc.warm { stroke:var(--warm); } .ring .arc.rest { stroke:var(--rest); } .ring .arc.dist { stroke:var(--dist); }
+.ring-center { position:absolute; inset:0; padding-bottom:8%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.ring-ico { position:absolute; top:5%; left:50%; transform:translateX(-50%); font-size:calc(15*var(--u)); line-height:1; font-style:normal; } .ring-ico.free { color:var(--neutral); } .ring-ico.dur { color:var(--dur); } .ring-ico.dist { color:var(--dist); } .ring-ico.intv { color:var(--work); font-size:calc(11*var(--u)); letter-spacing:-.05em; } /* ▮▯▮ is wide and heavy: smaller font for the same visual size as ∞ ◔ ↔ */
 .ring .label { font-size:calc(4*var(--u)); color:var(--muted); letter-spacing:.05em; text-transform:uppercase; }
-.ring .chrono { font-size:calc(18*var(--u)); font-weight:700; line-height:1; } .ring.dim .chrono { color:var(--muted); } .ring .chrono.power { color:var(--power); }
+.ring .chrono { font-size:calc(18*var(--u)); font-weight:700; line-height:1; } .ring.dim .chrono { color:var(--muted); } .ring .chrono.work { color:var(--work); } .ring .chrono.warm { color:var(--warm); } .ring .chrono.rest { color:var(--rest); }
 .ring .note { font-size:calc(4.5*var(--u)); color:var(--power); min-height:1.2em; white-space:pre; }
-.tap { width:calc(16*var(--u)); height:calc(16*var(--u)); border-radius:50%; display:grid; place-items:center; background:#26303f; color:#ff8a80; box-shadow:inset 0 0 0 calc(.5*var(--u)) #ff8a8066; margin-top:calc(2*var(--u)); }
+.tap { width:calc(16*var(--u)); height:calc(16*var(--u)); border-radius:50%; display:grid; place-items:center; background:#26303f; color:#ff8a80; box-shadow:inset 0 0 0 calc(.5*var(--u)) #ff8a8066; position:absolute; left:50%; bottom:9%; transform:translateX(-50%); }
 .tap svg { width:42%; height:42%; fill:currentColor; }
 .bar { grid-column:1/-1; margin-top:calc(3*var(--u)); }
 .track-b { position:relative; height:calc(8*var(--u)); border-radius:99px; background:linear-gradient(90deg,#1b2533,#22344a 50%,#1b2533); }
@@ -76,7 +76,24 @@ h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 14p
 .tiles { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:calc(3*var(--u)); }
 .tile { background:linear-gradient(160deg,#17202c,#111822); border:1px solid #26334a; border-radius:calc(3*var(--u)); padding:calc(3*var(--u)) calc(4*var(--u)); display:flex; flex-direction:column; justify-content:center; gap:calc(.8*var(--u)); }
 .tile b { font-size:calc(8*var(--u)); font-weight:600; } .tile span { font-size:calc(4*var(--u)); color:var(--muted); }
-.tile.free { border-color:#aab4c3aa; } .tile i { font-style:normal; font-size:calc(13*var(--u)); color:var(--neutral); line-height:1; } .tile i.intv { color:var(--power); } .tile i.dur { color:var(--dur); } .tile i.dist { color:var(--dist); }
+.tile.free { border-color:#aab4c3aa; } .tile i { font-style:normal; font-size:calc(13*var(--u)); color:var(--neutral); line-height:1; } .tile i.intv { color:var(--work); } .tile i.dur { color:var(--dur); } .tile i.dist { color:var(--dist); }
+.side-title { font-size:calc(7*var(--u)); font-weight:700; line-height:1.15; }
+.pk-ico.intv { color:var(--work); font-size:calc(15*var(--u)); letter-spacing:-.05em; }
+.screen.tint { background:radial-gradient(ellipse at center,var(--tint) 0%,transparent 75%); }
+.screen.t-work { --tint:#2b2408; } .screen.t-rest { --tint:#0a2414; } .screen.t-warm { --tint:#0b1c2c; }
+.ring .seg-count { font-size:calc(8.5*var(--u)); font-weight:600; color:var(--text); letter-spacing:.02em; }
+.ring .seg { stroke-linecap:butt; } .ring .seg.work { stroke:var(--work); } .ring .seg.rest { stroke:var(--rest); } .ring .seg.warm { stroke:var(--warm); }
+.zone { position:absolute; top:0; bottom:0; background:#ffd23f40; border-left:2px solid var(--work); border-right:2px solid var(--work); }
+.pgrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,minmax(0,1fr)); grid-auto-flow:column; gap:calc(2.6*var(--u)); }
+.pcard { display:flex; flex-direction:column; justify-content:center; gap:calc(.6*var(--u)); background:linear-gradient(160deg,#1d1b0e,#14120a); border:1px solid #4a4220; border-radius:calc(3*var(--u)); padding:calc(2*var(--u)) calc(3*var(--u)); }
+.pcard { position:relative; }
+.dots { position:absolute; top:calc(2.4*var(--u)); right:calc(3*var(--u)); display:flex; gap:calc(1*var(--u)); }
+.dots i { width:calc(2.2*var(--u)); height:calc(2.2*var(--u)); border-radius:50%; background:#4a4220; }
+.dots i.on { background:var(--work); }
+.pcard .pd { font-size:calc(4*var(--u)); font-weight:700; color:var(--work); letter-spacing:.04em; }
+.pcard b { font-size:calc(6.2*var(--u)); font-weight:600; line-height:1.1; }
+.pcard span { font-size:calc(3.5*var(--u)); color:var(--muted); line-height:1.3; }
+.pcard em { font-style:normal; font-size:calc(3.4*var(--u)); color:#e3c765; }
 .plist { display:flex; flex-direction:column; gap:calc(2.2*var(--u)); justify-content:center; }
 .prow { display:flex; justify-content:space-between; align-items:center; background:#141c27; border:1px solid #26334a; border-radius:calc(2.5*var(--u)); padding:calc(2.6*var(--u)) calc(4*var(--u)); font-size:calc(5.2*var(--u)); font-weight:600; }
 .prow span { font-size:calc(3.8*var(--u)); color:var(--muted); font-weight:400; }
@@ -88,7 +105,7 @@ h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 14p
 .picker .chrono { font-size:calc(17*var(--u)); } .picker .pu { font-size:calc(6*var(--u)); font-weight:400; color:var(--muted); margin-left:.3em; } .picker .hint { font-size:calc(3.6*var(--u)); color:var(--muted); margin-top:calc(1.5*var(--u)); }
 .pm { display:flex; gap:calc(9*var(--u)); margin-top:calc(7*var(--u)); } .pm div { width:calc(16*var(--u)); height:calc(16*var(--u)); display:grid; place-items:center; font-size:calc(9.5*var(--u)); border-radius:50%; background:#26303f; }
 .go { text-align:center; border-radius:99px; padding:.6em 1em; font-size:calc(6*var(--u)); font-weight:700; background:var(--btn); color:#0a0d12; }
-.pk-ico { font-style:normal; font-size:calc(30*var(--u)); line-height:1; height:calc(16*var(--u)); display:flex; align-items:center; margin:0 0 calc(-2*var(--u)) calc(2*var(--u)); } .picker.dur .pk-ico { color:var(--dur); } .picker.dist .pk-ico { color:var(--dist); }
+.pk-ico { font-style:normal; font-size:calc(30*var(--u)); line-height:1; margin:0 0 0 calc(2*var(--u)); } .picker .ring > svg { overflow:visible; } .picker.dur .pk-ico { color:var(--dur); } .picker.dist .pk-ico { color:var(--dist); transform:translateY(calc(4.7*var(--u))); }
 .presets { display:grid; grid-template-columns:1fr 1fr; gap:calc(2.5*var(--u)); } .presets div { text-align:center; padding:.45em .9em; border-radius:99px; background:#26303f; font-size:calc(5.2*var(--u)); font-weight:600; white-space:nowrap; } .presets div:hover { background:#324056; }
 .go.off { background:#1c2431; color:#5b6678; }
 
@@ -116,7 +133,7 @@ label.opt { display:flex; gap:8px; align-items:center; color:var(--muted); font-
     <h2>État</h2>
     <div class="state" id="state"></div>
     <h2>Parcours</h2>
-    <div class="evs"><button class="primary" id="auto">▶ Séance libre</button><button class="primary" id="autoDur">▶ Séance durée</button><button id="reset">↺ Remise à zéro</button></div>
+    <div class="evs"><button class="primary" id="auto">▶ Séance libre</button><button class="primary" id="autoDur">▶ Séance durée</button><button class="primary" id="autoHiit">▶ Séance HIIT</button><button id="reset">↺ Remise à zéro</button></div>
     <h2>Téléphone</h2>
     <div class="evs"><button data-ev="rotatePhone">⟳ Tourner le téléphone</button></div>
     <label class="opt"><input type="checkbox" id="lockRefused"> Verrouillage paysage refusé (onglet Chrome)</label>
@@ -132,9 +149,46 @@ label.opt { display:flex; gap:8px; align-items:center; color:var(--muted); font-
 // screen : home | menu | picker | programs | session | summary ; sess : waiting | running | paused ; conn : connected | reconnecting
 // mode : free | duration | distance | interval ; target : secondes (durée) ou mètres (distance)
 const PRESETS = { duration:[600,1200,1800,2700], distance:[1000,2000,5000,8000] };
+// Programmes d'intervalles (brief § 6) : phases = segment seul ('warmup' | 'rest' | 'cooldown') ou bloc répété (reps × effort / récup).
+// Cibles indicatives (split s/500 m, cadence), à régler sur ta base (médiane 2:08, meilleur 500 m 2:03).
+const PROGRAMS = [
+  { id:'pyramide', lvl:2, name:'Pyramide', min:15, struct:'30-60-90-60-30 s · récup 1 min', target:'effort 1:55–2:02 · 26–30 c/min',
+    phases:[{t:'warmup',d:240},{t:'block',efforts:[30,60,90,60,30],rest:60},{t:'cooldown',d:150}] },
+  { id:'1x1', lvl:1, name:'6 × 1 min', min:20, struct:'1 min effort / 1 min récup', target:'effort 1:55–2:00 · 26–30 c/min',
+    phases:[{t:'warmup',d:300},{t:'block',reps:6,work:60,rest:60},{t:'cooldown',d:180}] },
+  { id:'8x1', lvl:2, name:'8 × 1 min', min:20, struct:'1 min effort / 30 s récup', target:'effort 1:55–2:00 · 26–30 c/min',
+    phases:[{t:'warmup',d:300},{t:'block',reps:8,work:60,rest:30},{t:'cooldown',d:180}] },
+  { id:'4x2', lvl:2, name:'4 × 2 min', min:20, struct:'2 min effort / 1:30 récup', target:'effort 2:00–2:05 · 24–28 c/min',
+    phases:[{t:'warmup',d:240},{t:'block',reps:4,work:120,rest:90},{t:'cooldown',d:120}] },
+  { id:'4x4', lvl:3, name:'4 × 4 min', min:30, struct:'4 min soutenu / 1 min récup', target:'effort 2:03–2:08 · 22–26 c/min',
+    phases:[{t:'warmup',d:300},{t:'block',reps:4,work:240,rest:60},{t:'cooldown',d:300}] },
+  { id:'3x6', lvl:3, name:'3 × 6 × 30 s', min:30, struct:'3 séries · 6 × 30 s / 30 s', target:'effort 1:55–2:00 · 28–32 c/min',
+    phases:[{t:'warmup',d:240},{t:'block',reps:6,work:30,rest:30},{t:'rest',d:150},{t:'block',reps:6,work:30,rest:30},{t:'rest',d:150},{t:'block',reps:6,work:30,rest:30},{t:'cooldown',d:180}] },
+];
+// Zone cible de split pendant un effort : repère personnel (médiane du split moyen des 5 dernières séances de plus de 10 min ;
+// ici 2:08 ; 2:15 sans historique) + un décalage qui dépend de la durée de l'effort. Plus l'effort est court, plus la zone est rapide.
+const REF_SPLIT = 128;
+const zoneFor = (d, ref = REF_SPLIT) => { const [lo, hi] = d <= 30 ? [-8,-4] : d <= 60 ? [-6,-2] : d <= 120 ? [-3,0] : [-1,3]; return [ref+lo, ref+hi]; };
+const progSeconds = (p) => p.phases.reduce((a,x)=>a + (x.t!=='block' ? x.d : x.efforts ? x.efforts.reduce((u,v)=>u+v,0)+x.rest*(x.efforts.length-1) : x.reps*(x.work+x.rest)), 0);
+// Segments d'une phase : un segment seul, ou la suite effort / récup d'un bloc (type : warm = échauffement ou retour au calme, work, rest).
+const segsOf = (ph) => {
+  if (ph.t!=='block') return [{ type: ph.t==='rest'?'rest':'warm', d: ph.d }];
+  if (ph.efforts) return ph.efforts.flatMap((d,i)=>[{ type:'work', d, n:i+1 }, ...(i<ph.efforts.length-1 ? [{ type:'rest', d:ph.rest, n:i+1 }] : [])]);
+  return Array.from({length:ph.reps}).flatMap((_,i)=>[{ type:'work', d:ph.work, n:i+1 }, { type:'rest', d:ph.rest, n:i+1 }]);
+};
+const phaseLabel = (p, i, sg) => {
+  const ph = p.phases[i];
+  if (ph.t!=='block') return ph.t==='warmup' ? 'ÉCHAUFFEMENT' : ph.t==='cooldown' ? 'RETOUR AU CALME' : 'RÉCUP LONGUE';
+  const total = ph.efforts ? ph.efforts.length : ph.reps, blocks = p.phases.filter((x)=>x.t==='block'), set = blocks.indexOf(ph)+1;
+  return `${blocks.length>1?`S${set} · `:''}${sg.type==='work'?'EFFORT':'RÉCUP'} ${sg.n} / ${total}`;
+};
+// Écran : le nom complet de la phase au-dessus du chrono, « n / N » (précédé de « S2 · » s'il y a plusieurs séries) en gros dessous.
+const phaseName = (p, i, sg) => { const ph = p.phases[i]; return ph.t!=='block' ? (ph.t==='warmup' ? 'ÉCHAUFFEMENT' : ph.t==='cooldown' ? 'RETOUR AU CALME' : 'RÉCUP LONGUE') : (sg.type==='work' ? 'EFFORT' : 'RÉCUP'); };
+const segCount = (p, i, sg) => { const ph = p.phases[i]; if (ph.t!=='block') return ''; const blocks = p.phases.filter((x)=>x.t==='block'); return `${blocks.length>1?`S${blocks.indexOf(ph)+1} · `:''}${sg.n} / ${ph.efforts ? ph.efforts.length : ph.reps}`; };
+PROGRAMS.forEach((p)=>{ if (progSeconds(p)!==p.min*60) console.error('programme incohérent', p.id, progSeconds(p)); });
 const LIMITS = { duration:{ max:3600, step:30, def:1200 }, distance:{ max:8000, step:500, def:2000 } };
 const init = () => ({ screen:'home', sess:null, conn:'connected', searching:false, msg:'', phone:'landscape', locked:false,
-  hadSession:false, interrupted:false, goal:false, mode:'free', target:0, pickKind:'duration', pendingShare:false,
+  hadSession:false, interrupted:false, goal:false, mode:'free', target:0, program:'pyramide', pi:0, si:0, pickKind:'duration', pendingShare:false,
   lastSession:'hier · 20:12 · 4 988 m · 2:00 /500 m' });
 let M = init();
 const $ = (id) => document.getElementById(id);
@@ -144,7 +198,7 @@ const fmtDist = (m) => (m >= 1000 ? `${(m/1000).toFixed(1).replace('.',',')} km`
 const fmtTarget = (kind, v) => (kind==='duration' ? fmtTime(v) : fmtDist(v));
 const MODE_NAME = { free:'libre', duration:'durée', distance:'distance', interval:'intervalles' };
 
-const goSession = (m, mode, refusedTag='') => { m.screen='session'; m.sess='waiting'; m.mode=mode; m.hadSession=false; m.goal=false; return `Attente du 1er coup · séance ${MODE_NAME[mode]}${refusedTag}`; };
+const goSession = (m, mode, refusedTag='') => { m.screen='session'; m.sess='waiting'; m.mode=mode; m.pi=0; m.si=0; m.hadSession=false; m.goal=false; return `Attente du 1er coup · séance ${MODE_NAME[mode]}${refusedTag}`; };
 const isMenuish = (m) => ['menu','picker','programs'].includes(m.screen);
 
 // ---------- Événements ----------
@@ -161,16 +215,25 @@ const EV = [
   { id:'pickFree', label:'Tuile « Libre »', when:m=>m.screen==='menu', run(m,r){ return goSession(m,'free'); } },
   { id:'pickDuration', label:'Tuile « Durée »', when:m=>m.screen==='menu', run(m){ m.screen='picker'; m.pickKind='duration'; m.target=LIMITS.duration.def; return 'Sélecteur circulaire de durée (0–60 min, pas 30 s), départ à 20:00'; } },
   { id:'pickDistance', label:'Tuile « Distance »', when:m=>m.screen==='menu', run(m){ m.screen='picker'; m.pickKind='distance'; m.target=LIMITS.distance.def; return 'Sélecteur circulaire de distance (0–8 km, pas 500 m), départ à 2,0 km'; } },
-  { id:'pickInterval', label:'Tuile « Intervalles »', when:m=>m.screen==='menu', run(m){ m.screen='programs'; return 'Liste des programmes (à définir)'; } },
+  { id:'pickInterval', label:'Tuile « Intervalles »', when:m=>m.screen==='menu', run(m){ m.screen='programs'; return 'Liste de 6 programmes : 2 de 15 min, 2 de 20 min, 2 de 30 min'; } },
   { id:'pickerStart', label:'Démarrer (sélecteur)', when:m=>m.screen==='picker'&&m.target>0, run(m){ const k=m.pickKind; const t=fmtTarget(k,m.target); goSession(m,k); return `Attente du 1er coup · objectif ${t} (le chrono / la distance ne démarrent qu’au 1er coup)`; } },
-  { id:'programPick', label:'Choisir un programme', when:m=>m.screen==='programs', run(m){ return goSession(m,'interval'); },
-    warn:'L’écran de séance par intervalles = maquette-hiit.html (v2) ; non redessiné ici.' },
+  { id:'programPick', label:'Choisir un programme', when:m=>m.screen==='programs', run(m){ const p=PROGRAMS.find((x)=>x.id===m.program); return goSession(m,'interval', ` · ${p.name} (${p.min} min)`); } },
   { id:'menuBack', label:'‹ Retour (sélecteur / programmes → choix)', when:m=>m.screen==='picker'||m.screen==='programs', run(m){ m.screen='menu'; return 'Retour au choix de séance (rameur toujours connecté)'; } },
   { id:'disconnectBtn', label:'‹ Déconnecter (choix → accueil)', when:m=>m.screen==='menu', run(m){ m.screen='home'; m.locked=false; m.msg=''; return 'Accueil · rameur déconnecté, orientation libérée'; },
     warn:'Nouveau bouton : sans lui, il faudrait attendre le délai du S4 pour libérer la connexion.' },
 
   // --- Séance ---
   { id:'stroke1', label:'Premier coup', when:m=>m.screen==='session'&&m.sess==='waiting'&&m.conn==='connected', run(m){ m.sess='running'; m.hadSession=true; return 'Séance en cours'; } },
+  { id:'segNext', label:'Segment suivant (compte à rebours à 0)', when:m=>m.screen==='session'&&m.mode==='interval'&&m.sess==='running', run(m){
+      const p=PROGRAMS.find((x)=>x.id===m.program); m.si++;
+      if (m.si>=segsOf(p.phases[m.pi]).length) { m.pi++; m.si=0; }
+      if (m.pi>=p.phases.length) { m.screen='summary'; m.sess=null; m.goal=true; m.interrupted=false; m.pi=0; return 'Fin du programme : bilan (même bilan, mêmes deux actions)'; }
+      const sg=segsOf(p.phases[m.pi])[m.si]; return `${phaseLabel(p,m.pi,sg)} · ${fmtTime(sg.d)} · fond ${sg.type==='work'?'jaune':sg.type==='rest'?'vert':'bleu'}`; },
+    warn:'Sans audio (v2), les changements de phase ne se signalent que par la couleur : à vérifier à 1,5 m en vision périphérique.' },
+  { id:'phaseNext', label:'Phase suivante (saute au bloc / segment suivant)', when:m=>m.screen==='session'&&m.mode==='interval'&&m.sess==='running', run(m){
+      const p=PROGRAMS.find((x)=>x.id===m.program); m.pi++; m.si=0;
+      if (m.pi>=p.phases.length) { m.screen='summary'; m.sess=null; m.goal=true; m.interrupted=false; m.pi=0; return 'Fin du programme : bilan'; }
+      const sg=segsOf(p.phases[m.pi])[0]; return `${phaseLabel(p,m.pi,sg)} · ${p.phases[m.pi].t==='block'?'anneau = frise du bloc':'anneau simple'}`; } },
   { id:'stop4', label:'Plus de coup (≈ 4 s)', when:m=>m.screen==='session'&&m.sess==='running'&&m.mode!=='interval', run(m){ m.sess='paused'; return 'Pause auto, datée du dernier coup · ⏸ apparaît · le compte à rebours / la distance restante se figent'; } },
   { id:'stroke', label:'Coup : reprise', when:m=>m.screen==='session'&&m.sess==='paused'&&m.conn==='connected', run(m){ m.sess='running'; return 'Reprise auto (⏸ disparaît)'; } },
   { id:'goal', label:'Objectif atteint', when:m=>m.screen==='session'&&m.sess==='running'&&m.mode!=='free', run(m){ m.screen='summary'; m.sess=null; m.goal=true; m.interrupted=false; return 'Fin automatique : bilan « Objectif atteint » (même bilan, mêmes deux actions)'; },
@@ -216,8 +279,9 @@ const arc = (f, cls='') => `<circle class="arc ${cls}" cx="50" cy="50" r="46" st
 const metric = (label, value, unit, tone, long) => `<div class="metric ${tone||''}"><div class="label">${label}</div><div class="value${long?' long':''}">${value}${unit?`<span class="unit">${unit}</span>`:''}</div></div>`;
 const MODE_ICO = { free:['∞','free'], duration:['◔','dur'], distance:['↔','dist'], interval:['▮▯▮','intv'] };
 const modeIco = () => { const [g,c] = MODE_ICO[M.mode]||MODE_ICO.free; return `<i class="ring-ico ${c}">${g}</i>`; };
-const ring = ({label,main,note='',dim=false,btn=false,f=0,tone='',mainCls=''}) => `<div class="ring${dim?' dim':''}"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="46"/>${arc(f,tone)}</svg>${modeIco()}<div class="ring-center"><div class="label">${label}</div><div class="chrono ${mainCls}">${main}</div><div class="note">${note}</div>${btn?`<div class="tap" data-act="tapPause">${I.pause}</div>`:''}</div></div>`;
-const bar = (cursor) => `<div class="bar"><div class="track-b"><div class="avg" style="left:55%"></div>${cursor?'<div class="cursor" style="left:60%"></div>':''}</div><div class="scale"><span style="left:0">2:30</span><span style="left:25%">2:20</span><span style="left:50%">2:10</span><span style="left:75%">2:00</span><span style="left:100%">1:50</span></div></div>`;
+const ring = ({label,main,note='',dim=false,btn=false,f=0,tone='',mainCls='',svgInner=null}) => `<div class="ring${dim?' dim':''}"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="46"/>${svgInner ?? arc(f,tone)}</svg>${modeIco()}<div class="ring-center"><div class="label">${label}</div><div class="chrono ${mainCls}">${main}</div><div class="note">${note}</div>${btn?`<div class="tap" data-act="tapPause">${I.pause}</div>`:''}</div></div>`;
+const zoneAt = (z) => { const f = (x) => Math.min(Math.max((150-x)/40,0),1)*100; return `<div class="zone" style="left:${f(z[1])}%;right:${100-f(z[0])}%"></div>`; };
+const bar = (cursor, zone) => `<div class="bar"><div class="track-b">${zone?zoneAt(zone):''}<div class="avg" style="left:55%"></div>${cursor?'<div class="cursor" style="left:60%"></div>':''}</div><div class="scale"><span style="left:0">2:30</span><span style="left:25%">2:20</span><span style="left:50%">2:10</span><span style="left:75%">2:00</span><span style="left:100%">1:50</span></div></div>`;
 
 function viewHome(){
   return `<div class="start"><div class="hero">${I.logo}<h1 class="wordmark"><b>Rower</b><span>Monitor</span></h1></div>
@@ -235,13 +299,10 @@ function viewMenu(){
     </div><div class="dot"></div></div>`;
 }
 function viewPrograms(){
+  const card = (p) => `<div class="pcard" data-act="programPick" data-prog="${p.id}"><div class="dots" title="Intensité ${p.lvl} / 3">${[1,2,3].map((n)=>`<i class="${n<=p.lvl?'on':''}"></i>`).join('')}</div><div class="pd">${p.min} MIN</div><b>${p.name}</b><span>${p.struct}</span></div>`;
   return `<div class="choice"><div class="side"><div class="back" data-act="menuBack">‹ Retour</div>
-      <div><h2>Intervalles</h2><p>Choisis un programme.</p><span class="tag">liste à définir</span></div><span></span></div>
-    <div class="plist">
-      <div class="prow" data-act="programPick">Programme A <span>exemple · 8 × 20 s / 10 s</span></div>
-      <div class="prow" data-act="programPick">Programme B <span>exemple · 4 × 4 min / 2 min</span></div>
-      <div class="prow" data-act="programPick">Programme C <span>exemple · pyramide</span></div>
-    </div><div class="dot"></div></div>`;
+      <div class="side-title">Sélectionner<br>un programme</div><i class="pk-ico intv">▮▯▮</i></div>
+    <div class="pgrid">${PROGRAMS.map(card).join('')}</div><div class="dot"></div></div>`;
 }
 function viewPicker(){
   const k = M.pickKind, name = k==='duration'?'Durée':'Distance';
@@ -290,7 +351,7 @@ function bindPicker(){
 function viewSession(){
   const s = M.sess, run = s==='running', pause = s==='paused', wait = s==='waiting', md = M.mode;
   const v = (x) => (run ? x : '--');
-  let ringProps, rightBottom;
+  let ringProps, rightBottom, tint = null, zone = null;
   if (md==='free') {
     ringProps = { label: pause?'En pause':'Temps écoulé', main: wait?'0:00':'8:42', note: wait?'Premier coup pour démarrer':'', f: wait?0:(1250%2000)/2000, tone:'dist' };
     rightBottom = metric('Distance', wait?'0':'1 250', 'm', '', !wait);
@@ -302,14 +363,25 @@ function viewSession(){
     ringProps = { label: pause?'En pause':'Distance restante', main: wait?fmtDist(M.target):fmtDist(Math.max(0,M.target-done)), note: wait?'Premier coup pour démarrer':'', f: wait?0:done/M.target, tone:'dist' };
     rightBottom = metric('Temps', wait?'0:00':'8:42', '', '', false);
   } else {
-    ringProps = { label: wait?'Programme A':'Effort 3 / 8', main: wait?'0:20':'0:12', note: wait?'Premier coup pour démarrer':'(écran HIIT : maquette-hiit)', f: wait?0:.4, tone: wait?'':'power', mainCls: wait?'':'power' };
+    const pg = PROGRAMS.find((x)=>x.id===M.program), ph = pg.phases[M.pi], segs = segsOf(ph), sg = segs[M.si];
+    const total = segs.reduce((a,x)=>a+x.d,0), CC = 2*Math.PI*46, GAP = segs.length>1 ? 1.1 : 0;
+    let t0 = 0, arcs = '';
+    segs.forEach((x,i)=>{
+      const len = x.d/total*CC, from = t0/total*CC; t0 += x.d;
+      const draw = (l,op) => `<circle class="arc seg ${x.type}" cx="50" cy="50" r="46" opacity="${op}" stroke-dasharray="${Math.max(l-GAP,0).toFixed(2)} ${CC.toFixed(2)}" stroke-dashoffset="${(-from).toFixed(2)}"/>`;
+      if (wait || i>M.si) arcs += draw(len, .22);
+      else if (i<M.si) arcs += draw(len, .9);
+      else arcs += draw(len,.22) + draw(len*.4+GAP, 1);
+    });
+    ringProps = { label: phaseName(pg, M.pi, sg), main: fmtTime(wait ? sg.d : Math.round(sg.d*.6)), note: wait ? 'Premier coup pour démarrer' : (segCount(pg, M.pi, sg) ? `<span class="seg-count">${segCount(pg, M.pi, sg)}</span>` : ''), svgInner: arcs, mainCls: sg.type };
+    tint = sg.type; zone = (run && sg.type==='work') ? zoneFor(sg.d) : null;
     rightBottom = metric('Distance', wait?'0':'1 250', 'm', '', !wait);
   }
-  return `<div class="screen">
+  return `<div class="screen${tint?` tint t-${tint}`:''}">
     <div class="col">${metric('Split /500 m', v('2:06'), '')}${metric('Puissance', v('178'), 'W')}</div>
     ${ring({ ...ringProps, dim:pause, btn:wait||pause })}
     <div class="col r">${metric('Cadence', v('22'), '/min')}${rightBottom}</div>
-    ${bar(run)}
+    ${bar(run, zone)}
     ${M.conn==='connected' ? '<div class="dot"></div>' : '<div class="band">Reconnexion…</div>'}</div>`;
 }
 function viewSummary(){
@@ -325,7 +397,7 @@ function stateText(){
   const where = { home: M.searching?'Accueil · recherche en cours':'Accueil', menu:'Choix de séance', programs:'Choix d’un programme (intervalles)',
     picker:`Sélecteur de ${M.pickKind==='duration'?'durée':'distance'} · ${fmtTarget(M.pickKind,M.target)}`,
     summary: M.interrupted?'Bilan · séance interrompue (copie de secours)':M.goal?'Bilan · objectif atteint':'Bilan',
-    session: `Séance ${MODE_NAME[M.mode]} · ${sess}` }[M.screen];
+    session: `Séance ${MODE_NAME[M.mode]}${M.mode==='interval'?` · ${PROGRAMS.find((x)=>x.id===M.program).name}`:''} · ${sess}` }[M.screen];
   const extra = [M.screen==='session'&&M.conn==='reconnecting'&&'Bluetooth coupé', M.pendingShare&&'partage en attente', M.locked&&'paysage verrouillé'].filter(Boolean).join(' · ');
   return `${where}<small>${extra||'—'}</small>`;
 }
@@ -367,7 +439,7 @@ document.addEventListener('click', (ev) => {
     return;
   }
   const a = ev.target.closest('[data-act]');
-  if (a) { if (a.dataset.act==='pickerStart' && M.target<=0) return; fire(a.dataset.act); }
+  if (a) { if (a.dataset.act==='pickerStart' && M.target<=0) return; if (a.dataset.prog) M.program = a.dataset.prog; fire(a.dataset.act); }
 });
 $('reset').onclick = () => { M = init(); step = 0; warned.clear(); $('log').innerHTML = ''; render(); };
 async function play(ids){
@@ -376,6 +448,7 @@ async function play(ids){
 }
 $('auto').onclick = () => play(['connect','found','pickFree','stroke1','stop4','stroke','stop4','tapPause','keep','shareOk']);
 $('autoDur').onclick = () => play(['connect','found','pickDuration','pickerStart','stroke1','goal','keep','shareOk']);
+$('autoHiit').onclick = () => play(['connect','found','pickInterval','programPick','stroke1','segNext','segNext','segNext','phaseNext','phaseNext','keep','shareOk']);
 addEventListener('resize', fit);
 render();
 </script>

@@ -82,4 +82,15 @@ Chaque ligne se reproduit dans la maquette (boutons grisés ou lignes ⚠ du jou
 - L'orientation est toujours libérée au retour à l'accueil.
 
 ## Suite proposée
-À trancher avec Nico, puis corrections dans `src/app.js` (et `layouts.js` pour les libellés) : en priorité les écarts 1, 2 et 3, ensuite 8 ; les 4, 5, 6 si le test réel les rend gênants. Les écrans de la v2 (choix du type de séance, HIIT) viendront enrichir ce diagramme.
+À trancher avec Nico, puis corrections dans `src/app.js` (et `layouts.js` pour les libellés) : en priorité les écarts 1, 2 et 3, ensuite 8 ; les 4, 5, 6 si le test réel les rend gênants. Les écrans ajoutés depuis (section suivante) ne figurent pas encore dans le diagramme d'états ci-dessus.
+
+## Écrans ajoutés depuis (2026-11-20, v2 en cours)
+
+Tous présents dans la maquette unique [maquette-cinematique.html](maquette-cinematique.html) ; décisions de conception dans [ECRAN.md](ECRAN.md). **Codés et testés sous Node, pas encore essayés sur le S23.**
+
+- **Choix de séance** (`showChoice`, `ui/choice.js`) : après la connexion, quatre choix : Libre, Durée, Distance, Intervalles.
+- **Sélecteurs durée / distance** (`mountPicker`, `goal.js`) : sélecteur circulaire d'objectif, bouton de départ, retour au choix.
+- **Liste des programmes** (`showPrograms`, `programs.js`) : 6 programmes d'intervalles ; un appui lance le programme (`startProgram`).
+- **Séance durée / distance** : même gabarit que la séance libre, anneau = progression vers l'objectif.
+- **Séance HIIT** (`engine.js`, `target.js`) : anneau par phase (échauffement, frise d'un bloc d'efforts et récups, récup longue, retour au calme), compte à rebours, zone cible de split pendant les efforts. Le programme suit l'horloge murale : pas de « EN PAUSE » à l'écran.
+- **Fin automatique** : à l'objectif atteint (durée ou distance) ou à la fin du programme, la séance se termine seule et mène au bilan, sans appui sur ⏸.

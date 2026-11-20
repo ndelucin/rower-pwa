@@ -1,6 +1,6 @@
 # Plan : écran de séance libre v1 (pause auto, bilan, copie de secours)
 
-Spécification : [ECRAN.md](ECRAN.md), sections « Gabarit commun », « Barre de split », « Séance libre » et « Pause, fin de séance, bilan ». Rendu attendu : [maquette-seance-libre.html](maquette-seance-libre.html).
+Spécification : [ECRAN.md](ECRAN.md), sections « Gabarit commun », « Barre de split », « Séance libre » et « Pause, fin de séance, bilan ». Rendu attendu : [maquette-cinematique.html](maquette-cinematique.html) (séance libre).
 Hors périmètre : séances programmées (v2), export JSON (« Ajouter au board » range seulement la séance dans l'historique local), squelette PWA.
 
 ## Découpage
