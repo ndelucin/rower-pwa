@@ -5,8 +5,10 @@ import { parseRowerData, createRowerState } from './ftms.js';
 import { createSimSource } from './sim.js';
 import { createBleSource, isBleAvailable } from './ble.js';
 import { LAYOUTS, mountLayout } from './ui/layouts.js';
-import { mountChoice, mountPicker } from './ui/choice.js';
-import { GOAL_KINDS, goalProgress, goalName } from './goal.js';
+import { mountChoice, mountPicker, mountPrograms } from './ui/choice.js';
+import { GOAL_KINDS, goalProgress, goalExport } from './goal.js';
+import { getProgram } from './programs.js';
+import { DEFAULT_REFERENCE, referenceSplit } from './target.js';
 import { formatLastSession } from './ui/format.js';
 import { createKeepAwake } from './wakelock.js';
 import { createActivityFilter } from './activity.js';
@@ -21,7 +23,7 @@ let source = null;
 let rower = createRowerState();
 let activity = createActivityFilter(); // hides the S4's stale values when not rowing
 let session = null;                    // createSession(), null outside a session
-let goal = null;                       // { kind: 'duration' | 'distance', target } of the running session, null = free session
+let goal = null;                       // { kind: 'duration' | 'distance', target } or { kind: 'program', programId } of the running session, null = free session
 let values = {};                       // rower state after the activity filter
 let snapshot = {};                     // session.snapshot() or, on the summary screen, session.summary()
 let status = 'disconnected';
@@ -147,7 +149,7 @@ function showLastSession() {
     .catch(() => {});
 }
 
-// Rower connected, no session yet: the four tiles, then (duration / distance) the circular picker.
+// Rower connected, no session yet: the four tiles, then the circular picker (duration / distance) or the programme list.
 // Data keeps flowing (it is simply not used until a session starts); « Déconnecter » goes back home.
 function showChoice() {
   view = null;
@@ -156,10 +158,21 @@ function showChoice() {
   pickerEl.hidden = true;
   choiceEl.hidden = false;
   mountChoice(choiceEl, {
-    onPick: (kind) => (GOAL_KINDS.includes(kind) ? showPicker(kind) : startSession(sourceLabel, null)),
+    onPick: (kind) => {
+      if (GOAL_KINDS.includes(kind)) showPicker(kind);
+      else if (kind === 'intervals') showPrograms();
+      else startSession(sourceLabel, null);
+    },
     onBack: goHome,
   });
   lockLandscape();
+}
+
+function showPrograms() {
+  mountPrograms(choiceEl, {
+    onPick: (programId) => startProgram(programId),
+    onBack: showChoice,
+  });
 }
 
 function showPicker(kind) {
@@ -170,6 +183,17 @@ function showPicker(kind) {
     onStart: (target) => startSession(sourceLabel, { kind, target }),
     onBack: showChoice,
   });
+}
+
+// IndexedDB that never answers must not block the start of a session: default reference after 1.5 s.
+const loadReference = () => Promise.race([
+  store.listSessions().then(referenceSplit),
+  new Promise((resolve) => setTimeout(resolve, 1500, DEFAULT_REFERENCE)),
+]).catch(() => DEFAULT_REFERENCE);
+
+function startProgram(programId) {
+  const label = sourceLabel;
+  loadReference().then((reference) => startSession(label, { kind: 'program', programId }, reference));
 }
 
 function goHome() {
@@ -198,14 +222,15 @@ const saveDraft = () => {
     .catch((err) => logEvent(`copie de secours impossible : ${err.message}`));
 };
 
-function startSession(label, sessionGoal = null) {
+// reference: personal split reference (s/500 m) of the target zone of programme efforts (src/target.js).
+function startSession(label, sessionGoal = null, reference = DEFAULT_REFERENCE) {
   sourceLabel = label;
   goal = sessionGoal;
   rower = createRowerState();
   activity = createActivityFilter();
   session = createSession();
   snapshot = session.snapshot();
-  show(LAYOUTS.session({ goal, onEnd: () => finishSession() }));
+  show(LAYOUTS.session({ goal, reference, onEnd: () => finishSession() }));
   lockLandscape();
   awakeWarning = false;
   const mine = session;
@@ -218,7 +243,7 @@ function startSession(label, sessionGoal = null) {
   draftTimer = setInterval(saveDraft, DRAFT_EVERY_MS);
 }
 
-// goalReached: the session ends by itself because its duration / distance goal was reached.
+// goalReached: the session ends by itself because its duration / distance goal was reached (or its programme is over).
 function finishSession(goalReached = false) {
   clearInterval(draftTimer);
   if (session.snapshot().status === 'waiting') { // connected but never rowed: back home, no summary
@@ -234,9 +259,7 @@ function finishSession(goalReached = false) {
 // files is unsupported. Never rejects: the outcome goes to the diagnostic journal.
 function shareSession(summary, sessionGoal) {
   try {
-    const program = sessionGoal
-      ? { id: `${sessionGoal.kind}-${sessionGoal.target}`, name: goalName(sessionGoal), kind: sessionGoal.kind }
-      : undefined;
+    const program = goalExport(sessionGoal);
     const file = exportFile(summary, globalThis.File, program ? { program } : {});
     if (navigator.canShare?.({ files: [file] })) {
       // No `title`: the Drive share target would use it as the file name instead of the file's own name.
@@ -327,18 +350,29 @@ function bindSource(src) {
 
 // Simulator. `direct`: start the session at once (?sim=… in the address); otherwise go through the choice
 // screen like the real rower. ?mode=duration|distance&target=1200 (s) or 2000 (m) starts a goal session,
-// ?mode=choice stops on the choice screen.
+// ?mode=program&program=pyramide starts a programme, ?mode=choice stops on the choice screen.
+// ?frames=full sends whole frames: the default 20-byte split makes activity.js see a phantom stroke
+// and the session never leaves "waiting" (the real S4 sends whole frames).
+function goalFromParams(params) {
+  const mode = params.get('mode');
+  const target = Number(params.get('target'));
+  if (mode === 'program' && getProgram(params.get('program'))) return { kind: 'program', programId: params.get('program') };
+  return GOAL_KINDS.includes(mode) && target > 0 ? { kind: mode, target } : null;
+}
+
 function startSimulator(scenario, { direct = false } = {}) {
   const params = new URLSearchParams(location.search);
   const speed = Number(params.get('speed')) || 1;  // ?speed=10 to fast-forward while developing
-  const src = createSimSource({ scenario, intervalMs: 1000 / speed, maxFrameBytes: 20 });
+  const src = createSimSource({ scenario, intervalMs: 1000 / speed, maxFrameBytes: params.get('frames') === 'full' ? Infinity : 20 });
   bindSource(src);
   const label = `Simulateur · ${scenario}`;
   const mode = params.get('mode');
-  if (!direct || mode === 'choice') { sourceLabel = label; showChoice(); }
+  sourceLabel = label;
+  if (!direct || mode === 'choice') showChoice();
   else {
-    const target = Number(params.get('target'));
-    startSession(label, GOAL_KINDS.includes(mode) && target > 0 ? { kind: mode, target } : null);
+    const sessionGoal = goalFromParams(params);
+    if (sessionGoal?.kind === 'program') startProgram(sessionGoal.programId);
+    else startSession(label, sessionGoal);
   }
   src.connect();
 }

@@ -66,6 +66,12 @@ test('ringArcs: several arcs with a gap (v2 interval frieze)', () => {
   assert.equal(ringArcs([{ from: 0, to: 0.005 }], { gap: 0.01 })[0].length, 0);
 });
 
+test('ringArcs: a segment can carry its own gap (programme frieze)', () => {
+  const [a, b] = ringArcs([{ from: 0, to: 0.5, gap: 0.01 }, { from: 0.5, to: 1 }]);
+  assert.ok(Math.abs(a.length - 0.49 * ringCircumference(46)) < 0.01);
+  assert.ok(Math.abs(b.length - 0.5 * ringCircumference(46)) < 0.01);
+});
+
 test('formatLastSession: start screen line for the last session', async () => {
   const { formatLastSession } = await import('../src/ui/format.js');
   const now = new Date(2026, 10, 15, 19, 0).getTime();

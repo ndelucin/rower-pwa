@@ -49,16 +49,16 @@ export const ringCircumference = (r = 46) => 2 * Math.PI * r;
 /**
  * SVG stroke geometry for arcs on a ring (circle drawn from 12 o'clock, clockwise once the
  * SVG is rotated by -90°). segments: [{ from, to }] as fractions of a full turn (0..1).
- * gap: fraction of a turn left empty at the end of each arc (to separate v2 intervals).
+ * gap: fraction of a turn left empty at the end of each arc (to separate v2 intervals); a segment's own `gap` wins.
  * Returns, per segment, the values for stroke-dasharray / stroke-dashoffset.
  */
 export function ringArcs(segments, { r = 46, gap = 0 } = {}) {
   const c = ringCircumference(r);
   const round = (x) => Math.round(x * 100) / 100;
-  return segments.map(({ from, to }) => {
+  return segments.map(({ from, to, gap: ownGap = gap }) => {
     const a = Math.min(Math.max(from, 0), 1);
     const b = Math.min(Math.max(to, a), 1);
-    const length = Math.max((b - a - gap) * c, 0);
+    const length = Math.max((b - a - ownGap) * c, 0);
     return { dasharray: `${round(length)} ${round(c)}`, dashoffset: round(-a * c) || 0, length: round(length) };
   });
 }

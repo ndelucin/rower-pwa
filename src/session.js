@@ -157,6 +157,8 @@ export function createSession({ restore } = {}) {
         // Chrono to display: never goes backwards when a pause is dated back to the last stroke
         // (docs/ECRAN.md). The summary uses `elapsed`.
         displayElapsed: s.status === 'waiting' ? 0 : elapsed + (s.hiddenMs ?? 0) / 1000,
+        // Wall clock since the first stroke, pauses included: the clock of programmes (src/engine.js).
+        wallElapsed: s.status === 'waiting' ? 0 : (s.lastNow - s.startedAt) / 1000,
         distance: s.distance,
         activeDistance: activeDist,
         avgSplit: avgSplit(elapsed, activeDist),

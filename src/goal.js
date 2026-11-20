@@ -1,8 +1,11 @@
-// Session goals (v2): a duration (s) or a distance (m) to reach, chosen on the circular picker.
+// Session goals (v2): a duration (s) or a distance (m) to reach, chosen on the circular picker,
+// or a programme { kind: 'program', programId } to complete (src/engine.js).
 // Pure module: no DOM, no clock. The goal is an addition to the session, not part of its data:
 // session.js and the export file do not know about it (docs/cinematique.md).
+import { getProgram } from './programs.js';
+import { engineOf } from './engine.js';
 
-export const GOAL_KINDS = ['duration', 'distance'];
+export const GOAL_KINDS = ['duration', 'distance']; // the kinds chosen on the circular picker
 
 /** Picker range per kind: `max` is one full turn of the ring, `step` the granularity, `def` the starting value. */
 export const GOAL_LIMITS = {
@@ -59,21 +62,36 @@ export function goalPresetLabel(kind, value) {
 /** Name used in the export file: "Durée 20 min", "Distance 2 km". */
 export function goalName(goal) {
   if (!goal) return 'Séance libre';
+  if (goal.kind === 'program') return getProgram(goal.programId).name;
   return `${goal.kind === 'duration' ? 'Durée' : 'Distance'} ${goalPresetLabel(goal.kind, goal.target)}`;
 }
 
+/** The `program` field of the export file: { id, name, kind } ('intervals' for a programme). */
+export function goalExport(goal) {
+  if (!goal) return undefined;
+  if (goal.kind === 'program') return { id: goal.programId, name: goalName(goal), kind: 'intervals' };
+  return { id: `${goal.kind}-${goal.target}`, name: goalName(goal), kind: goal.kind };
+}
+
+const DONE = {
+  // The duration uses the displayed chrono (it never goes backwards), so the countdown and the end
+  // of the session agree on screen. A programme runs on the wall clock (src/engine.js).
+  duration: (snap) => snap.displayElapsed ?? snap.elapsed ?? 0,
+  distance: (snap) => snap.distance ?? 0,
+  program: (snap) => snap.wallElapsed ?? 0,
+};
+
 /**
- * Progress towards a goal, from session.snapshot(). The duration uses the displayed chrono (it never goes
- * backwards), so the countdown and the end of the session agree on screen.
+ * Progress towards a goal, from session.snapshot().
  * -> { done, remaining, fraction (0..1), reached }
  */
 export function goalProgress(goal, snap) {
-  const done = goal.kind === 'duration' ? (snap.displayElapsed ?? snap.elapsed ?? 0) : (snap.distance ?? 0);
-  const remaining = Math.max(0, goal.target - done);
+  const target = goal.kind === 'program' ? engineOf(goal.programId).duration : goal.target;
+  const done = DONE[goal.kind](snap);
   return {
     done,
-    remaining,
-    fraction: goal.target > 0 ? Math.min(1, done / goal.target) : 0,
-    reached: goal.target > 0 && done >= goal.target,
+    remaining: Math.max(0, target - done),
+    fraction: target > 0 ? Math.min(1, done / target) : 0,
+    reached: target > 0 && done >= target,
   };
 }

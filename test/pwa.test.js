@@ -56,6 +56,6 @@ test('service worker pre-caches every module of the app (import graph from src/a
 test('index.html preloads the modules (flattens the import waterfall)', () => {
   const html = readFileSync(new URL('index.html', root), 'utf8');
   const preloaded = new Set([...html.matchAll(/<link rel="modulepreload" href="([^"]+)"/g)].map((m) => m[1]));
-  for (const p of ['src/ftms.js', 'src/ui/layouts.js', 'src/ble.js', 'src/session.js']) assert.ok(preloaded.has(p), p);
+  for (const p of ['src/ftms.js', 'src/ui/layouts.js', 'src/ble.js', 'src/session.js', 'src/engine.js', 'src/programs.js', 'src/target.js']) assert.ok(preloaded.has(p), p);
   for (const p of preloaded) assert.ok(isRelative(p) && existsSync(new URL(p, root)), p);
 });

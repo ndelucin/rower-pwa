@@ -4,16 +4,21 @@
 import { metricColumn, ring, tapButton, splitBar, summaryActions, connection } from './components.js';
 import { formatPace, formatDuration, formatNumber, formatDistance, formatDistanceShort } from './format.js';
 import { goalProgress } from '../goal.js';
+import { engineOf } from '../engine.js';
+import { DEFAULT_REFERENCE, targetZone } from '../target.js';
 
 const RING_DISTANCE = 2000; // m: one full turn of the ring in a free session (reference rowing distance)
 
-// Colours carry the data, not the controls: blue = time, violet = distance, orange = intervals, grey = free.
+// Colours carry the data, not the controls: blue = time, violet = distance, yellow = intervals, grey = free.
 // The ring icon says which kind of session this is.
 const ICON = {
   free: { glyph: '∞', tone: 'free' },
   duration: { glyph: '◔', tone: 'dur' },
   distance: { glyph: '↔', tone: 'dist' },
+  program: { glyph: '▮▯▮', tone: 'intv' },
 };
+// Ring arc colour of a goal (the summary draws it in the colour of its session type).
+const GOAL_TONE = { duration: 'dur', distance: 'dist', program: 'work' };
 
 const sessionOf = (m) => m.session ?? {};
 const isPaused = (m) => sessionOf(m).status === 'paused';
@@ -28,8 +33,26 @@ const distanceArc = (d) => {
 const NOTE = { waiting: 'Premier coup pour démarrer' };
 const elapsedOf = (m) => sessionOf(m).displayElapsed ?? sessionOf(m).elapsed ?? 0;
 
+// Ring of a programme: the frieze of the current phase (one arc per segment, past ones bright, to-come ones faint,
+// the running one filling up), phase name, countdown of the segment, "n / N" counter. Never shows a pause.
+function programCentre(goal) {
+  const at = (m) => engineOf(goal.programId).positionAt(sessionOf(m).wallElapsed ?? 0);
+  return {
+    arcs: (m) => at(m).frieze.flatMap(({ from, to, tone, progress }) => {
+      const arc = { from, to, tone, segment: true, gap: 0.004 };
+      return progress > 0 ? [{ ...arc, faint: true }, { ...arc, to: from + (to - from) * progress }] : [{ ...arc, faint: true }];
+    }),
+    label: (m) => at(m).name,
+    main: (m) => formatDuration(Math.ceil(at(m).remaining)),
+    count: (m) => at(m).count,
+    tone: (m) => at(m).tone,
+    dimmed: () => false,
+  };
+}
+
 /** Centre of the ring (label, big text, ring arc) per kind of session. */
 function centre(goal) {
+  if (goal?.kind === 'program') return programCentre(goal);
   if (goal?.kind === 'duration') {
     return {
       arcs: (m) => [{ from: 0, to: goalProgress(goal, sessionOf(m)).fraction, tone: 'dur' }],
@@ -51,22 +74,29 @@ function centre(goal) {
   };
 }
 
+// Target zone of the split bar: only during an effort.
+function programTarget(goal, reference, m) {
+  const position = engineOf(goal.programId).positionAt(sessionOf(m).wallElapsed ?? 0);
+  return position.tone === 'work' ? targetZone(reference, position.duration) : null;
+}
+
 export const LAYOUTS = {
   /**
-   * Running session: free (no goal) or with a goal { kind: 'duration' | 'distance', target }.
+   * Running session: free (no goal) or with a goal { kind: 'duration' | 'distance', target } or { kind: 'program', programId }.
    * onEnd() is called by a tap on ⏸ (shown while waiting for the first stroke and while paused): it ends the session at once.
    * The fourth value is the distance, or the time when the goal is a distance (the ring already shows the distance).
+   * reference: personal split reference (s/500 m) of the target zone shown during the efforts of a programme.
    */
-  session: ({ goal = null, onEnd } = {}) => ({
+  session: ({ goal = null, reference = DEFAULT_REFERENCE, onEnd } = {}) => ({
     left: metricColumn([
       { label: 'Split /500 m', value: (m) => formatPace(inst(m, 'instPace')) },
       { label: 'Puissance', unit: 'W', value: (m) => formatNumber(inst(m, 'instPower')) },
     ]),
     center: ring({
+      dimmed: isPaused,
       ...centre(goal),
       icon: ICON[goal?.kind ?? 'free'],
       note: (m) => NOTE[sessionOf(m).status] ?? '',
-      dimmed: isPaused,
       action: tapButton({ label: 'Terminer la séance', icon: 'pause', cls: 'stop', onTap: onEnd }),
       actionVisible: (m) => ['waiting', 'paused'].includes(sessionOf(m).status),
     }),
@@ -76,7 +106,7 @@ export const LAYOUTS = {
         ? { label: 'Temps', value: (m) => formatDuration(elapsedOf(m)) }
         : { label: 'Distance', unit: 'm', value: (m) => formatDistance(sessionOf(m).distance ?? 0) },
     ], { align: 'right' }),
-    bar: splitBar(),
+    bar: splitBar(goal?.kind === 'program' ? { target: (m) => programTarget(goal, reference, m) } : {}),
     conn: connection(),
   }),
 
@@ -92,8 +122,9 @@ export const LAYOUTS = {
     center: ring({
       arcs: (m) => {
         if (!goal) return distanceArc(sessionOf(m).distance ?? 0);
-        const f = goalReached ? 1 : goalProgress(goal, { ...sessionOf(m), displayElapsed: sessionOf(m).duration }).fraction;
-        return [{ from: 0, to: f, tone: goal.kind === 'duration' ? 'dur' : 'dist' }];
+        const elapsed = sessionOf(m).duration;
+        const f = goalReached ? 1 : goalProgress(goal, { ...sessionOf(m), displayElapsed: elapsed, wallElapsed: elapsed }).fraction;
+        return [{ from: 0, to: f, tone: GOAL_TONE[goal.kind] }];
       },
       icon: ICON[goal?.kind ?? 'free'],
       label: () => 'Séance terminée',

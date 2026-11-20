@@ -31,7 +31,7 @@ const idle = (session, { from, to, count, dist, state = 'stopped' }) => {
 test('waiting until the first stroke; baselines are taken there, the first stroke counts as 1', () => {
   const s = createSession();
   let snap = s.update({ state: 'waiting', strokeCount: 40, totalDistance: 1000 }, 0);
-  assert.deepEqual(snap, { status: 'waiting', elapsed: 0, displayElapsed: 0, distance: 0, activeDistance: 0, avgSplit: null, strokes: 0 });
+  assert.deepEqual(snap, { status: 'waiting', elapsed: 0, displayElapsed: 0, wallElapsed: 0, distance: 0, activeDistance: 0, avgSplit: null, strokes: 0 });
   snap = s.update({ state: 'waiting', strokeCount: 40, totalDistance: 1002 }, 2000); // handle moved, no stroke
   assert.equal(snap.distance, 0);
   snap = s.update({ state: 'rowing', strokeCount: 41, totalDistance: 1003, instPower: 100 }, 5000);
@@ -264,4 +264,14 @@ test('S4 resets its counters mid-session: strokes and distance carry on, never n
   snap = s.update({ state: 'rowing', strokeCount: 1, totalDistance: 2, instPower: 150, strokeRate: 30, instPace: 125 }, 12000);
   assert.equal(snap.distance, before + 4);
   assert.equal(snap.strokes, 6);
+});
+
+test('wallElapsed: wall clock since the first stroke, pauses included (clock of programmes)', () => {
+  const s = fresh();
+  let { snap, count, dist } = row(s, { from: 0, to: 10000, count: 0, dist: 0 });
+  assert.equal(snap.wallElapsed, 10);
+  snap = idle(s, { from: 11000, to: 30000, count, dist });
+  assert.equal(snap.status, 'paused');
+  assert.equal(snap.elapsed, 10, 'the session clock stopped');
+  assert.equal(snap.wallElapsed, 30, 'the wall clock did not');
 });

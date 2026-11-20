@@ -8,11 +8,15 @@
   --muted: #8b97a9;
   --pace: #4fc3f7;
   --power: #ffb547;
-  /* Colour carries the data: blue = time, violet = distance, orange = intervals. Controls are neutral. */
+  /* Colour carries the data: blue = time, violet = distance, yellow = intervals. Controls are neutral. */
   --dur: #4fc3f7;
   --dist: #b197fc;
   --btn: #e8edf4;     /* main buttons */
   --neutral: #aab4c3; /* free session, secondary icons */
+  /* Phases of a programme (docs/ECRAN.md, "Code couleur") */
+  --work: #ffd23f;    /* effort */
+  --rest: #4cd97b;    /* recovery */
+  --warm: #4fc3f7;    /* warm-up and cool-down */
   --ok: #5cd27a;
   --warn: #ffb547;
   --err: #ff5d5d;
@@ -28,7 +32,7 @@ html, body {
   overflow: hidden;
 }
 
-/* ---------- Session screen (docs/ECRAN.md, mock-up docs/maquette-seance-libre.html) ----------
+/* ---------- Session screen (docs/ECRAN.md, mock-up docs/maquette-cinematique.html) ----------
    Grid: [left metrics | ring | right metrics] over the full-width split bar.
    Zones are display: contents, so the components they hold are the grid items. */
 .screen {
@@ -60,15 +64,27 @@ html, body {
 .ring-arc.tone-pace, .ring-arc.tone-dur { stroke: var(--dur); }
 .ring-arc.tone-dist { stroke: var(--dist); }
 .ring-arc.tone-power { stroke: var(--power); }
-.ring-arc.tone-rest { stroke: #4dd0c1; }
-.ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-.ring-ico { position: absolute; top: 12%; left: 50%; transform: translateX(-50%); font-size: calc(8 * var(--u)); line-height: 1; font-style: normal; }
-.ring-ico.free { color: var(--neutral); } .ring-ico.dur { color: var(--dur); } .ring-ico.dist { color: var(--dist); } .ring-ico.intv { color: var(--power); }
+.ring-arc.tone-work { stroke: var(--work); }
+.ring-arc.tone-rest { stroke: var(--rest); }
+.ring-arc.tone-warm { stroke: var(--warm); }
+.ring-center { position: absolute; inset: 0; padding-bottom: 8%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.ring-ico { position: absolute; top: 5%; left: 50%; transform: translateX(-50%); font-size: calc(15 * var(--u)); line-height: 1; font-style: normal; }
+.ring-ico.free { color: var(--neutral); } .ring-ico.dur { color: var(--dur); } .ring-ico.dist { color: var(--dist); } .ring-ico.intv { color: var(--work); font-size: calc(11 * var(--u)); letter-spacing: -.05em; } /* ▮▯▮ is wide and heavy: smaller font for the same visual size as ∞ ◔ ↔ */
 .ring .label { font-size: calc(4 * var(--u)); color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
 .ring .chrono { font-size: calc(18 * var(--u)); font-weight: 700; line-height: 1; }
-.ring .note { font-size: calc(4.5 * var(--u)); color: var(--power); min-height: 1.2em; white-space: pre; }
+.ring.t-work .chrono { color: var(--work); } .ring.t-rest .chrono { color: var(--rest); } .ring.t-warm .chrono { color: var(--warm); }
 .ring.dimmed .chrono { color: var(--muted); }
-.controls { min-height: calc(14 * var(--u)); display: flex; gap: calc(4 * var(--u)); margin-top: calc(2 * var(--u)); }
+.ring .count { font-size: calc(8.5 * var(--u)); font-weight: 600; letter-spacing: .02em; }
+.ring.has-count .note:empty { display: none; }
+/* Programme frieze: flat-ended segments, those to come faint. */
+.ring-arc.seg { stroke-linecap: butt; }
+.ring-arc.faint { opacity: .22; }
+/* Background tinted by the phase (peripheral vision). */
+.screen:has(.ring.t-work) { background: radial-gradient(ellipse at center, #2b2408 0%, transparent 75%); }
+.screen:has(.ring.t-rest) { background: radial-gradient(ellipse at center, #0a2414 0%, transparent 75%); }
+.screen:has(.ring.t-warm) { background: radial-gradient(ellipse at center, #0b1c2c 0%, transparent 75%); }
+.ring .note { font-size: calc(4.5 * var(--u)); color: var(--power); min-height: 1.2em; white-space: pre; }
+.controls { position: absolute; left: 50%; bottom: 9%; transform: translateX(-50%); display: flex; gap: calc(4 * var(--u)); } /* pause button: lower part of the ring, clear of the text */
 
 /* Hold-to-confirm buttons (long press ~1.5 s, progress shown while pressed) */
 .hold { position: relative; font: inherit; color: var(--text); border: 0; cursor: pointer;
@@ -90,7 +106,7 @@ html, body {
 .track { position: relative; height: calc(8 * var(--u)); border-radius: 99px;
   background: linear-gradient(90deg, #1b2533, #22344a 50%, #1b2533); }
 .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: #3a4a60; }
-.target { position: absolute; top: 0; bottom: 0; background: #5cd27a40; box-shadow: inset 0 0 0 1px #5cd27a99; border-radius: calc(.8 * var(--u)); }
+.target { position: absolute; top: 0; bottom: 0; background: #ffd23f40; box-shadow: inset 0 0 0 1px #ffd23f99; border-radius: calc(.8 * var(--u)); }
 .avg { position: absolute; top: calc(-2 * var(--u)); bottom: calc(-2 * var(--u)); width: calc(1 * var(--u));
   background: var(--text); border-radius: 2px; transform: translateX(-50%); opacity: .8; }
 .cursor { position: absolute; top: 50%; width: calc(2.6 * var(--u)); height: calc(12 * var(--u)); border-radius: calc(.8 * var(--u));
@@ -148,14 +164,29 @@ html, body {
 .tile span { font-size: calc(4 * var(--u)); color: var(--muted); }
 .tile.free { border-color: #aab4c3aa; }
 .tile i { font-style: normal; font-size: calc(13 * var(--u)); color: var(--neutral); line-height: 1; }
-.tile i.dur { color: var(--dur); } .tile i.dist { color: var(--dist); } .tile i.intv { color: var(--power); }
+.tile i.dur { color: var(--dur); } .tile i.dist { color: var(--dist); } .tile i.intv { color: var(--work); }
+
+/* Programme list */
+.side-title { font-size: calc(7 * var(--u)); font-weight: 700; line-height: 1.15; }
+.pgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); grid-auto-flow: column; gap: calc(2.6 * var(--u)); }
+.pcard { position: relative; font: inherit; color: var(--text); text-align: left; cursor: pointer; display: flex; flex-direction: column; justify-content: center; gap: calc(.6 * var(--u));
+  background: linear-gradient(160deg, #1d1b0e, #14120a); border: 1px solid #4a4220; border-radius: calc(3 * var(--u)); padding: calc(2 * var(--u)) calc(3 * var(--u)); }
+.pcard:active { background: #26220f; }
+.pcard .dots { position: absolute; top: calc(2.4 * var(--u)); right: calc(3 * var(--u)); display: flex; gap: calc(1 * var(--u)); }
+.dots i { width: calc(2.2 * var(--u)); height: calc(2.2 * var(--u)); border-radius: 50%; background: #4a4220; }
+.dots i.on { background: var(--work); }
+.pcard .pd { font-size: calc(4 * var(--u)); font-weight: 700; color: var(--work); letter-spacing: .04em; }
+.pcard b { font-size: calc(6.2 * var(--u)); font-weight: 600; line-height: 1.1; }
+.pcard .struct { font-size: calc(3.5 * var(--u)); color: var(--muted); line-height: 1.3; }
+.pk-ico.intv { color: var(--work); font-size: calc(15 * var(--u)); letter-spacing: -.05em; }
 
 .picker { grid-template-rows: minmax(0, 1fr); }
 .picker-left, .picker-right { justify-content: space-between; padding: calc(2 * var(--u)) 0; }
 .picker-right { text-align: right; align-items: flex-end; }
 .picker-title { font-size: calc(7 * var(--u)); font-weight: 700; line-height: 1.15; }
-.pk-ico { font-style: normal; font-size: calc(30 * var(--u)); line-height: 1; height: calc(16 * var(--u)); display: flex; align-items: center; margin: 0 0 calc(-2 * var(--u)) calc(2 * var(--u)); }
-.picker.dur .pk-ico { color: var(--dur); } .picker.dist .pk-ico { color: var(--dist); }
+.pk-ico { font-style: normal; font-size: calc(30 * var(--u)); line-height: 1; margin: 0 0 0 calc(2 * var(--u)); }
+.picker.dur .pk-ico { color: var(--dur); } .picker.dist .pk-ico { color: var(--dist); transform: translateY(calc(4.7 * var(--u))); } /* the arrow is thin: its ink sits mid-box, lower it to the bottom edge of Start */
+.picker .ring > svg { overflow: visible; } /* the knob sticks out of the viewBox at 3 h / 9 h */
 .picker .ring { cursor: grab; touch-action: none; } .picker .ring:active { cursor: grabbing; }
 .knob { fill: var(--text); stroke: var(--dur); stroke-width: 2; } .picker.dist .knob { stroke: var(--dist); }
 .picker .chrono { font-size: calc(17 * var(--u)); }

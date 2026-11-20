@@ -129,16 +129,19 @@ export function tapButton({ label, icon = 'pause', onTap, cls = '' }) {
 
 /**
  * Central ring: SVG arcs around a label, a big main text (chrono) and an optional line.
- *  arcs(model)    -> [{ from, to, tone }] fractions of a turn (tone: 'pace' | 'power' | 'rest' | 'dur' | 'dist')
+ *  arcs(model)    -> [{ from, to, tone, segment, faint, gap }] fractions of a turn (tone: 'pace' | 'power' | 'dur' | 'dist'
+ *                    | 'work' | 'rest' | 'warm'); `segment` = flat ends, `faint` = dimmed (to come), `gap` = turn left empty at the end
  *  label(model)   -> small caps text above
  *  main(model)    -> big text (chrono / countdown)
  *  note(model)    -> small line under the main text ('' to leave empty)
+ *  count(model)   -> optional big line under the main text (programmes: "S2 · 3 / 6")
+ *  tone(model)    -> optional phase tone ('work' | 'rest' | 'warm'): colours the main text and tints the screen background
  *  dimmed(model)  -> true greys the main text (paused)
  *  action         -> optional component (e.g. tapButton) under the main text, shown when actionVisible(model)
  *  icon           -> optional { glyph, tone } shown at the top centre: the session type (∞ ◔ ↔), tone 'free' | 'dur' | 'dist' | 'intv'
  */
-export function ring({ arcs, label, main, note = () => '', dimmed = () => false, action = null, actionVisible = () => true, icon = null }) {
-  let root, arcGroup, labelEl, mainEl, noteEl;
+export function ring({ arcs, label, main, note = () => '', count = null, tone = () => null, dimmed = () => false, action = null, actionVisible = () => true, icon = null }) {
+  let root, arcGroup, labelEl, mainEl, noteEl, countEl;
   const arcEls = [];
   return {
     mount(el) {
@@ -149,6 +152,10 @@ export function ring({ arcs, label, main, note = () => '', dimmed = () => false,
       s.append(arcGroup);
       const center = h('div', 'ring-center');
       center.append((labelEl = h('div', 'label')), (mainEl = h('div', 'chrono')), (noteEl = h('div', 'note')));
+      if (count) {
+        center.append((countEl = h('div', 'count')));
+        root.classList.add('has-count');
+      }
       if (action) {
         const controls = h('div', 'controls');
         action.mount(controls);
@@ -177,11 +184,14 @@ export function ring({ arcs, label, main, note = () => '', dimmed = () => false,
         if (!g) return;
         setAttr(c, 'stroke-dasharray', g.dasharray);
         setAttr(c, 'stroke-dashoffset', g.dashoffset);
-        setAttr(c, 'class', `ring-arc tone-${list[i].tone ?? 'pace'}`);
+        const { tone: arcTone = 'pace', segment, faint } = list[i];
+        setAttr(c, 'class', `ring-arc tone-${arcTone}${segment ? ' seg' : ''}${faint ? ' faint' : ''}`);
       });
       setText(labelEl, label(m));
       setText(mainEl, main(m));
       setText(noteEl, note(m));
+      if (count) setText(countEl, count(m));
+      for (const t of ['work', 'rest', 'warm']) root.classList.toggle(`t-${t}`, tone(m) === t);
       root.classList.toggle('dimmed', !!dimmed(m));
       if (action) {
         action.setVisible?.(!!actionVisible(m));
@@ -195,7 +205,7 @@ export function ring({ arcs, label, main, note = () => '', dimmed = () => false,
  * Split bar: fixed scale from `slow` (left) to `fast` (right), seconds per 500 m.
  * Cursor = values.instPace (hidden when null or paused), white line = session.avgSplit.
  * Off scale: stuck to the edge with ◀ / ▶. target(model) -> { from, to } (s/500 m) | null
- * draws a green target zone (programmed sessions, v2).
+ * draws a yellow target zone (efforts of a programme).
  */
 export function splitBar({ slow = 150, fast = 110, ticks = [140, 130, 120], target = () => null } = {}) {
   let zone, avg, avgArrow, cursor, cursorArrow;

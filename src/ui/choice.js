@@ -1,17 +1,18 @@
-// Session choice screen (4 tiles) and the circular goal picker. Maquette: docs/maquette-cinematique.html.
+// Session choice screen (4 tiles), programme list and circular goal picker. Maquette: docs/maquette-cinematique.html.
 // Unlike the session screens these are not zones of the common template: each one fills its own container.
 // Pure goal logic (ranges, angle -> value, display) lives in src/goal.js; this file only draws and listens.
 import {
   GOAL_LIMITS, GOAL_PRESETS, clampGoal, stepGoal, goalFromAngle, goalDisplay, goalPresetLabel,
 } from '../goal.js';
+import { PROGRAMS } from '../programs.js';
 import { ringCircumference } from './format.js';
 
 const GLYPH = { duration: '◔', distance: '↔' };
 const TITLE = { duration: 'une durée', distance: 'une distance' };
 
 /**
- * Tiles: Libre, Durée, Distance, Intervalles (the last one is not available yet: v2, programs).
- * onPick('free' | 'duration' | 'distance'), onBack() = disconnect.
+ * Tiles: Libre, Durée, Distance, Intervalles.
+ * onPick('free' | 'duration' | 'distance' | 'intervals'), onBack() = disconnect.
  */
 export function mountChoice(el, { onPick, onBack }) {
   el.innerHTML = `
@@ -24,10 +25,30 @@ export function mountChoice(el, { onPick, onBack }) {
       <button type="button" class="tile free" data-pick="free"><i>∞</i><b>Libre</b><span>sans objectif</span></button>
       <button type="button" class="tile" data-pick="duration"><i class="dur">◔</i><b>Durée</b><span>0 à 60 min</span></button>
       <button type="button" class="tile" data-pick="distance"><i class="dist">↔</i><b>Distance</b><span>0 à 8 km</span></button>
-      <button type="button" class="tile" disabled><i class="intv">▮▯▮</i><b>Intervalles</b><span>bientôt</span></button>
+      <button type="button" class="tile" data-pick="intervals"><i class="intv">▮▯▮</i><b>Intervalles</b><span>programmes</span></button>
     </div>`;
   el.querySelector('[data-back]').addEventListener('click', () => onBack?.());
   el.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => onPick?.(b.dataset.pick)));
+}
+
+/** Programme list: a grid of cards. onPick(programId), onBack() = back to the tiles. */
+export function mountPrograms(el, { onPick, onBack }) {
+  const card = (p) => `
+    <button type="button" class="pcard" data-program="${p.id}">
+      <span class="dots" title="Intensité ${p.level} / 3">${[1, 2, 3].map((n) => `<i${n <= p.level ? ' class="on"' : ''}></i>`).join('')}</span>
+      <span class="pd">${p.minutes} MIN</span>
+      <b>${p.name}</b>
+      <span class="struct">${p.struct}</span>
+    </button>`;
+  el.innerHTML = `
+    <div class="side">
+      <button type="button" class="back" data-back>‹ Retour</button>
+      <div class="side-title">Sélectionner<br>un programme</div>
+      <i class="pk-ico intv">▮▯▮</i>
+    </div>
+    <div class="pgrid">${PROGRAMS.map(card).join('')}</div>`;
+  el.querySelector('[data-back]').addEventListener('click', () => onBack?.());
+  el.querySelectorAll('[data-program]').forEach((b) => b.addEventListener('click', () => onPick?.(b.dataset.program)));
 }
 
 /**

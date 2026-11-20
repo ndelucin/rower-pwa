@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  GOAL_LIMITS, clampGoal, stepGoal, goalFromAngle, goalDisplay, goalPresetLabel, goalName, goalProgress,
+  GOAL_LIMITS, clampGoal, stepGoal, goalFromAngle, goalDisplay, goalPresetLabel, goalName, goalProgress, goalExport,
 } from '../src/goal.js';
 
 const TURN = 2 * Math.PI;
@@ -62,4 +62,21 @@ test('goalProgress: distance, waiting session and overshoot', () => {
   assert.equal(p.remaining, 0);
   assert.equal(p.fraction, 1);
   assert.equal(p.reached, true);
+});
+
+test('program goal: name and export field', () => {
+  const goal = { kind: 'program', programId: 'pyramide' };
+  assert.equal(goalName(goal), 'Pyramide');
+  assert.deepEqual(goalExport(goal), { id: 'pyramide', name: 'Pyramide', kind: 'intervals' });
+  assert.deepEqual(goalExport({ kind: 'duration', target: 1200 }), { id: 'duration-1200', name: 'Durée 20 min', kind: 'duration' });
+  assert.equal(goalExport(null), undefined);
+});
+
+test('goalProgress: a programme runs on the wall clock and is reached at its duration', () => {
+  const goal = { kind: 'program', programId: 'pyramide' }; // 15 min
+  const p = goalProgress(goal, { elapsed: 100, displayElapsed: 100, wallElapsed: 450 });
+  assert.deepEqual([p.done, p.remaining, p.fraction, p.reached], [450, 450, 0.5, false]);
+  assert.equal(goalProgress(goal, { elapsed: 700, wallElapsed: 899.9 }).reached, false);
+  assert.equal(goalProgress(goal, { elapsed: 700, wallElapsed: 900 }).reached, true);
+  assert.equal(goalProgress(goal, { elapsed: 0, wallElapsed: 0 }).fraction, 0);
 });
