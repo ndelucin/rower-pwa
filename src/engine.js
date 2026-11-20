@@ -5,7 +5,8 @@
 // not on the session chrono, which stops while the rower is stopped. An interval programme must not wait
 // for the athlete: a recovery lasts its 60 s whether he keeps rowing gently or stops (docs/ECRAN.md: stopping
 // during a recovery is normal). The session still dates its automatic pauses internally (averages stay right),
-// but the programme screen never shows them.
+// but the programme screen never shows them. wallElapsed follows the frames (session.js), so during a Bluetooth
+// loss the countdown stands still, then jumps by the length of the outage when frames come back.
 //
 // The programme (src/programs.js) is expanded into flat segments { tone, name, count, duration, start, phase },
 // `tone` being the colour class: 'work' | 'rest' | 'warm' (warm-up and cool-down).

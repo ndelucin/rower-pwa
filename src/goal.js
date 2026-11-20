@@ -19,7 +19,7 @@ export const GOAL_PRESETS = {
   distance: [1000, 2000, 5000, 8000],
 };
 
-/** 30..3600 s or 500..8000 m, rounded to the step. */
+/** 0..max (3600 s or 8000 m), rounded to the step. */
 export function clampGoal(kind, value) {
   const { max, step } = GOAL_LIMITS[kind];
   return Math.max(0, Math.min(max, Math.round(value / step) * step));
@@ -63,7 +63,11 @@ export function goalPresetLabel(kind, value) {
 export function goalName(goal) {
   if (!goal) return 'Séance libre';
   if (goal.kind === 'program') return getProgram(goal.programId).name;
-  return `${goal.kind === 'duration' ? 'Durée' : 'Distance'} ${goalPresetLabel(goal.kind, goal.target)}`;
+  // Whole minutes / kilometres read "20 min", "2 km"; anything else uses the picker's display ("20:30 min", "1,5 km"):
+  // goalPresetLabel alone would give "20.5 min" with a point.
+  const whole = goal.kind === 'duration' ? goal.target % 60 === 0 : goal.target % 1000 === 0;
+  const { text, unit } = goalDisplay(goal.kind, goal.target);
+  return `${goal.kind === 'duration' ? 'Durée' : 'Distance'} ${whole ? goalPresetLabel(goal.kind, goal.target) : `${text} ${unit}`}`;
 }
 
 /** The `program` field of the export file: { id, name, kind } ('intervals' for a programme). */
@@ -94,4 +98,20 @@ export function goalProgress(goal, snap) {
     fraction: target > 0 ? Math.min(1, done / target) : 0,
     reached: target > 0 && done >= target,
   };
+}
+
+/** True when the goal of the session is reached (null goal: never). Called on every frame by src/app.js. */
+export function isGoalReached(goal, snap) {
+  return !!goal && goalProgress(goal, snap).reached;
+}
+
+/**
+ * The goal of a restored session (backup copy), or null when it can no longer be used: unknown kind,
+ * bad target, or a programme that does not exist any more (renamed or removed between two versions).
+ */
+export function validGoal(goal) {
+  if (!goal || typeof goal !== 'object') return null;
+  if (goal.kind === 'program') return getProgram(goal.programId) ? goal : null;
+  const ok = GOAL_KINDS.includes(goal.kind) && Number.isFinite(goal.target) && goal.target > 0;
+  return ok ? goal : null;
 }

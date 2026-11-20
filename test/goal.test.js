@@ -2,11 +2,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   GOAL_LIMITS, clampGoal, stepGoal, goalFromAngle, goalDisplay, goalPresetLabel, goalName, goalProgress, goalExport,
+  isGoalReached, validGoal,
 } from '../src/goal.js';
 
 const TURN = 2 * Math.PI;
 
-test('clampGoal rounds to the step and stays in range', () => {
+test('clampGoal rounds to the step and stays in 0..max', () => {
   assert.equal(clampGoal('duration', 1234), 1230);
   assert.equal(clampGoal('duration', 99999), GOAL_LIMITS.duration.max);
   assert.equal(clampGoal('distance', -50), 0);
@@ -79,4 +80,30 @@ test('goalProgress: a programme runs on the wall clock and is reached at its dur
   assert.equal(goalProgress(goal, { elapsed: 700, wallElapsed: 899.9 }).reached, false);
   assert.equal(goalProgress(goal, { elapsed: 700, wallElapsed: 900 }).reached, true);
   assert.equal(goalProgress(goal, { elapsed: 0, wallElapsed: 0 }).fraction, 0);
+});
+
+test('goalName: off-preset values use the picker display, never "20.5 min"', () => {
+  assert.equal(goalName({ kind: 'duration', target: 1230 }), 'Durée 20:30 min');
+  assert.equal(goalName({ kind: 'distance', target: 1500 }), 'Distance 1,5 km');
+  assert.equal(goalName({ kind: 'duration', target: 1200 }), 'Durée 20 min');
+  assert.equal(goalName({ kind: 'distance', target: 2000 }), 'Distance 2 km');
+});
+
+test('isGoalReached: null goal never, else the progress of goalProgress', () => {
+  assert.equal(isGoalReached(null, { distance: 9999 }), false);
+  assert.equal(isGoalReached({ kind: 'distance', target: 2000 }, { distance: 1999 }), false);
+  assert.equal(isGoalReached({ kind: 'distance', target: 2000 }, { distance: 2000 }), true);
+  assert.equal(isGoalReached({ kind: 'program', programId: 'pyramide' }, { wallElapsed: 900 }), true);
+});
+
+test('validGoal: a goal that can no longer be used is dropped', () => {
+  const ok = { kind: 'duration', target: 1200 };
+  assert.equal(validGoal(ok), ok);
+  assert.equal(validGoal({ kind: 'program', programId: 'pyramide' })?.programId, 'pyramide');
+  assert.equal(validGoal({ kind: 'program', programId: 'removed-one' }), null);
+  assert.equal(validGoal({ kind: 'weight', target: 5 }), null);
+  assert.equal(validGoal({ kind: 'distance', target: 0 }), null);
+  assert.equal(validGoal({ kind: 'distance', target: '2000' }), null);
+  assert.equal(validGoal(null), null);
+  assert.equal(validGoal('program'), null);
 });

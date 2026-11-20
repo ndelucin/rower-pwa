@@ -15,6 +15,7 @@
   <link rel="modulepreload" href="src/activity.js">
   <link rel="modulepreload" href="src/wakelock.js">
   <link rel="modulepreload" href="src/session.js">
+  <link rel="modulepreload" href="src/smooth.js">
   <link rel="modulepreload" href="src/store.js">
   <link rel="modulepreload" href="src/export.js">
   <link rel="modulepreload" href="src/version.js">
@@ -39,34 +40,17 @@
     <div class="zone-conn" data-zone="conn"></div>
   </main>
 
-  <!-- Session choice (4 tiles) and goal picker: shown once the rower is connected (src/ui/choice.js). -->
+  <!-- Session choice: the root screen (logo, connection button, 4 tiles) ; goal picker and programme list reuse these two containers (src/ui/choice.js). -->
   <main id="choice" class="choice" hidden></main>
   <main id="picker" hidden></main>
 
-  <!-- Start screen (docs/ECRAN.md, "Accueil"): connect, then choose the session type.
-       Portrait (default) and landscape; the session screen switches to landscape once connected. -->
-  <div id="start" class="start">
-    <div class="start-main">
-      <div class="hero">
-        <svg class="hero-logo" viewBox="0 0 64 32" aria-hidden="true"><defs><linearGradient id="ecg" x1="0" x2="1"><stop offset="0" stop-color="#4fc3f7" stop-opacity="0"/><stop offset=".25" stop-color="#4fc3f7"/><stop offset=".75" stop-color="#4fc3f7"/><stop offset="1" stop-color="#4fc3f7" stop-opacity="0"/></linearGradient></defs><path d="M1 18H13L16.5 14.5L19.5 18H25L29 4L35 30L39 18H45L48.5 13.5L52 18H63" fill="none" stroke="url(#ecg)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <h1 class="wordmark"><b>Rower</b><span>Monitor</span></h1>
-      </div>
-      <button id="btn-ble" class="btn-connect" disabled>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10-5 5V2l5 5L7 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Connecter le rameur
-      </button>
-      <p id="start-msg" class="start-msg" role="status"></p>
-    </div>
-    <p id="last-session" class="last-session"></p>
-    <p id="build" class="build"></p>
-    <!-- Simulator: development only, shown with ?dev in the address. -->
-    <div class="sim-choice" id="sim-choice" hidden>
-      <span>Simulateur :</span>
-      <button data-sim="steady">Continu</button>
-      <button data-sim="hiit">HIIT</button>
-      <button data-sim="startstop">Arrêts</button>
-      <button data-sim="rest">Repos</button>
-    </div>
+  <!-- Simulator: development only, shown on the session choice with ?dev in the address. -->
+  <div class="sim-choice" id="sim-choice" hidden>
+    <span>Simulateur :</span>
+    <button data-sim="steady">Continu</button>
+    <button data-sim="hiit">HIIT</button>
+    <button data-sim="startstop">Arrêts</button>
+    <button data-sim="rest">Repos</button>
   </div>
 
   <div class="rotate-hint">Tourne le téléphone en paysage</div>

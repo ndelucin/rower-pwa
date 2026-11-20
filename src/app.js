@@ -6,13 +6,13 @@ import { createSimSource } from './sim.js';
 import { createBleSource, isBleAvailable } from './ble.js';
 import { LAYOUTS, mountLayout } from './ui/layouts.js';
 import { mountChoice, mountPicker, mountPrograms } from './ui/choice.js';
-import { GOAL_KINDS, goalProgress, goalExport } from './goal.js';
+import { GOAL_KINDS, isGoalReached, goalExport, validGoal } from './goal.js';
 import { getProgram } from './programs.js';
 import { DEFAULT_REFERENCE, referenceSplit } from './target.js';
-import { formatLastSession } from './ui/format.js';
 import { createKeepAwake } from './wakelock.js';
 import { createActivityFilter } from './activity.js';
 import { createSession } from './session.js';
+import { createSmoother, DEFAULT_WINDOW, PROGRAMME_WINDOW } from './smooth.js';
 import { createStore } from './store.js';
 import { exportFile } from './export.js';
 import { BUILD, formatBuild } from './version.js';
@@ -24,7 +24,10 @@ let rower = createRowerState();
 let activity = createActivityFilter(); // hides the S4's stale values when not rowing
 let session = null;                    // createSession(), null outside a session
 let goal = null;                       // { kind: 'duration' | 'distance', target } or { kind: 'program', programId } of the running session, null = free session
-let values = {};                       // rower state after the activity filter
+let values = {};                       // rower state after the activity filter (raw: session, series, export)
+let display = {};                      // the same, power and split smoothed (src/smooth.js): what the screen shows
+const smoother = createSmoother();
+let navToken = 0;                      // changes at every screen change: a late answer (programme start) checks it
 let snapshot = {};                     // session.snapshot() or, on the summary screen, session.summary()
 let status = 'disconnected';
 let sourceLabel = '';
@@ -85,8 +88,8 @@ function scheduleRender() {
   renderPending = true;
   requestAnimationFrame(() => {
     renderPending = false;
-    if (!view) return; // goHome() ran between the request and the frame
-    view.update({ values, session: snapshot, status, sourceLabel, warning: awakeWarning ? 'Écran non maintenu allumé : il peut s’éteindre' : '' });
+    if (!view) return; // backToChoice() ran between the request and the frame
+    view.update({ values: display, session: snapshot, status, sourceLabel, warning: awakeWarning ? 'Écran non maintenu allumé : il peut s’éteindre' : '' });
   });
 }
 
@@ -111,30 +114,27 @@ async function lockLandscape() {
     await orientation?.lock?.('landscape');
   } catch { /* desktop browser or refused: the rotate hint shows in portrait */ }
 }
-// Back to free rotation for the start screen. unlock() alone would fall back to the manifest's orientation,
-// which an already installed app may still carry as "landscape"; lock('any') overrides it explicitly.
-async function freeOrientation() {
-  const orientation = window.screen.orientation;
-  // Leave the fullscreen that lockLandscape() may have requested (only if there is one: in an installed
-  // fullscreen PWA document.fullscreenElement is null and the app stays fullscreen).
-  try { if (document.fullscreenElement) await document.exitFullscreen?.(); } catch { /* already left */ }
-  try {
-    await orientation?.lock?.('any');
-  } catch {
-    try { orientation?.unlock?.(); } catch { /* unsupported */ }
-  }
-}
-
 // ---------- Screens ----------
-const startEl = document.getElementById('start');
 const screenEl = document.getElementById('screen');
 const choiceEl = document.getElementById('choice');
 const pickerEl = document.getElementById('picker');
-// A tap on the session screen retries the landscape lock (a user gesture may be needed).
+const devEl = document.getElementById('sim-choice'); // simulator buttons (?dev), on the session choice only
+const isDev = new URLSearchParams(location.search).has('dev');
+// A tap on the session screen or on the choice retries the landscape lock (a user gesture may be needed).
 screenEl.addEventListener('click', lockLandscape);
+choiceEl.addEventListener('click', lockLandscape);
+
+// The rower link, as the choice screen shows it: 'off' | 'searching' | 'on' (the simulator counts as connected),
+// and the one short line under the connection button (yellow).
+let link = 'off';
+let linkMessage = '';
+let choice = null; // the mounted choice screen, null while another screen is shown
+const renderChoice = () => choice?.update({ link, message: linkMessage, available: isBleAvailable() });
+const setMessage = (text) => { linkMessage = text; renderChoice(); };
 
 function show(layout) {
-  startEl.hidden = true;
+  choice = null;
+  devEl.hidden = true;
   choiceEl.hidden = true;
   pickerEl.hidden = true;
   screenEl.hidden = false;
@@ -142,33 +142,32 @@ function show(layout) {
   scheduleRender();
 }
 
-// Last saved session, shown at the bottom of the start screen.
-function showLastSession() {
-  store.listSessions()
-    .then((list) => { document.getElementById('last-session').textContent = formatLastSession(list.at(-1), Date.now()); })
-    .catch(() => {});
-}
-
-// Rower connected, no session yet: the four tiles, then the circular picker (duration / distance) or the programme list.
-// Data keeps flowing (it is simply not used until a session starts); « Déconnecter » goes back home.
+// The root screen: name, connection button, tiles (greyed until the rower is connected), then the circular picker
+// (duration / distance) or the programme list. Data keeps flowing (it is simply not used until a session starts).
 function showChoice() {
+  navToken++;
   view = null;
-  startEl.hidden = true;
   screenEl.hidden = true;
   pickerEl.hidden = true;
   choiceEl.hidden = false;
-  mountChoice(choiceEl, {
+  devEl.hidden = !isDev;
+  choice = mountChoice(choiceEl, {
+    build: formatBuild(BUILD),
     onPick: (kind) => {
       if (GOAL_KINDS.includes(kind)) showPicker(kind);
       else if (kind === 'intervals') showPrograms();
       else startSession(sourceLabel, null);
     },
-    onBack: goHome,
+    onConnect: startRower,
+    onDisconnect: disconnectRower,
   });
+  renderChoice();
   lockLandscape();
 }
 
 function showPrograms() {
+  navToken++;
+  choice = null;
   mountPrograms(choiceEl, {
     onPick: (programId) => startProgram(programId),
     onBack: showChoice,
@@ -176,6 +175,8 @@ function showPrograms() {
 }
 
 function showPicker(kind) {
+  navToken++;
+  choice = null;
   choiceEl.hidden = true;
   pickerEl.hidden = false;
   mountPicker(pickerEl, {
@@ -191,28 +192,34 @@ const loadReference = () => Promise.race([
   new Promise((resolve) => setTimeout(resolve, 1500, DEFAULT_REFERENCE)),
 ]).catch(() => DEFAULT_REFERENCE);
 
+// The reference may take up to 1.5 s: Back, Disconnect or a second tap in the meantime change navToken,
+// and the late start is dropped (otherwise a session screen would open without any rower).
 function startProgram(programId) {
   const label = sourceLabel;
-  loadReference().then((reference) => startSession(label, { kind: 'program', programId }, reference));
+  const token = ++navToken;
+  loadReference().then((reference) => {
+    if (token === navToken) startSession(label, { kind: 'program', programId }, reference);
+  });
 }
 
-function goHome() {
+// Session over (or abandoned before the first stroke): back to the session choice. The rower stays connected, so
+// that a second session can follow; « ✓ Connecté » is what disconnects it.
+function backToChoice() {
   view = null;
   session = null;
   goal = null;
   snapshot = {};
-  choiceEl.hidden = true;
-  pickerEl.hidden = true;
   clearInterval(draftTimer);
   keepAwake.stop();
-  freeOrientation();
   awakeWarning = false;
-  source?.disconnect();
-  source = null;
-  screenEl.hidden = true;
-  startEl.hidden = false;
-  btnBle.disabled = !isBleAvailable();
-  showLastSession();
+  showChoice();
+}
+
+// « ‹ Retour » before the first stroke: nothing was rowed, nothing to keep.
+function leaveWaiting() {
+  if (!session || session.snapshot().status !== 'waiting') return; // the first stroke came in the meantime
+  if (draftReady) store.deleteDraft().catch(() => {});
+  backToChoice();
 }
 
 const saveDraft = () => {
@@ -225,12 +232,16 @@ const saveDraft = () => {
 // reference: personal split reference (s/500 m) of the target zone of programme efforts (src/target.js).
 function startSession(label, sessionGoal = null, reference = DEFAULT_REFERENCE) {
   sourceLabel = label;
+  linkMessage = '';
   goal = sessionGoal;
   rower = createRowerState();
   activity = createActivityFilter();
+  smoother.reset();
+  smoother.setWindow(goal?.kind === 'program' ? PROGRAMME_WINDOW : DEFAULT_WINDOW);
+  display = {};
   session = createSession();
   snapshot = session.snapshot();
-  show(LAYOUTS.session({ goal, reference, onEnd: () => finishSession() }));
+  show(LAYOUTS.session({ goal, reference, onEnd: () => finishSession(), onBack: leaveWaiting }));
   lockLandscape();
   awakeWarning = false;
   const mine = session;
@@ -246,9 +257,8 @@ function startSession(label, sessionGoal = null, reference = DEFAULT_REFERENCE) 
 // goalReached: the session ends by itself because its duration / distance goal was reached (or its programme is over).
 function finishSession(goalReached = false) {
   clearInterval(draftTimer);
-  if (session.snapshot().status === 'waiting') { // connected but never rowed: back home, no summary
-    if (draftReady) store.deleteDraft().catch(() => {});
-    goHome();
+  if (session.snapshot().status === 'waiting') { // connected but never rowed: back to the choice, no summary
+    leaveWaiting();
     return;
   }
   saveDraft(); // the draft survives until the summary is kept or discarded
@@ -295,21 +305,23 @@ function showSummary(summary, { goalReached = false } = {}) {
       if (settled) return;
       settled = true;
       if (summary.startedAt == null) { // no stroke at all: nothing to keep, nothing to share
-        store.deleteDraft().catch(() => {}).finally(() => { goHome(); startMsg.textContent = 'Séance vide : rien à enregistrer.'; });
+        store.deleteDraft().catch(() => {}).finally(() => { backToChoice(); setMessage('Séance vide : rien à enregistrer.'); });
         return;
       }
       // Web Share needs the tap's user gesture: it is started first, synchronously. The local copy
       // is the safety net (a cancelled share loses nothing).
       const sharing = shareSession(summary, summaryGoal);
       let saved = 'Séance enregistrée.';
-      store.saveSession(summary)
+      // goalKind (not part of the export): lets the split reference ignore programme sessions (src/target.js).
+      store.saveSession({ ...summary, goalKind: summaryGoal?.kind ?? 'free' })
         .then(() => store.deleteDraft())
         .catch((err) => { saved = 'Enregistrement local impossible.'; logEvent(`enregistrement impossible : ${err.message}`); })
-        // Home right after the local copy: a share sheet that never answers must not freeze the summary.
+        // Back to the choice right after the local copy: a share sheet that never answers must not freeze the summary.
         .finally(() => {
-          goHome();
-          startMsg.textContent = saved;
-          sharing.then((outcome) => { startMsg.textContent = `${saved} ${outcome}`; });
+          backToChoice();
+          setMessage(saved);
+          // The outcome of the share only completes the message it belongs to, never a newer one.
+          sharing.then((outcome) => { if (linkMessage === saved) setMessage(`${saved} ${outcome}`); });
         });
     },
     onDiscard: () => {
@@ -317,7 +329,7 @@ function showSummary(summary, { goalReached = false } = {}) {
       settled = true;
       store.deleteDraft()
         .catch((err) => logEvent(`suppression impossible : ${err.message}`))
-        .finally(goHome);
+        .finally(backToChoice);
     },
   }));
 }
@@ -326,7 +338,7 @@ function showSummary(summary, { goalReached = false } = {}) {
 function bindSource(src) {
   source = src;
   src.addEventListener('status', (e) => {
-    if (src !== source) return; // a source left behind after goHome()
+    if (src !== source) return; // a source left behind after disconnectRower()
     status = e.detail;
     logEvent(`état : ${e.detail}`);
     if (status === 'disconnected' && session) snapshot = session.suspend(Date.now());
@@ -334,15 +346,16 @@ function bindSource(src) {
   });
   src.addEventListener('log', (e) => { if (src === source) logEvent(e.detail); });
   src.addEventListener('data', (e) => {
-    if (src !== source) return; // a source left behind after goHome()
+    if (src !== source) return; // a source left behind after disconnectRower()
     const parsed = parseRowerData(e.detail);
     logFrame(e.detail, parsed);
     const now = Date.now();
     values = activity.update(rower.apply(parsed), now);
     if (session) {
       snapshot = session.update(values, now);
-      if (goal && goalProgress(goal, snapshot).reached) { finishSession(true); return; } // the goal ends the session by itself
+      if (isGoalReached(goal, snapshot)) { finishSession(true); return; } // the goal ends the session by itself
     }
+    display = smoother.update(values);
     logSeries(values);
     scheduleRender();
   });
@@ -368,6 +381,7 @@ function startSimulator(scenario, { direct = false } = {}) {
   const label = `Simulateur · ${scenario}`;
   const mode = params.get('mode');
   sourceLabel = label;
+  link = 'on';
   if (!direct || mode === 'choice') showChoice();
   else {
     const sessionGoal = goalFromParams(params);
@@ -377,39 +391,43 @@ function startSimulator(scenario, { direct = false } = {}) {
   src.connect();
 }
 
-const startMsg = document.getElementById('start-msg');
-const BLE_ERRORS = {
-  NotFoundError: 'Aucun rameur trouvé ou choisi. Vérifie que le Bluetooth du téléphone est activé, réveille le moniteur S4 (appuie sur un bouton) et ferme WaterRower Connect, puis réessaie.',
-  AbortError: 'Connexion interrompue avant la fin. Réessaie.',
-  SecurityError: 'Bluetooth refusé : la page doit être servie en HTTPS ou depuis localhost.',
-  NotAllowedError: 'Autorisation Bluetooth refusée.',
-  NetworkError: 'Connexion au rameur impossible. Il est peut-être déjà connecté à une autre appli, ou en veille.',
-  GestureNeeded: 'Rameur pas trouvé directement. Réveille le S4, puis touche à nouveau « Connecter le rameur » pour le choisir.',
-};
-
+// Connection button of the choice screen. Any failure shows the same short « S4 non détecté »; the detail goes
+// to the diagnostic journal (window.__rower.events).
 async function startRower() {
-  if (connecting || session) return; // a second tap while connecting would open a second link (the S4 takes one)
+  if (connecting || session || link !== 'off') return; // a second tap while connecting would open a second link (the S4 takes one)
   connecting = true;
-  btnBle.disabled = true;
+  link = 'searching';
+  linkMessage = '';
+  renderChoice();
   // The device chooser needs the user gesture: requestDevice must be the first thing called.
-  // Landscape comes after the connection (startSession).
   const src = createBleSource();
   bindSource(src);
-  startMsg.textContent = 'Recherche du rameur…';
   try {
     await src.connect();
-    startMsg.textContent = '';
     sourceLabel = src.deviceName() ?? 'Rameur';
-    showChoice();
+    link = 'on';
+    lockLandscape();
   } catch (err) {
     logEvent(`erreur : ${err.name} ${err.message}`);
-    startMsg.textContent = BLE_ERRORS[err.name] ?? `Erreur : ${err.message}`;
+    linkMessage = 'S4 non détecté';
     src.disconnect(); // close any half-open link: a ghost connection keeps the S4 busy
     source = null;
-    btnBle.disabled = !isBleAvailable();
+    link = 'off';
   } finally {
     connecting = false;
+    renderChoice();
   }
+}
+
+// « ✓ Connecté »: frees the S4 (it accepts one connection at a time, WaterRower Connect needs it).
+function disconnectRower() {
+  if (session) return;
+  navToken++;
+  source?.disconnect();
+  source = null;
+  link = 'off';
+  linkMessage = '';
+  renderChoice();
 }
 
 // ---------- Offline start and silent updates (sw.js, docs/PLAN-pwa.md) ----------
@@ -421,20 +439,10 @@ if ('serviceWorker' in navigator && (!isLocal || new URLSearchParams(location.se
     .catch((err) => logEvent(`service worker refusé : ${err.message}`));
 }
 
-// ---------- Start screen ----------
-const btnBle = document.getElementById('btn-ble');
-if (isBleAvailable()) {
-  btnBle.disabled = false;
-  btnBle.addEventListener('click', startRower);
-} else {
-  startMsg.textContent = 'Bluetooth web indisponible : ouvre l’appli dans Chrome sur Android.';
-}
-
-// Simulator buttons: development only (?dev in the address).
-if (new URLSearchParams(location.search).has('dev')) document.getElementById('sim-choice').hidden = false;
-showLastSession();
-document.getElementById('build').textContent = formatBuild(BUILD);
-freeOrientation(); // the start screen follows the phone, even if the installed manifest still says landscape
+// ---------- Launch ----------
+// No home screen: the app opens on the session choice, rower not connected (landscape only, see the manifest).
+if (!isBleAvailable()) linkMessage = 'Bluetooth indisponible';
+showChoice();
 
 document.querySelectorAll('[data-sim]').forEach((btn) => btn.addEventListener('click', () => {
   startSimulator(btn.dataset.sim);
@@ -450,13 +458,13 @@ const autoSim = new URLSearchParams(location.search).get('sim');
 function showInterrupted(draft) {
   logEvent('séance interrompue retrouvée');
   sourceLabel = draft.sourceLabel;
-  goal = draft.goal ?? null;
+  goal = validGoal(draft.goal); // a programme that no longer exists must not block the summary
   session = createSession({ restore: draft.session });
   showSummary(session.end(draft.savedAt));
 }
 // IndexedDB that never answers (seen in headless Chrome) must not block the start: 1.5 s at most.
 // Backups are not written before the read has answered, and a copy that arrives late is shown if nothing
-// else is going on (home screen, no connection in progress).
+// else is going on (the session choice, no connection in progress).
 let startupDone = false;
 const draftRead = store.loadDraft().then((draft) => ({ draft }), () => ({ draft: null }));
 draftRead.then(({ draft }) => {

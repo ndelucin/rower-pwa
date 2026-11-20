@@ -8,10 +8,10 @@ const root = new URL('../', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('manifest.webmanifest', root)));
 const isRelative = (p) => !/^(\/|[a-z]+:)/i.test(p);
 
-test('manifest: installable, fullscreen, free orientation (landscape is locked by the app), relative paths', () => {
+test('manifest: installable, fullscreen, landscape only (no portrait screen), relative paths', () => {
   assert.equal(manifest.name, 'RowerMonitor');
   assert.equal(manifest.display, 'fullscreen');
-  assert.equal(manifest.orientation, 'any'); // portrait start screen; app.js locks landscape for the session
+  assert.equal(manifest.orientation, 'landscape'); // the app opens on the session choice: every screen is landscape
   for (const p of [manifest.id, manifest.start_url, manifest.scope]) assert.ok(isRelative(p), p);
   assert.equal(manifest.id, './');
   assert.deepEqual(manifest.display_override, ['fullscreen', 'standalone']);
@@ -34,11 +34,10 @@ test('service worker and its registration use relative paths only', () => {
   assert.match(readFileSync(new URL('index.html', root), 'utf8'), /href="manifest\.webmanifest"/);
 });
 
-test('service worker pre-caches every module of the app (import graph from src/app.js) and the icons', () => {
-  const sw = readFileSync(new URL('sw.js', root), 'utf8');
-  const shell = new Set([...sw.slice(sw.indexOf('const SHELL'), sw.indexOf('];', sw.indexOf('const SHELL'))).matchAll(/'(\.\/[^']*)'/g)].map((m) => m[1]));
+// Every module reachable from src/app.js, as paths relative to the site root ("src/ui/layouts.js").
+function graph() {
   const seen = new Set();
-  const walk = (path) => { // path relative to the site root, e.g. "src/ui/layouts.js"
+  const walk = (path) => {
     if (seen.has(path)) return;
     seen.add(path);
     const text = readFileSync(new URL(path, root), 'utf8');
@@ -47,6 +46,13 @@ test('service worker pre-caches every module of the app (import graph from src/a
     }
   };
   walk('src/app.js');
+  return seen;
+}
+
+test('service worker pre-caches every module of the app (import graph from src/app.js) and the icons', () => {
+  const sw = readFileSync(new URL('sw.js', root), 'utf8');
+  const shell = new Set([...sw.slice(sw.indexOf('const SHELL'), sw.indexOf('];', sw.indexOf('const SHELL'))).matchAll(/'(\.\/[^']*)'/g)].map((m) => m[1]));
+  const seen = graph();
   for (const p of seen) assert.ok(shell.has(`./${p}`), `missing from SHELL: ${p}`);
   for (const { src } of manifest.icons) assert.ok(shell.has(`./${src}`), `icon missing from SHELL: ${src}`);
   for (const p of ['./', './index.html', './manifest.webmanifest', './src/ui/styles.css']) assert.ok(shell.has(p), p);
@@ -56,6 +62,6 @@ test('service worker pre-caches every module of the app (import graph from src/a
 test('index.html preloads the modules (flattens the import waterfall)', () => {
   const html = readFileSync(new URL('index.html', root), 'utf8');
   const preloaded = new Set([...html.matchAll(/<link rel="modulepreload" href="([^"]+)"/g)].map((m) => m[1]));
-  for (const p of ['src/ftms.js', 'src/ui/layouts.js', 'src/ble.js', 'src/session.js', 'src/engine.js', 'src/programs.js', 'src/target.js']) assert.ok(preloaded.has(p), p);
+  for (const p of graph()) if (p !== 'src/app.js') assert.ok(preloaded.has(p), `not preloaded: ${p}`); // app.js is the entry script
   for (const p of preloaded) assert.ok(isRelative(p) && existsSync(new URL(p, root)), p);
 });

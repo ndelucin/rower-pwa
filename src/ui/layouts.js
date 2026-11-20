@@ -1,7 +1,7 @@
 // One configuration per screen: which component goes into which zone of the common template
 // (index.html: left, center, right, bar, conn). See docs/ECRAN.md.
 // Adding a session type = adding a case here; the template never changes.
-import { metricColumn, ring, tapButton, splitBar, summaryActions, connection } from './components.js';
+import { metricColumn, ring, tapButton, backButton, controlGroup, splitBar, summaryActions, connection } from './components.js';
 import { formatPace, formatDuration, formatNumber, formatDistance, formatDistanceShort } from './format.js';
 import { goalProgress } from '../goal.js';
 import { engineOf } from '../engine.js';
@@ -35,7 +35,7 @@ const elapsedOf = (m) => sessionOf(m).displayElapsed ?? sessionOf(m).elapsed ?? 
 
 // Ring of a programme: the frieze of the current phase (one arc per segment, past ones bright, to-come ones faint,
 // the running one filling up), phase name, countdown of the segment, "n / N" counter. Never shows a pause.
-function programCentre(goal) {
+export function programCentre(goal) {
   const at = (m) => engineOf(goal.programId).positionAt(sessionOf(m).wallElapsed ?? 0);
   return {
     arcs: (m) => at(m).frieze.flatMap(({ from, to, tone, progress }) => {
@@ -51,7 +51,7 @@ function programCentre(goal) {
 }
 
 /** Centre of the ring (label, big text, ring arc) per kind of session. */
-function centre(goal) {
+export function centre(goal) {
   if (goal?.kind === 'program') return programCentre(goal);
   if (goal?.kind === 'duration') {
     return {
@@ -75,7 +75,7 @@ function centre(goal) {
 }
 
 // Target zone of the split bar: only during an effort.
-function programTarget(goal, reference, m) {
+export function programTarget(goal, reference, m) {
   const position = engineOf(goal.programId).positionAt(sessionOf(m).wallElapsed ?? 0);
   return position.tone === 'work' ? targetZone(reference, position.duration) : null;
 }
@@ -83,11 +83,12 @@ function programTarget(goal, reference, m) {
 export const LAYOUTS = {
   /**
    * Running session: free (no goal) or with a goal { kind: 'duration' | 'distance', target } or { kind: 'program', programId }.
-   * onEnd() is called by a tap on ⏸ (shown while waiting for the first stroke and while paused): it ends the session at once.
+   * Before the first stroke the ring shows « ‹ Retour » (onBack(): back to the session choice, nothing recorded);
+   * while paused it shows ⏸ (onEnd(): ends the session at once).
    * The fourth value is the distance, or the time when the goal is a distance (the ring already shows the distance).
    * reference: personal split reference (s/500 m) of the target zone shown during the efforts of a programme.
    */
-  session: ({ goal = null, reference = DEFAULT_REFERENCE, onEnd } = {}) => ({
+  session: ({ goal = null, reference = DEFAULT_REFERENCE, onEnd, onBack } = {}) => ({
     left: metricColumn([
       { label: 'Split /500 m', value: (m) => formatPace(inst(m, 'instPace')) },
       { label: 'Puissance', unit: 'W', value: (m) => formatNumber(inst(m, 'instPower')) },
@@ -97,7 +98,10 @@ export const LAYOUTS = {
       ...centre(goal),
       icon: ICON[goal?.kind ?? 'free'],
       note: (m) => NOTE[sessionOf(m).status] ?? '',
-      action: tapButton({ label: 'Terminer la séance', icon: 'pause', cls: 'stop', onTap: onEnd }),
+      action: controlGroup([
+        { component: backButton({ onTap: onBack }), visible: (m) => sessionOf(m).status === 'waiting' },
+        { component: tapButton({ label: 'Terminer la séance', icon: 'pause', cls: 'stop', onTap: onEnd }), visible: isPaused },
+      ]),
       actionVisible: (m) => ['waiting', 'paused'].includes(sessionOf(m).status),
     }),
     right: metricColumn([

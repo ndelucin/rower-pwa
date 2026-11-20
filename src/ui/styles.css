@@ -84,7 +84,8 @@ html, body {
 .screen:has(.ring.t-rest) { background: radial-gradient(ellipse at center, #0a2414 0%, transparent 75%); }
 .screen:has(.ring.t-warm) { background: radial-gradient(ellipse at center, #0b1c2c 0%, transparent 75%); }
 .ring .note { font-size: calc(4.5 * var(--u)); color: var(--power); min-height: 1.2em; white-space: pre; }
-.controls { position: absolute; left: 50%; bottom: 9%; transform: translateX(-50%); display: flex; gap: calc(4 * var(--u)); } /* pause button: lower part of the ring, clear of the text */
+.controls { position: absolute; left: 50%; top: 79.3%; transform: translate(-50%, -50%); display: flex; gap: calc(4 * var(--u)); } /* « ‹ Retour » / ⏸: centred between the text (note bottom, ~65 % of the ring) and the inner edge of the ring (~93.5 %): equal margins above and below */
+.controls .back { font-size: calc(5 * var(--u)); padding: .5em 1.4em; align-self: center; white-space: nowrap; }
 
 /* Hold-to-confirm buttons (long press ~1.5 s, progress shown while pressed) */
 .hold { position: relative; font: inherit; color: var(--text); border: 0; cursor: pointer;
@@ -107,13 +108,16 @@ html, body {
   background: linear-gradient(90deg, #1b2533, #22344a 50%, #1b2533); }
 .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: #3a4a60; }
 .target { position: absolute; top: 0; bottom: 0; background: #ffd23f40; box-shadow: inset 0 0 0 1px #ffd23f99; border-radius: calc(.8 * var(--u)); }
-.avg { position: absolute; top: calc(-2 * var(--u)); bottom: calc(-2 * var(--u)); width: calc(1 * var(--u));
-  background: var(--text); border-radius: 2px; transform: translateX(-50%); opacity: .8; }
-.cursor { position: absolute; top: 50%; width: calc(2.6 * var(--u)); height: calc(12 * var(--u)); border-radius: calc(.8 * var(--u));
+.avg { position: absolute; top: 50%; width: 0; height: 0; z-index: 2; } /* split average: a white diamond sitting on the bar, above the cursor */
+.avg::before { content: ""; position: absolute; left: 0; top: 0; width: calc(5.6 * var(--u)); height: calc(5.6 * var(--u)); box-sizing: border-box;
+  background: var(--text); border: calc(.6 * var(--u)) solid var(--bg); transform: translate(-50%, -50%) rotate(45deg); }
+.cursor { position: absolute; z-index: 1; top: 50%; width: calc(2.6 * var(--u)); height: calc(12 * var(--u)); border-radius: calc(.8 * var(--u));
   background: var(--pace); box-shadow: 0 0 calc(2 * var(--u)) var(--pace); transform: translate(-50%, -50%); }
 /* Clamped at an edge: keep the marker inside the bar, arrow pointing out. */
-.avg[data-clamp="left"] { transform: none; }
-.avg[data-clamp="right"] { transform: translateX(-100%); }
+.avg[data-clamp="left"]::before { left: calc(4 * var(--u)); }
+.avg[data-clamp="right"]::before { left: calc(-4 * var(--u)); }
+.avg[data-clamp="left"] > .arrow { margin-left: calc(8 * var(--u)); }
+.avg[data-clamp="right"] > .arrow { margin-right: calc(8 * var(--u)); }
 .cursor[data-clamp="left"] { transform: translate(0, -50%); }
 .cursor[data-clamp="right"] { transform: translate(-100%, -50%); }
 .arrow { position: absolute; top: 50%; transform: translateY(-50%); font-size: calc(5 * var(--u)); line-height: 1; color: var(--text); }
@@ -134,9 +138,7 @@ html, body {
 .actions .keep, .actions .hold { width: 100%; text-align: center; }
 .hold.discard { color: #ff8a80; box-shadow: inset 0 0 0 calc(.4 * var(--u)) #ff8a8066; }
 
-/* Connection indicator */
-.conn-dot { position: fixed; top: calc(1.5 * var(--u)); right: max(calc(1.5 * var(--u)), env(safe-area-inset-right));
-  width: calc(1.8 * var(--u)); height: calc(1.8 * var(--u)); border-radius: 50%; background: var(--ok); }
+/* Connection indicator: no dot (barely visible); the red band below says it when the link drops */
 .conn-band { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 10;
   padding: calc(1.2 * var(--u)) calc(5 * var(--u)); border-radius: 0 0 calc(2 * var(--u)) calc(2 * var(--u));
   background: var(--err); color: #fff; font-weight: 700; font-size: calc(5 * var(--u)); letter-spacing: .03em;
@@ -152,9 +154,10 @@ html, body {
   padding: calc(4 * var(--u)) max(calc(5 * var(--u)), env(safe-area-inset-right)) calc(4 * var(--u)) max(calc(5 * var(--u)), env(safe-area-inset-left)); }
 .choice h2 { margin: 0; font-size: calc(7 * var(--u)); font-weight: 600; line-height: 1.15; }
 .choice p { margin: calc(1.5 * var(--u)) 0 0; font-size: calc(4 * var(--u)); color: var(--muted); }
-.side { display: flex; flex-direction: column; justify-content: space-between; }
+.side { display: flex; flex-direction: column; justify-content: flex-end; gap: calc(3 * var(--u)); }
+.side > :first-child { margin-bottom: auto; } /* logo / Back at the top; title and icon grouped at the bottom: the top of the title stays under the median axis */
 .back { font: inherit; align-self: flex-start; font-size: calc(4.4 * var(--u)); color: var(--muted); background: none; border: 1px solid #2c3748;
-  border-radius: 99px; padding: .4em 1.1em; cursor: pointer; }
+  border-radius: 99px; padding: .4em 1.1em; min-height: 48px; cursor: pointer; }
 .tiles { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: calc(3 * var(--u)); }
 .tile { font: inherit; color: var(--text); text-align: left; cursor: pointer; background: linear-gradient(160deg, #17202c, #111822); border: 1px solid #26334a;
   border-radius: calc(3 * var(--u)); padding: calc(3 * var(--u)) calc(4 * var(--u)); display: flex; flex-direction: column; justify-content: center; gap: calc(.8 * var(--u)); }
@@ -162,6 +165,20 @@ html, body {
 .tile:disabled { opacity: .4; cursor: default; }
 .tile b { font-size: calc(8 * var(--u)); font-weight: 600; }
 .tile span { font-size: calc(4 * var(--u)); color: var(--muted); }
+/* Root screen: name + logo, connection button, short message */
+.brand { display: flex; flex-direction: column; align-items: center; gap: calc(1.8 * var(--u)); width: fit-content; }
+.brand svg { width: calc(26 * var(--u)); height: calc(13 * var(--u)); filter: drop-shadow(0 0 calc(3 * var(--u)) rgba(79,195,247,.5)); }
+.wordmark { margin: 0; font-family: "Segoe UI", Roboto, system-ui, sans-serif; font-size: calc(7 * var(--u)); line-height: 1; letter-spacing: .02em; font-weight: 400; }
+.wordmark b { font-weight: 600; }
+.wordmark span { font-weight: 300; color: var(--pace); margin-left: .1em; }
+.conn-btn { font: inherit; display: inline-flex; align-items: center; gap: calc(1.6 * var(--u)); margin-top: calc(1.6 * var(--u)); font-size: calc(4.2 * var(--u)); color: var(--muted);
+  background: none; border: 1px solid #2c3748; border-radius: 99px; padding: .4em 1.1em; min-height: 48px; cursor: pointer; }
+.conn-btn.busy { opacity: .55; cursor: default; }
+.conn-btn.on { color: var(--text); border-color: #2f4a38; } .conn-btn.on i { font-style: normal; color: var(--ok); }
+.conn-btn:disabled { cursor: default; }
+.choice .start-msg { margin: calc(1 * var(--u)) 0 0; height: calc(9.5 * var(--u)); overflow: hidden; max-width: 95%; font-size: calc(3.8 * var(--u)); color: var(--work); line-height: 1.25; } /* two lines reserved: a message never moves the layout */
+.build { position: absolute; left: max(calc(5 * var(--u)), env(safe-area-inset-left)); bottom: calc(1 * var(--u)); margin: 0; font-size: calc(3.2 * var(--u)); color: var(--muted); opacity: .6; font-variant-numeric: tabular-nums; } /* out of the flow: it must not push the title above the median axis */
+
 .tile.free { border-color: #aab4c3aa; }
 .tile i { font-style: normal; font-size: calc(13 * var(--u)); color: var(--neutral); line-height: 1; }
 .tile i.dur { color: var(--dur); } .tile i.dist { color: var(--dist); } .tile i.intv { color: var(--work); }
@@ -181,11 +198,14 @@ html, body {
 .pk-ico.intv { color: var(--work); font-size: calc(15 * var(--u)); letter-spacing: -.05em; }
 
 .picker { grid-template-rows: minmax(0, 1fr); }
-.picker-left, .picker-right { justify-content: space-between; padding: calc(2 * var(--u)) 0; }
+.picker-left { justify-content: flex-end; gap: calc(3 * var(--u)); padding: calc(2 * var(--u)) 0; }
+.picker-left > .back { margin-bottom: auto; }
+.picker-right { justify-content: space-between; padding: calc(2 * var(--u)) 0; }
 .picker-right { text-align: right; align-items: flex-end; }
 .picker-title { font-size: calc(7 * var(--u)); font-weight: 700; line-height: 1.15; }
 .pk-ico { font-style: normal; font-size: calc(30 * var(--u)); line-height: 1; margin: 0 0 0 calc(2 * var(--u)); }
-.picker.dur .pk-ico { color: var(--dur); } .picker.dist .pk-ico { color: var(--dist); transform: translateY(calc(4.7 * var(--u))); } /* the arrow is thin: its ink sits mid-box, lower it to the bottom edge of Start */
+.picker .pk-ico { line-height: calc(20 * var(--u)); height: calc(20 * var(--u)); transform: translateY(calc(-3.2 * var(--u))); } /* 20u box instead of 30u: the title stays under the median axis; the glyph keeps its place */
+.picker.dur .pk-ico { color: var(--dur); } .picker.dist .pk-ico { color: var(--dist); transform: translateY(calc(1.5 * var(--u))); } /* the arrow is thin: its ink sits mid-box, lower it to the bottom edge of Start */
 .picker .ring > svg { overflow: visible; } /* the knob sticks out of the viewBox at 3 h / 9 h */
 .picker .ring { cursor: grab; touch-action: none; } .picker .ring:active { cursor: grabbing; }
 .knob { fill: var(--text); stroke: var(--dur); stroke-width: 2; } .picker.dist .knob { stroke: var(--dist); }
@@ -203,51 +223,14 @@ html, body {
   padding: .6em 1.4em; min-height: 48px; cursor: pointer; }
 .go:disabled { background: #1c2431; color: #5b6678; cursor: default; }
 
-/* ---------- Start screen ---------- */
-/* Premium background: blue-night gradient, a soft glow behind the button, faint rings echoing the session ring. */
-.start {
-  position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
-  padding: calc(4 * var(--u)) max(calc(4 * var(--u)), env(safe-area-inset-right)) calc(4 * var(--u)) max(calc(4 * var(--u)), env(safe-area-inset-left));
-  text-align: center;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(79,195,247,.16) 0, rgba(79,195,247,.05) 28%, transparent 55%),
-    repeating-radial-gradient(circle at 50% 50%, transparent 0 calc(11 * var(--u)), rgba(79,195,247,.045) calc(11 * var(--u)) calc(11.3 * var(--u))),
-    radial-gradient(120% 90% at 50% 0%, #14253a 0, #0c1522 45%, #070a10 100%);
-}
-.hero { display: flex; flex-direction: column; align-items: center; gap: calc(2.5 * var(--u)); margin-bottom: calc(5 * var(--u)); }
-.hero-logo { width: calc(40 * var(--u)); height: calc(20 * var(--u)); filter: drop-shadow(0 0 calc(4 * var(--u)) rgba(79,195,247,.5)); }
-.wordmark { margin: 0; font-family: "Segoe UI", Roboto, system-ui, sans-serif; font-size: calc(10 * var(--u)); line-height: 1; letter-spacing: .03em; font-weight: 400; }
-.wordmark b { font-weight: 600; }
-.wordmark span { font-weight: 300; color: var(--pace); margin-left: .12em; }
-.start-main { display: flex; flex-direction: column; align-items: center; gap: calc(2.5 * var(--u)); width: 100%; }
-.btn-connect {
-  display: inline-flex; align-items: center; gap: calc(3 * var(--u));
-  font: 700 calc(7.5 * var(--u)) system-ui, Roboto, sans-serif; color: var(--bg); background: var(--btn);
-  border: 0; border-radius: 99px; padding: calc(4 * var(--u)) calc(10 * var(--u)); cursor: pointer;
-  box-shadow: 0 0 calc(5 * var(--u)) rgba(255, 255, 255, .18);
-}
-.btn-connect svg { width: 1.1em; height: 1.1em; }
-.btn-connect:disabled { background: var(--panel); color: var(--muted); box-shadow: none; cursor: default; }
-.start-msg { margin: 0; min-height: 1.3em; max-width: 80vw; font-size: calc(4.2 * var(--u)); color: var(--warn); }
-.last-session { position: absolute; left: 0; right: 0; bottom: calc(7 * var(--u)); margin: 0; padding: 0 calc(4 * var(--u)); text-wrap: balance; min-height: 1.3em; font-size: calc(4.4 * var(--u)); color: var(--muted); font-variant-numeric: tabular-nums; }
-.build { position: absolute; left: 0; right: 0; bottom: max(calc(2 * var(--u)), env(safe-area-inset-bottom)); margin: 0;
-  font-size: calc(3.4 * var(--u)); color: var(--muted); opacity: .75; font-variant-numeric: tabular-nums; }
-.last-session b { color: var(--text); font-weight: 600; }
+/* ---------- Simulator buttons (development, ?dev) ---------- */
 .sim-choice { position: fixed; top: calc(4 * var(--u)); right: max(calc(4 * var(--u)), env(safe-area-inset-right)); display: flex; gap: calc(1.5 * var(--u));
   align-items: center; font-size: calc(3.6 * var(--u)); color: var(--muted); }
 .sim-choice button { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line);
   border-radius: calc(1.5 * var(--u)); padding: .4em .9em; cursor: pointer; }
 
 /* ---------- Orientation ---------- */
-/* The start screen works in portrait (default) and landscape; the session screen is landscape only. */
-@media (orientation: portrait) {
-  .start .btn-connect { width: 100%; font-size: calc(6 * var(--u)); padding: calc(5.5 * var(--u)) calc(4 * var(--u)); justify-content: center; }
-}
-@media (orientation: landscape) {
-  .hero-logo { width: calc(30 * var(--u)); height: calc(15 * var(--u)); }
-  .hero { gap: calc(1.5 * var(--u)); margin-bottom: calc(3 * var(--u)); }
-  .start .btn-connect { padding: calc(3 * var(--u)) calc(9 * var(--u)); }
-}
+/* Every screen is landscape (manifest `orientation: landscape`); in portrait, a hint asks to turn the phone. */
 .rotate-hint { display: none; }
 @media (orientation: portrait) {
   .screen:not([hidden]), .choice:not([hidden]) { display: none !important; }

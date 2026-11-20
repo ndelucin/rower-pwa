@@ -72,17 +72,6 @@ test('ringArcs: a segment can carry its own gap (programme frieze)', () => {
   assert.ok(Math.abs(b.length - 0.5 * ringCircumference(46)) < 0.01);
 });
 
-test('formatLastSession: start screen line for the last session', async () => {
-  const { formatLastSession } = await import('../src/ui/format.js');
-  const now = new Date(2026, 10, 15, 19, 0).getTime();
-  const s = { startedAt: new Date(2026, 10, 15, 18, 3).getTime(), duration: 137.2, distance: 604, avgSplit: 132.7 };
-  assert.equal(formatLastSession(s, now), "Dernière séance : aujourd'hui · 2:17 · 604 m · 2:13 /500 m");
-  assert.match(formatLastSession({ ...s, startedAt: new Date(2026, 10, 14, 20, 0).getTime() }, now), /^Dernière séance : hier · /);
-  assert.match(formatLastSession({ ...s, startedAt: new Date(2026, 10, 1, 15, 0).getTime() }, now), /^Dernière séance : le 1 nov\./);
-  assert.equal(formatLastSession({ ...s, avgSplit: null }, now), "Dernière séance : aujourd'hui · 2:17 · 604 m");
-  assert.equal(formatLastSession(null, now), '');
-});
-
 test('formatDistanceShort: metres below 1 km, km with a comma above, rounded up', async () => {
   const { formatDistanceShort } = await import('../src/ui/format.js');
   assert.equal(formatDistanceShort(750), '750 m');

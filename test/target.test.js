@@ -34,3 +34,12 @@ test('target zone: offset by effort length, example with 2:08', () => {
   assert.deepEqual(targetZone(ref, 120), { from: 125, to: 128 });
   assert.deepEqual(targetZone(ref, 240), { from: 127, to: 131 });
 });
+
+test('reference: programme sessions are left out (fast on average, they would push the zone up)', () => {
+  const list = [
+    session(1, 130), session(2, 128), session(3, 126),
+    { ...session(4, 110), goalKind: 'program' }, // an interval session
+    { ...session(5, 140), goalKind: 'free' },
+  ];
+  assert.equal(referenceSplit(list), 129); // 130 128 126 140 (the programme's 110 ignored): mean of the middle two
+});

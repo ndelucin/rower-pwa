@@ -62,18 +62,3 @@ export function ringArcs(segments, { r = 46, gap = 0 } = {}) {
     return { dasharray: `${round(length)} ${round(c)}`, dashoffset: round(-a * c) || 0, length: round(length) };
   });
 }
-
-/**
- * Start screen line for the last saved session (summary() of src/session.js), or '' if none.
- * "Dernière séance : hier · 2:17 · 604 m · 2:13 /500 m". `now` is passed in (testable).
- */
-export function formatLastSession(summary, now) {
-  if (!summary?.startedAt) return '';
-  const day = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
-  const days = Math.round((day(now) - day(summary.startedAt)) / 86400000);
-  const when = days === 0 ? "aujourd'hui" : days === 1 ? 'hier'
-    : `le ${new Date(summary.startedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
-  const parts = [when, formatDuration(summary.duration), `${formatDistance(summary.distance)} m`];
-  if (summary.avgSplit != null) parts.push(`${formatPace(summary.avgSplit)} /500 m`);
-  return `Dernière séance : ${parts.join(' · ')}`;
-}

@@ -128,6 +128,45 @@ export function tapButton({ label, icon = 'pause', onTap, cls = '' }) {
 }
 
 /**
+ * "‹ Retour" pill (same look as the Back buttons of the other screens), shown before the first stroke.
+ * Same interface as tapButton: setVisible(bool).
+ */
+export function backButton({ label = 'Retour', onTap }) {
+  let btn;
+  return {
+    mount(el) {
+      btn = h('button', 'back', `‹ ${label}`);
+      btn.type = 'button';
+      btn.addEventListener('click', () => onTap?.());
+      el.append(btn);
+    },
+    update() {},
+    setVisible(visible) { btn.hidden = !visible; },
+  };
+}
+
+/**
+ * Several controls in one block (the ring's `action`): items = [{ component, visible(model) }].
+ * The block itself shows or hides through setVisible, like a single button.
+ */
+export function controlGroup(items) {
+  let box;
+  return {
+    mount(el) {
+      box = el;
+      items.forEach((it) => it.component.mount(el));
+    },
+    update(m) {
+      items.forEach((it) => {
+        it.component.setVisible?.(!!it.visible(m));
+        it.component.update(m);
+      });
+    },
+    setVisible(visible) { box.hidden = !visible; },
+  };
+}
+
+/**
  * Central ring: SVG arcs around a label, a big main text (chrono) and an optional line.
  *  arcs(model)    -> [{ from, to, tone, segment, faint, gap }] fractions of a turn (tone: 'pace' | 'power' | 'dur' | 'dist'
  *                    | 'work' | 'rest' | 'warm'); `segment` = flat ends, `faint` = dimmed (to come), `gap` = turn left empty at the end
@@ -203,7 +242,8 @@ export function ring({ arcs, label, main, note = () => '', count = null, tone = 
 
 /**
  * Split bar: fixed scale from `slow` (left) to `fast` (right), seconds per 500 m.
- * Cursor = values.instPace (hidden when null or paused), white line = session.avgSplit.
+ * Cursor = values.instPace (smoothed by the app, src/smooth.js; hidden when null or paused),
+ * white diamond = session.avgSplit.
  * Off scale: stuck to the edge with ◀ / ▶. target(model) -> { from, to } (s/500 m) | null
  * draws a yellow target zone (efforts of a programme).
  */
@@ -281,28 +321,25 @@ export function summaryActions({ onKeep, onDiscard }) {
 }
 
 /**
- * Connection indicator: a small green dot in the corner when connected; a clearly visible
+ * Connection indicator: nothing while connected (a green dot was barely visible on the S23); a clearly visible
  * "Reconnexion…" band otherwise (connecting / disconnected during a session).
  * model.warning (optional text): a discreet line while connected (e.g. the screen may turn off).
  */
 export function connection({ bandText = 'Reconnexion…' } = {}) {
-  let dot, band, warn;
+  let band, warn;
   return {
     mount(el) {
-      dot = h('div', 'conn-dot');
       band = h('div', 'conn-band', bandText);
       band.setAttribute('role', 'status');
       warn = h('div', 'conn-warn');
       warn.hidden = true;
-      el.append(dot, band, warn);
+      el.append(band, warn);
     },
     update(m) {
       const ok = m.status === 'connected';
-      dot.hidden = !ok;
       band.hidden = ok;
       warn.hidden = !m.warning || !ok; // the red band has priority over a warning
       setText(warn, m.warning ?? '');
-      if (m.sourceLabel) setAttr(dot, 'title', m.sourceLabel);
     },
   };
 }

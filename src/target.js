@@ -20,10 +20,15 @@ const median = (values) => {
   return v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
 };
 
-/** Median average split of the last 5 saved sessions longer than 10 min (summaries from store.listSessions()). */
+/**
+ * Median average split of the last 5 saved sessions longer than 10 min (summaries from store.listSessions()).
+ * Programme sessions are left out (`goalKind: 'program'`, stored with the summary): an interval session is fast
+ * on average, and counting it would push the zone up each time a programme is rowed. Older summaries have no
+ * `goalKind` and count as steady rowing.
+ */
 export function referenceSplit(sessions) {
   const splits = [...sessions]
-    .filter((s) => s.duration > MIN_SESSION && s.avgSplit != null)
+    .filter((s) => s.duration > MIN_SESSION && s.avgSplit != null && s.goalKind !== 'program')
     .sort((a, b) => a.startedAt - b.startedAt)
     .slice(-SESSIONS_USED)
     .map((s) => s.avgSplit);

@@ -10,16 +10,26 @@ import { ringCircumference } from './format.js';
 const GLYPH = { duration: '◔', distance: '↔' };
 const TITLE = { duration: 'une durée', distance: 'une distance' };
 
+// The heartbeat logo, shown under the name on the session choice.
+const LOGO = '<svg viewBox="0 0 64 32" aria-hidden="true"><defs><linearGradient id="ecg" x1="0" x2="1"><stop offset="0" stop-color="#4fc3f7" stop-opacity="0"/><stop offset=".25" stop-color="#4fc3f7"/><stop offset=".75" stop-color="#4fc3f7"/><stop offset="1" stop-color="#4fc3f7" stop-opacity="0"/></linearGradient></defs><path d="M1 18H13L16.5 14.5L19.5 18H25L29 4L35 30L39 18H45L48.5 13.5L52 18H63" fill="none" stroke="url(#ecg)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
 /**
- * Tiles: Libre, Durée, Distance, Intervalles.
- * onPick('free' | 'duration' | 'distance' | 'intervals'), onBack() = disconnect.
+ * The root screen "Sélectionner la séance": name and logo, a discreet connection button under the title and the
+ * four tiles (Libre, Durée, Distance, Intervalles), greyed until the rower is connected.
+ * onPick('free' | 'duration' | 'distance' | 'intervals'), onConnect(), onDisconnect() (a tap on « ✓ Connecté »).
+ * Returns { update({ link, message, available }) }: link = 'off' | 'searching' | 'on', message = one short line
+ * under the button (yellow), available = false when Web Bluetooth is missing (the button is disabled).
  */
-export function mountChoice(el, { onPick, onBack }) {
+export function mountChoice(el, { onPick, onConnect, onDisconnect, build = '' }) {
   el.innerHTML = `
     <div class="side">
-      <button type="button" class="back" data-back>‹ Déconnecter</button>
-      <div><h2>Démarrer<br>une séance</h2><p>Rameur connecté.</p></div>
-      <span></span>
+      <div class="brand"><h1 class="wordmark"><b>Rower</b><span>Monitor</span></h1>${LOGO}</div>
+      <div>
+        <h2>Sélectionner<br>la séance</h2>
+        <button type="button" class="conn-btn" data-conn></button>
+        <p class="start-msg" role="status" data-msg></p>
+        <p class="build">${build}</p>
+      </div>
     </div>
     <div class="tiles">
       <button type="button" class="tile free" data-pick="free"><i>∞</i><b>Libre</b><span>sans objectif</span></button>
@@ -27,8 +37,22 @@ export function mountChoice(el, { onPick, onBack }) {
       <button type="button" class="tile" data-pick="distance"><i class="dist">↔</i><b>Distance</b><span>0 à 8 km</span></button>
       <button type="button" class="tile" data-pick="intervals"><i class="intv">▮▯▮</i><b>Intervalles</b><span>programmes</span></button>
     </div>`;
-  el.querySelector('[data-back]').addEventListener('click', () => onBack?.());
-  el.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => onPick?.(b.dataset.pick)));
+  const conn = el.querySelector('[data-conn]');
+  const msg = el.querySelector('[data-msg]');
+  const tiles = [...el.querySelectorAll('[data-pick]')];
+  let link = 'off';
+  conn.addEventListener('click', () => (link === 'on' ? onDisconnect?.() : onConnect?.()));
+  tiles.forEach((b) => b.addEventListener('click', () => onPick?.(b.dataset.pick)));
+  return {
+    update({ link: next = 'off', message = '', available = true } = {}) {
+      link = next;
+      conn.className = `conn-btn${link === 'on' ? ' on' : link === 'searching' ? ' busy' : ''}`;
+      conn.innerHTML = link === 'on' ? '<i>✓</i> Connecté' : `⌁ ${link === 'searching' ? 'Recherche…' : 'Connecter'}`;
+      conn.disabled = link === 'searching' || (link === 'off' && !available);
+      msg.textContent = message;
+      tiles.forEach((b) => { b.disabled = link !== 'on'; });
+    },
+  };
 }
 
 /** Programme list: a grid of cards. onPick(programId), onBack() = back to the tiles. */
