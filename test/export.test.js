@@ -44,3 +44,16 @@ test('exportFile: the program of a goal session goes into the same schema', asyn
   const f = exportFile(summary, globalThis.File, { program });
   assert.deepEqual(JSON.parse(await f.text()).program, program);
 });
+
+test('fixture rower-session-2026-11-18: schema and summary consistent with the samples', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const e = JSON.parse(await readFile(new URL('./fixtures/rower-session-2026-11-18.json', import.meta.url), 'utf8'));
+  assert.equal(e.schema, SCHEMA);
+  assert.ok(Array.isArray(e.samples) && e.samples.length > 0);
+  const last = e.samples.at(-1);
+  // samples run once per active second, so duration >= the last sample time
+  assert.ok(e.summary.duration >= last.t);
+  // total distance (since the first stroke) is at least the active distance of the last sample
+  assert.ok(e.summary.distance >= last.d);
+  assert.ok(e.samples.every((s, i) => i === 0 || (s.t > e.samples[i - 1].t && s.d >= e.samples[i - 1].d)));
+});
