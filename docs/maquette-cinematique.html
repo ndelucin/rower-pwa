@@ -24,17 +24,14 @@ h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 14p
 .badge { position:absolute; left:50%; top:calc(1*var(--u)); transform:translateX(-50%); z-index:30; font-size:calc(2.6*var(--u)); color:var(--muted); background:#000a; padding:.1em .7em; border-radius:99px; pointer-events:none; }
 [data-act] { cursor:pointer; }
 
-/* ----- Accueil ----- */
-.start { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:calc(4*var(--u)); text-align:center;
-  background: radial-gradient(circle at 50% 50%, rgba(79,195,247,.16) 0, rgba(79,195,247,.05) 28%, transparent 55%), radial-gradient(120% 90% at 50% 0%, #14253a 0, #0c1522 45%, #070a10 100%); }
-.hero { display:flex; flex-direction:column; align-items:center; gap:calc(2*var(--u)); margin-bottom:calc(4*var(--u)); }
-.hero svg { width:calc(30*var(--u)); height:calc(15*var(--u)); filter:drop-shadow(0 0 calc(4*var(--u)) rgba(79,195,247,.5)); }
-.wordmark { margin:0; font-size:calc(9*var(--u)); line-height:1; letter-spacing:.03em; font-weight:400; } .wordmark b{font-weight:600} .wordmark span{font-weight:300;color:var(--pace);margin-left:.12em}
-.btn-connect { display:inline-flex; align-items:center; justify-content:center; gap:calc(3*var(--u)); font:700 calc(6.5*var(--u)) system-ui,sans-serif; color:var(--bg); background:var(--btn); border:0; border-radius:99px; padding:calc(3*var(--u)) calc(9*var(--u)); box-shadow:0 0 calc(5*var(--u)) rgba(255,255,255,.18); }
-.btn-connect.busy { background:var(--panel); color:var(--muted); box-shadow:none; }
-.phone.portrait .btn-connect { width:100%; font-size:calc(6*var(--u)); padding:calc(5.5*var(--u)) calc(4*var(--u)); }
-.start-msg { margin:calc(2.5*var(--u)) 0 0; min-height:1.3em; max-width:90%; font-size:calc(4*var(--u)); color:var(--warn); }
-.last { position:absolute; left:0; right:0; bottom:calc(6*var(--u)); margin:0; padding:0 calc(4*var(--u)); font-size:calc(4*var(--u)); color:var(--muted); text-wrap:balance; } .last b{color:var(--text);font-weight:600}
+/* ----- Sélection de séance : écran racine ----- */
+.brand { display:flex; flex-direction:column; align-items:center; gap:calc(1.8*var(--u)); width:fit-content; } .brand svg { width:calc(26*var(--u)); height:calc(13*var(--u)); filter:drop-shadow(0 0 calc(3*var(--u)) rgba(79,195,247,.5)); }
+.brand .wordmark { margin:0; font-size:calc(7*var(--u)); line-height:1; letter-spacing:.02em; font-weight:400; } .brand .wordmark b{font-weight:600} .brand .wordmark span{font-weight:300;color:var(--pace);margin-left:.1em}
+.conn-btn { display:inline-flex; align-items:center; gap:calc(1.6*var(--u)); margin-top:calc(1.6*var(--u)); font-size:calc(4.2*var(--u)); color:var(--muted); border:1px solid #2c3748; border-radius:99px; padding:.4em 1.1em; }
+.conn-btn.busy { opacity:.55; } .conn-btn.on { color:var(--text); border-color:#2f4a38; } .conn-btn.on i { font-style:normal; color:var(--ok); }
+.build { position:absolute; left:calc(5*var(--u)); bottom:calc(1*var(--u)); margin:0; font-size:calc(3.2*var(--u)); color:var(--muted); opacity:.6; }
+.choice .start-msg { margin:calc(1*var(--u)) 0 0; height:calc(9.5*var(--u)); overflow:hidden; max-width:95%; font-size:calc(3.8*var(--u)); color:var(--work); line-height:1.25; } /* 2 lignes réservées : un message ne décale jamais la mise en page */
+.tiles.off .tile { opacity:.38; pointer-events:none; }
 
 /* ----- Grille commune (séance, bilan, choix) ----- */
 .screen { position:absolute; inset:0; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; padding:calc(2.5*var(--u)) calc(3*var(--u)) calc(2*var(--u)); column-gap:calc(3*var(--u)); }
@@ -51,17 +48,19 @@ h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 14p
 .ring .label { font-size:calc(4*var(--u)); color:var(--muted); letter-spacing:.05em; text-transform:uppercase; }
 .ring .chrono { font-size:calc(18*var(--u)); font-weight:700; line-height:1; } .ring.dim .chrono { color:var(--muted); } .ring .chrono.work { color:var(--work); } .ring .chrono.warm { color:var(--warm); } .ring .chrono.rest { color:var(--rest); }
 .ring .note { font-size:calc(4.5*var(--u)); color:var(--power); min-height:1.2em; white-space:pre; }
-.tap { width:calc(16*var(--u)); height:calc(16*var(--u)); border-radius:50%; display:grid; place-items:center; background:#26303f; color:#ff8a80; box-shadow:inset 0 0 0 calc(.5*var(--u)) #ff8a8066; position:absolute; left:50%; bottom:9%; transform:translateX(-50%); }
+.controls { position:absolute; left:50%; top:79.3%; transform:translate(-50%,-50%); display:flex; gap:calc(4*var(--u)); } /* centré entre le texte (bas de la note, ~65 %) et le bord intérieur de l'anneau (~93,5 %) : marges égales au-dessus et en dessous */
+.tap { width:calc(16*var(--u)); height:calc(16*var(--u)); border-radius:50%; display:grid; place-items:center; background:#26303f; color:#ff8a80; box-shadow:inset 0 0 0 calc(.5*var(--u)) #ff8a8066; }
 .tap svg { width:42%; height:42%; fill:currentColor; }
+.controls .back { font-size:calc(5*var(--u)); padding:.5em 1.4em; align-self:center; white-space:nowrap; }
 .bar { grid-column:1/-1; margin-top:calc(3*var(--u)); }
 .track-b { position:relative; height:calc(8*var(--u)); border-radius:99px; background:linear-gradient(90deg,#1b2533,#22344a 50%,#1b2533); }
-.avg { position:absolute; top:calc(-2*var(--u)); bottom:calc(-2*var(--u)); width:calc(1*var(--u)); background:var(--text); border-radius:2px; transform:translateX(-50%); opacity:.8; }
-.cursor { position:absolute; top:50%; width:calc(2.6*var(--u)); height:calc(12*var(--u)); border-radius:calc(.8*var(--u)); background:var(--pace); box-shadow:0 0 calc(2*var(--u)) var(--pace); transform:translate(-50%,-50%); }
+.avg { position:absolute; top:50%; width:0; height:0; z-index:2; } /* split moyen : losange blanc posé sur la barre, au-dessus du curseur */
+.avg::before { content:""; position:absolute; left:0; top:0; width:calc(5.6*var(--u)); height:calc(5.6*var(--u)); box-sizing:border-box; background:var(--text); border:calc(.6*var(--u)) solid var(--bg); transform:translate(-50%,-50%) rotate(45deg); }
+.cursor { position:absolute; z-index:1; top:50%; width:calc(2.6*var(--u)); height:calc(12*var(--u)); border-radius:calc(.8*var(--u)); background:var(--pace); box-shadow:0 0 calc(2*var(--u)) var(--pace); transform:translate(-50%,-50%); }
 .scale { position:relative; height:calc(5.5*var(--u)); font-size:calc(4.2*var(--u)); color:var(--muted); } .scale span{position:absolute;top:calc(.8*var(--u));transform:translateX(-50%)} .scale span:first-child{transform:none} .scale span:last-child{transform:translateX(-100%)}
 .actions { display:grid; grid-template-columns:repeat(2,14em); justify-content:center; gap:calc(6*var(--u)); font-size:calc(5*var(--u)); }
 .actions div { text-align:center; border-radius:99px; padding:.55em 1em; font-weight:600; }
 .keep { background:var(--btn); color:#0a0d12; } .discard { background:#26303f; color:#ff8a80; box-shadow:inset 0 0 0 calc(.4*var(--u)) #ff8a8066; font-weight:400 !important; }
-.dot { position:absolute; top:calc(1.5*var(--u)); right:calc(1.5*var(--u)); width:calc(1.8*var(--u)); height:calc(1.8*var(--u)); border-radius:50%; background:var(--ok); }
 .band { position:absolute; top:0; left:50%; transform:translateX(-50%); z-index:10; padding:calc(1.2*var(--u)) calc(5*var(--u)); border-radius:0 0 calc(2*var(--u)) calc(2*var(--u)); background:var(--err); color:#fff; font-weight:700; font-size:calc(5*var(--u)); animation:blink 1.6s ease-in-out infinite; }
 .band.info { background:#1d4f6b; animation:none; font-weight:600; font-size:calc(4.2*var(--u)); }
 @keyframes blink { 50% { opacity:.65; } }
@@ -71,7 +70,7 @@ h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 14p
 /* ----- Choix de séance ----- */
 .choice { position:absolute; inset:0; display:grid; grid-template-columns:minmax(0,.55fr) minmax(0,1.45fr); gap:calc(4*var(--u)); padding:calc(4*var(--u)) calc(5*var(--u)); }
 .choice h2 { margin:0; font-size:calc(7*var(--u)); font-weight:600; line-height:1.15; } .choice p { margin:calc(1.5*var(--u)) 0 0; font-size:calc(4*var(--u)); color:var(--muted); }
-.side { display:flex; flex-direction:column; justify-content:space-between; }
+.side { display:flex; flex-direction:column; justify-content:flex-end; gap:calc(3*var(--u)); } .side > :first-child { margin-bottom:auto; } /* logo / Retour en haut ; titre + icône groupés en bas : le haut du titre reste sous l'axe médian */
 .back { align-self:flex-start; font-size:calc(4.4*var(--u)); color:var(--muted); border:1px solid #2c3748; border-radius:99px; padding:.4em 1.1em; }
 .tiles { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:calc(3*var(--u)); }
 .tile { background:linear-gradient(160deg,#17202c,#111822); border:1px solid #26334a; border-radius:calc(3*var(--u)); padding:calc(3*var(--u)) calc(4*var(--u)); display:flex; flex-direction:column; justify-content:center; gap:calc(.8*var(--u)); }
@@ -105,7 +104,8 @@ h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 14p
 .picker .chrono { font-size:calc(17*var(--u)); } .picker .pu { font-size:calc(6*var(--u)); font-weight:400; color:var(--muted); margin-left:.3em; } .picker .hint { font-size:calc(3.6*var(--u)); color:var(--muted); margin-top:calc(1.5*var(--u)); }
 .pm { display:flex; gap:calc(9*var(--u)); margin-top:calc(7*var(--u)); } .pm div { width:calc(16*var(--u)); height:calc(16*var(--u)); display:grid; place-items:center; font-size:calc(9.5*var(--u)); border-radius:50%; background:#26303f; }
 .go { text-align:center; border-radius:99px; padding:.6em 1em; font-size:calc(6*var(--u)); font-weight:700; background:var(--btn); color:#0a0d12; }
-.pk-ico { font-style:normal; font-size:calc(30*var(--u)); line-height:1; margin:0 0 0 calc(2*var(--u)); } .picker .ring > svg { overflow:visible; } .picker.dur .pk-ico { color:var(--dur); } .picker.dist .pk-ico { color:var(--dist); transform:translateY(calc(4.7*var(--u))); }
+.pk-ico { font-style:normal; font-size:calc(30*var(--u)); line-height:1; margin:0 0 0 calc(2*var(--u)); } .picker .ring > svg { overflow:visible; } .picker .pk-ico { line-height:calc(20*var(--u)); height:calc(20*var(--u)); transform:translateY(calc(-3.2*var(--u))); } /* boîte de 20u au lieu de 30u : le titre reste sous l'axe médian ; le glyphe garde sa place */
+.picker.dur .pk-ico { color:var(--dur); } .picker.dist .pk-ico { color:var(--dist); transform:translateY(calc(1.5*var(--u))); }
 .presets { display:grid; grid-template-columns:1fr 1fr; gap:calc(2.5*var(--u)); } .presets div { text-align:center; padding:.45em .9em; border-radius:99px; background:#26303f; font-size:calc(5.2*var(--u)); font-weight:600; white-space:nowrap; } .presets div:hover { background:#324056; }
 .go.off { background:#1c2431; color:#5b6678; }
 
@@ -146,7 +146,7 @@ label.opt { display:flex; gap:8px; align-items:center; color:var(--muted); font-
 
 <script>
 // ---------- Modèle ----------
-// screen : home | menu | picker | programs | session | summary ; sess : waiting | running | paused ; conn : connected | reconnecting
+// screen : menu (racine : « Sélectionner la séance ») | picker | programs | session | summary ; sess : waiting | running | paused ; conn : connected | reconnecting
 // mode : free | duration | distance | interval ; target : secondes (durée) ou mètres (distance)
 const PRESETS = { duration:[600,1200,1800,2700], distance:[1000,2000,5000,8000] };
 // Programmes d'intervalles (brief § 6) : phases = segment seul ('warmup' | 'rest' | 'cooldown') ou bloc répété (reps × effort / récup).
@@ -187,9 +187,9 @@ const phaseName = (p, i, sg) => { const ph = p.phases[i]; return ph.t!=='block' 
 const segCount = (p, i, sg) => { const ph = p.phases[i]; if (ph.t!=='block') return ''; const blocks = p.phases.filter((x)=>x.t==='block'); return `${blocks.length>1?`S${blocks.indexOf(ph)+1} · `:''}${sg.n} / ${ph.efforts ? ph.efforts.length : ph.reps}`; };
 PROGRAMS.forEach((p)=>{ if (progSeconds(p)!==p.min*60) console.error('programme incohérent', p.id, progSeconds(p)); });
 const LIMITS = { duration:{ max:3600, step:30, def:1200 }, distance:{ max:8000, step:500, def:2000 } };
-const init = () => ({ screen:'home', sess:null, conn:'connected', searching:false, msg:'', phone:'landscape', locked:false,
-  hadSession:false, interrupted:false, goal:false, mode:'free', target:0, program:'pyramide', pi:0, si:0, pickKind:'duration', pendingShare:false,
-  lastSession:'hier · 20:12 · 4 988 m · 2:00 /500 m' });
+const init = () => ({ screen:'menu', sess:null, conn:'connected', linked:false, searching:false, msg:'', phone:'landscape', locked:false,
+  hadSession:false, interrupted:false, goal:false, mode:'free', target:0, program:'pyramide', pi:0, si:0, pickKind:'duration', pendingShare:false });
+const BOOT_WARN = 'Accueil supprimé : l’appli s’ouvre sur « Sélectionner la séance ». Manifeste en orientation paysage (à faire au codage). Tuiles grisées tant que le rameur n’est pas connecté.';
 let M = init();
 const $ = (id) => document.getElementById(id);
 const shown = () => (M.locked ? 'landscape' : M.phone);
@@ -203,26 +203,24 @@ const isMenuish = (m) => ['menu','picker','programs'].includes(m.screen);
 
 // ---------- Événements ----------
 const EV = [
-  { id:'connect', label:'Appui « Connecter le rameur »', when:m=>m.screen==='home'&&!m.searching, run(m){ m.searching=true; m.msg='Recherche du rameur…'; return 'Recherche du rameur (bouton grisé)'; },
-    warn:'Recherche non annulable (écart 5, inchangé).' },
-  { id:'found', label:'Rameur trouvé', when:m=>m.searching, run(m,refused){ m.searching=false; m.msg=''; m.screen='menu'; m.conn='connected'; m.hadSession=false; m.locked=!refused;
-      return refused ? 'Choix de séance · verrouillage refusé : « Tourne le téléphone » en portrait' : 'Choix de séance · bascule auto en paysage, écran maintenu allumé'; },
-    warn:'Nouveau : le paysage est demandé dès la connexion, avant le choix du type de séance (le sélecteur circulaire est en paysage).' },
-  { id:'notfound', label:'Rameur introuvable', when:m=>m.searching, run(m){ m.searching=false; m.msg='S4 non détecté, vérifier la connexion'; return 'Retour accueil · message court « S4 non détecté, vérifier la connexion »'; },
-    warn:'Message unique pour toutes les causes (introuvable, refus, réseau…) : le détail reste dans le journal de diagnostic. Voir la question sur les autres erreurs.' },
+  { id:'connect', label:'Appui « Connecter »', when:m=>m.screen==='menu'&&!m.linked&&!m.searching, run(m){ m.searching=true; m.msg=''; return 'Recherche du rameur (bouton « Recherche… » atténué, tuiles grisées)'; } },
+  { id:'found', label:'Rameur trouvé', when:m=>m.searching, run(m,refused){ m.searching=false; m.msg=''; m.linked=true; m.conn='connected'; m.hadSession=false; m.locked=!refused;
+      return refused ? 'Connecté · tuiles actives · verrouillage refusé : « Tourne le téléphone » en portrait' : 'Connecté (« ✓ Connecté », sans point vert) · tuiles actives · bascule auto en paysage, écran maintenu allumé'; } },
+  { id:'notfound', label:'Rameur introuvable', when:m=>m.searching, run(m){ m.searching=false; m.msg='S4 non détecté'; return 'Message « S4 non détecté » en jaune sous le bouton (le détail de la cause reste dans le journal de diagnostic)'; } },
 
   // --- Choix de séance (nouveau) ---
-  { id:'pickFree', label:'Tuile « Libre »', when:m=>m.screen==='menu', run(m,r){ return goSession(m,'free'); } },
-  { id:'pickDuration', label:'Tuile « Durée »', when:m=>m.screen==='menu', run(m){ m.screen='picker'; m.pickKind='duration'; m.target=LIMITS.duration.def; return 'Sélecteur circulaire de durée (0–60 min, pas 30 s), départ à 20:00'; } },
-  { id:'pickDistance', label:'Tuile « Distance »', when:m=>m.screen==='menu', run(m){ m.screen='picker'; m.pickKind='distance'; m.target=LIMITS.distance.def; return 'Sélecteur circulaire de distance (0–8 km, pas 500 m), départ à 2,0 km'; } },
-  { id:'pickInterval', label:'Tuile « Intervalles »', when:m=>m.screen==='menu', run(m){ m.screen='programs'; return 'Liste de 6 programmes : 2 de 15 min, 2 de 20 min, 2 de 30 min'; } },
+  { id:'pickFree', label:'Tuile « Libre »', when:m=>m.screen==='menu'&&m.linked, run(m,r){ return goSession(m,'free'); } },
+  { id:'pickDuration', label:'Tuile « Durée »', when:m=>m.screen==='menu'&&m.linked, run(m){ m.screen='picker'; m.pickKind='duration'; m.target=LIMITS.duration.def; return 'Sélecteur circulaire de durée (0–60 min, pas 30 s), départ à 20:00'; } },
+  { id:'pickDistance', label:'Tuile « Distance »', when:m=>m.screen==='menu'&&m.linked, run(m){ m.screen='picker'; m.pickKind='distance'; m.target=LIMITS.distance.def; return 'Sélecteur circulaire de distance (0–8 km, pas 500 m), départ à 2,0 km'; } },
+  { id:'pickInterval', label:'Tuile « Intervalles »', when:m=>m.screen==='menu'&&m.linked, run(m){ m.screen='programs'; return 'Liste de 6 programmes : 2 de 15 min, 2 de 20 min, 2 de 30 min'; } },
   { id:'pickerStart', label:'Démarrer (sélecteur)', when:m=>m.screen==='picker'&&m.target>0, run(m){ const k=m.pickKind; const t=fmtTarget(k,m.target); goSession(m,k); return `Attente du 1er coup · objectif ${t} (le chrono / la distance ne démarrent qu’au 1er coup)`; } },
   { id:'programPick', label:'Choisir un programme', when:m=>m.screen==='programs', run(m){ const p=PROGRAMS.find((x)=>x.id===m.program); return goSession(m,'interval', ` · ${p.name} (${p.min} min)`); } },
   { id:'menuBack', label:'‹ Retour (sélecteur / programmes → choix)', when:m=>m.screen==='picker'||m.screen==='programs', run(m){ m.screen='menu'; return 'Retour au choix de séance (rameur toujours connecté)'; } },
-  { id:'disconnectBtn', label:'‹ Déconnecter (choix → accueil)', when:m=>m.screen==='menu', run(m){ m.screen='home'; m.locked=false; m.msg=''; return 'Accueil · rameur déconnecté, orientation libérée'; },
-    warn:'Nouveau bouton : sans lui, il faudrait attendre le délai du S4 pour libérer la connexion.' },
+  { id:'disconnectBtn', label:'Appui « ✓ Connecté » (déconnecter)', when:m=>m.screen==='menu'&&m.linked, run(m){ m.linked=false; m.msg=''; return 'Rameur déconnecté (S4 libéré pour une autre appli) · tuiles grisées · « Connecter » revient'; } },
 
   // --- Séance ---
+  { id:'backWait', label:'Appui « ‹ Retour » (séance non démarrée)', when:m=>m.screen==='session'&&m.sess==='waiting', run(m){ m.screen='menu'; m.sess=null; m.hadSession=false; return 'Retour à « Sélectionner la séance » (rien n’a été ramé, pas de bilan, rameur toujours connecté)'; },
+    warn:'Avant le premier coup, un seul bouton : « ‹ Retour », le même que sur les autres écrans. ⏸ n’apparaît plus qu’en pause (il y termine la séance).' },
   { id:'stroke1', label:'Premier coup', when:m=>m.screen==='session'&&m.sess==='waiting'&&m.conn==='connected', run(m){ m.sess='running'; m.hadSession=true; return 'Séance en cours'; } },
   { id:'segNext', label:'Segment suivant (compte à rebours à 0)', when:m=>m.screen==='session'&&m.mode==='interval'&&m.sess==='running', run(m){
       const p=PROGRAMS.find((x)=>x.id===m.program); m.si++;
@@ -238,35 +236,34 @@ const EV = [
   { id:'stroke', label:'Coup : reprise', when:m=>m.screen==='session'&&m.sess==='paused'&&m.conn==='connected', run(m){ m.sess='running'; return 'Reprise auto (⏸ disparaît)'; } },
   { id:'goal', label:'Objectif atteint', when:m=>m.screen==='session'&&m.sess==='running'&&m.mode!=='free', run(m){ m.screen='summary'; m.sess=null; m.goal=true; m.interrupted=false; return 'Fin automatique : bilan « Objectif atteint » (même bilan, mêmes deux actions)'; },
     warn:'Pas de signal à l’atteinte de l’objectif tant que l’audio (v2) n’existe pas : l’écran change seul.' },
-  { id:'tapPause', label:'Appui ⏸', when:m=>m.screen==='session'&&(m.sess==='waiting'||m.sess==='paused'), run(m){
-      if (m.sess==='waiting') { m.screen='menu'; m.sess=null; m.hadSession=false; return 'Retour au choix de séance (rien n’a été ramé, pas de bilan, rameur toujours connecté)'; }
-      m.screen='summary'; m.sess=null; m.goal=false; m.interrupted=false; return 'Bilan (effet immédiat, pas de confirmation)'; },
-    warn:'Changement : ⏸ en attente ramenait à l’accueil (rameur déconnecté) ; il ramène désormais au choix de séance, pour changer d’avis sans se reconnecter.' },
+  { id:'tapPause', label:'Appui ⏸ (en pause)', when:m=>m.screen==='session'&&m.sess==='paused', run(m){
+      m.screen='summary'; m.sess=null; m.goal=false; m.interrupted=false; return 'Bilan (effet immédiat, pas de confirmation)'; } },
   { id:'disc', label:'Déconnexion Bluetooth', when:m=>m.screen==='session'&&m.conn==='connected', run(m){ m.conn='reconnecting'; if (m.sess==='running') m.sess='paused'; return 'Bandeau « Reconnexion… » · en effort : pause auto'; } },
-  { id:'reco', label:'Reconnexion réussie', when:m=>m.screen==='session'&&m.conn==='reconnecting', run(m){ m.conn='connected'; return 'Bandeau remplacé par le point vert · reprise au prochain coup'; } },
-  { id:'back', label:'Bouton Retour Android', when:m=>m.screen!=='home', run(m){
-      if (m.screen==='picker'||m.screen==='programs') { m.screen='menu'; return '✔ Retour du sélecteur au choix de séance'; }
-      if (m.screen==='menu') { m.screen='home'; m.locked=false; m.msg=''; return 'Accueil · rameur déconnecté (comme « Déconnecter »)'; }
+  { id:'reco', label:'Reconnexion réussie', when:m=>m.screen==='session'&&m.conn==='reconnecting', run(m){ m.conn='connected'; return 'Bandeau « Reconnexion… » retiré (pas de point vert) · reprise au prochain coup'; } },
+  { id:'back', label:'Bouton Retour Android', when:m=>true, run(m){
+      if (m.screen==='picker'||m.screen==='programs') { m.screen='menu'; return '✔ Retour du sélecteur à « Sélectionner la séance »'; }
+      if (m.screen==='menu') return 'Écran racine : le geste quitte l’appli (connexion Bluetooth perdue, rien à sauver)';
       return '✔ (écart 3) Geste intercepté : rien ne se passe, une consigne « Termine par ⏸ » s’affiche brièvement'; } },
-  { id:'crash', label:'Crash / rechargement', when:m=>m.screen!=='home', run(m,r){ return crash(m,'Page rechargée',r); } },
+  { id:'crash', label:'Crash / rechargement', when:m=>true, run(m,r){ return crash(m,'Page rechargée',r); } },
 
   // --- Bilan ---
-  { id:'keep', label:'Enregistrer (partage lancé)', when:m=>m.screen==='summary', run(m){ m.screen='home'; m.msg='Séance enregistrée.'; m.pendingShare=true; m.locked=false; m.interrupted=false; m.goal=false;
-      m.lastSession='à l’instant · 8:38 · 1 250 m · 2:08 /500 m'; return 'Accueil immédiat « Séance enregistrée. » · feuille de partage ouverte · rameur déconnecté'; } },
+  { id:'keep', label:'Enregistrer (partage lancé)', when:m=>m.screen==='summary', run(m){ m.screen='menu'; m.msg='Séance enregistrée.'; m.pendingShare=true; m.interrupted=false; m.goal=false;
+      return 'Retour immédiat à « Sélectionner la séance », message « Séance enregistrée. » sous le titre · feuille de partage ouverte · rameur toujours connecté'; },
+    warn:'Après enregistrement, on revient à la sélection sans déconnecter (enchaîner deux séances). Le S4 n’accepte qu’une connexion : WaterRower Connect ne peut pas s’y connecter tant que l’appli reste ouverte (à trancher : déconnecter au retour ?).' },
   { id:'shareOk', label:'Partage terminé', when:m=>m.pendingShare, run(m){ m.pendingShare=false;
-      if (m.screen==='home'&&!m.searching) { m.msg='Séance enregistrée. Fichier partagé.'; return 'Message complété : « Fichier partagé. »'; }
+      if (m.screen==='menu'&&!m.searching) { m.msg='Séance enregistrée. Fichier partagé.'; return 'Message complété : « Fichier partagé. »'; }
       return '✔ (écart 2) Résultat du partage ignoré : l’écran n’est plus au repos, le message en cours n’est pas écrasé'; } },
   { id:'shareCancel', label:'Partage annulé', when:m=>m.pendingShare, run(m){ m.pendingShare=false;
-      if (m.screen==='home'&&!m.searching) { m.msg='Séance enregistrée. Partage annulé.'; return 'Message : « Partage annulé. » (copie locale conservée)'; }
+      if (m.screen==='menu'&&!m.searching) { m.msg='Séance enregistrée. Partage annulé.'; return 'Message : « Partage annulé. » (copie locale conservée)'; }
       return '✔ (écart 2) Résultat du partage ignoré : écran occupé'; } },
-  { id:'discard', label:'Ignorer (appui long)', when:m=>m.screen==='summary', run(m){ m.screen='home'; m.msg=''; m.locked=false; m.interrupted=false; m.goal=false; return 'Séance supprimée, accueil sans message'; } },
+  { id:'discard', label:'Ignorer (appui long)', when:m=>m.screen==='summary', run(m){ m.screen='menu'; m.msg=''; m.interrupted=false; m.goal=false; return 'Séance supprimée, retour à « Sélectionner la séance » sans message'; } },
 ];
 function crash(m, why, refused){
   const had = m.hadSession;
-  m.searching=false; m.pendingShare=false; m.conn='connected'; m.goal=false;
+  m.searching=false; m.pendingShare=false; m.conn='connected'; m.linked=false; m.goal=false;
   if (had) { m.screen='summary'; m.sess=null; m.interrupted=true; m.msg=''; m.locked=!refused;
     return `${why} → relance : ✔ (écart 1) paysage verrouillé aussitôt, bilan de la séance interrompue avec bandeau « Séance interrompue retrouvée »`; }
-  m.screen='home'; m.sess=null; m.msg=''; m.locked=false; return `${why} → relance : accueil (pas de copie de secours : rien n’a été ramé, ou on était encore dans le choix de séance)`;
+  m.screen='menu'; m.sess=null; m.msg=''; return `${why} → relance : « Sélectionner la séance », rameur à reconnecter (pas de copie de secours : rien n’a été ramé, ou on était encore dans le choix de séance)`;
 }
 
 // ---------- Rendu ----------
@@ -279,41 +276,38 @@ const arc = (f, cls='') => `<circle class="arc ${cls}" cx="50" cy="50" r="46" st
 const metric = (label, value, unit, tone, long) => `<div class="metric ${tone||''}"><div class="label">${label}</div><div class="value${long?' long':''}">${value}${unit?`<span class="unit">${unit}</span>`:''}</div></div>`;
 const MODE_ICO = { free:['∞','free'], duration:['◔','dur'], distance:['↔','dist'], interval:['▮▯▮','intv'] };
 const modeIco = () => { const [g,c] = MODE_ICO[M.mode]||MODE_ICO.free; return `<i class="ring-ico ${c}">${g}</i>`; };
-const ring = ({label,main,note='',dim=false,btn=false,f=0,tone='',mainCls='',svgInner=null}) => `<div class="ring${dim?' dim':''}"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="46"/>${svgInner ?? arc(f,tone)}</svg>${modeIco()}<div class="ring-center"><div class="label">${label}</div><div class="chrono ${mainCls}">${main}</div><div class="note">${note}</div>${btn?`<div class="tap" data-act="tapPause">${I.pause}</div>`:''}</div></div>`;
+const ring = ({label,main,note='',dim=false,btn=false,back=false,f=0,tone='',mainCls='',svgInner=null}) => `<div class="ring${dim?' dim':''}"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="46"/>${svgInner ?? arc(f,tone)}</svg>${modeIco()}<div class="ring-center"><div class="label">${label}</div><div class="chrono ${mainCls}">${main}</div><div class="note">${note}</div>${(btn||back)?`<div class="controls">${back?`<div class="back" data-act="backWait">‹ Retour</div>`:''}${btn?`<div class="tap" data-act="tapPause">${I.pause}</div>`:''}</div>`:''}</div></div>`;
 const zoneAt = (z) => { const f = (x) => Math.min(Math.max((150-x)/40,0),1)*100; return `<div class="zone" style="left:${f(z[1])}%;right:${100-f(z[0])}%"></div>`; };
 const bar = (cursor, zone) => `<div class="bar"><div class="track-b">${zone?zoneAt(zone):''}<div class="avg" style="left:55%"></div>${cursor?'<div class="cursor" style="left:60%"></div>':''}</div><div class="scale"><span style="left:0">2:30</span><span style="left:25%">2:20</span><span style="left:50%">2:10</span><span style="left:75%">2:00</span><span style="left:100%">1:50</span></div></div>`;
 
-function viewHome(){
-  return `<div class="start"><div class="hero">${I.logo}<h1 class="wordmark"><b>Rower</b><span>Monitor</span></h1></div>
-    <div class="btn-connect${M.searching?' busy':''}" data-act="connect">⌁ Connecter le rameur</div><p class="start-msg">${M.msg}</p>
-    <p class="last">Dernière séance : <b>${M.lastSession}</b></p></div>`;
-}
 function viewMenu(){
-  return `<div class="choice"><div class="side"><div class="back" data-act="disconnectBtn">‹ Déconnecter</div>
-      <div><h2>Démarrer<br>une séance</h2><p>Rameur connecté.</p></div><span></span></div>
-    <div class="tiles">
+  const on = M.linked, conn = on ? '<div class="conn-btn on" data-act="disconnectBtn"><i>✓</i> Connecté</div>'
+    : `<div class="conn-btn${M.searching?' busy':''}" data-act="connect">⌁ ${M.searching?'Recherche…':'Connecter'}</div>`;
+  return `<div class="choice"><div class="side"><div class="brand"><h1 class="wordmark"><b>Rower</b><span>Monitor</span></h1>${I.logo}</div>
+      <div><h2>Sélectionner<br>la séance</h2>${conn}<p class="start-msg">${M.msg}</p><p class="build">build 45 · 20/11 17:35</p></div></div>
+    <div class="tiles${on?'':' off'}">
       <div class="tile free" data-act="pickFree"><i>∞</i><b>Libre</b><span>sans objectif</span></div>
       <div class="tile" data-act="pickDuration"><i class="dur">◔</i><b>Durée</b><span>0 à 60 min</span></div>
       <div class="tile" data-act="pickDistance"><i class="dist">↔</i><b>Distance</b><span>0 à 8 km</span></div>
       <div class="tile" data-act="pickInterval"><i class="intv">▮▯▮</i><b>Intervalles</b><span>programmes</span></div>
-    </div><div class="dot"></div></div>`;
+    </div></div>`;
 }
 function viewPrograms(){
   const card = (p) => `<div class="pcard" data-act="programPick" data-prog="${p.id}"><div class="dots" title="Intensité ${p.lvl} / 3">${[1,2,3].map((n)=>`<i class="${n<=p.lvl?'on':''}"></i>`).join('')}</div><div class="pd">${p.min} MIN</div><b>${p.name}</b><span>${p.struct}</span></div>`;
   return `<div class="choice"><div class="side"><div class="back" data-act="menuBack">‹ Retour</div>
       <div class="side-title">Sélectionner<br>un programme</div><i class="pk-ico intv">▮▯▮</i></div>
-    <div class="pgrid">${PROGRAMS.map(card).join('')}</div><div class="dot"></div></div>`;
+    <div class="pgrid">${PROGRAMS.map(card).join('')}</div></div>`;
 }
 function viewPicker(){
   const k = M.pickKind, name = k==='duration'?'Durée':'Distance';
-  return `<div class="screen picker ${k==='duration'?'dur':'dist'}" style="grid-template-rows:minmax(0,1fr)"><div class="col" style="justify-content:space-between;padding:calc(2*var(--u)) 0"><div class="back" data-act="menuBack" style="align-self:flex-start;font-size:calc(4.4*var(--u));color:var(--muted);border:1px solid #2c3748;border-radius:99px;padding:.4em 1.1em">‹ Retour</div>
+  return `<div class="screen picker ${k==='duration'?'dur':'dist'}" style="grid-template-rows:minmax(0,1fr)"><div class="col" style="justify-content:flex-end;gap:calc(3*var(--u));padding:calc(2*var(--u)) 0"><div class="back" data-act="menuBack" style="margin-bottom:auto;align-self:flex-start;font-size:calc(4.4*var(--u));color:var(--muted);border:1px solid #2c3748;border-radius:99px;padding:.4em 1.1em">‹ Retour</div>
       <div class="metric"><div class="value long" style="font-size:calc(7*var(--u));line-height:1.15;white-space:normal">Définir<br>une ${name.toLowerCase()}</div></div><i class="pk-ico">${k==='duration'?'◔':'↔'}</i></div>
     <div class="ring" id="pkRing"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="46"/><circle class="arc ${k==='duration'?'':'dist'}" id="pkArc" cx="50" cy="50" r="46"/><circle class="knob" id="pkKnob" r="4.2"/></svg>
       <div class="ring-center"><div class="chrono" id="pkMain"></div>
       <div class="pm"><div data-pk="-1">−</div><div data-pk="1">+</div></div></div></div>
     <div class="col r" style="justify-content:space-between;padding:calc(2*var(--u)) 0"><div class="presets">${PRESETS[k].map((v)=>`<div data-preset="${v}">${k==='duration'?v/60+' min':v/1000+' km'}</div>`).join('')}</div>
       <div class="go" id="pkGo" data-act="pickerStart">Démarrer</div></div>
-    <div class="dot"></div></div>`;
+    </div>`;
 }
 function updatePicker(){
   const k = M.pickKind, L = LIMITS[k], f = M.target / L.max;
@@ -379,10 +373,10 @@ function viewSession(){
   }
   return `<div class="screen${tint?` tint t-${tint}`:''}">
     <div class="col">${metric('Split /500 m', v('2:06'), '')}${metric('Puissance', v('178'), 'W')}</div>
-    ${ring({ ...ringProps, dim:pause, btn:wait||pause })}
+    ${ring({ ...ringProps, dim:pause, btn:pause, back:wait })}
     <div class="col r">${metric('Cadence', v('22'), '/min')}${rightBottom}</div>
     ${bar(run, zone)}
-    ${M.conn==='connected' ? '<div class="dot"></div>' : '<div class="band">Reconnexion…</div>'}</div>`;
+    ${M.conn==='connected' ? '' : '<div class="band">Reconnexion…</div>'}</div>`;
 }
 function viewSummary(){
   return `<div class="screen">
@@ -394,7 +388,7 @@ function viewSummary(){
 }
 function stateText(){
   const sess = { waiting:'attente du 1er coup', running:'en cours', paused:'en pause' }[M.sess];
-  const where = { home: M.searching?'Accueil · recherche en cours':'Accueil', menu:'Choix de séance', programs:'Choix d’un programme (intervalles)',
+  const where = { menu: `Sélectionner la séance · ${M.searching?'recherche du rameur…':M.linked?'rameur connecté':'rameur non connecté'}`, programs:'Choix d’un programme (intervalles)',
     picker:`Sélecteur de ${M.pickKind==='duration'?'durée':'distance'} · ${fmtTarget(M.pickKind,M.target)}`,
     summary: M.interrupted?'Bilan · séance interrompue (copie de secours)':M.goal?'Bilan · objectif atteint':'Bilan',
     session: `Séance ${MODE_NAME[M.mode]}${M.mode==='interval'?` · ${PROGRAMS.find((x)=>x.id===M.program).name}`:''} · ${sess}` }[M.screen];
@@ -405,8 +399,8 @@ function render(){
   const o = shown(), p = $('phone');
   p.className = `phone ${o}`; fit();
   $('badge').textContent = `${o==='landscape'?'780 × 360':'360 × 780'} · ${M.locked?'verrouillé':'libre'}`;
-  const body = { home:viewHome, menu:viewMenu, programs:viewPrograms, picker:viewPicker, session:viewSession, summary:viewSummary }[M.screen]();
-  const hint = (o==='portrait' && M.screen!=='home') ? `<div class="rotate">Tourne le téléphone en paysage<small>${M.screen==='session'?'La séance continue à tourner derrière.':'Le choix et le bilan restent inaccessibles en portrait.'}</small></div>` : '';
+  const body = { menu:viewMenu, programs:viewPrograms, picker:viewPicker, session:viewSession, summary:viewSummary }[M.screen]();
+  const hint = (o==='portrait') ? `<div class="rotate">Tourne le téléphone en paysage<small>${M.screen==='session'?'La séance continue à tourner derrière.':'La sélection, les sélecteurs et le bilan sont en paysage.'}</small></div>` : '';
   $('view').innerHTML = body + hint;
   $('state').innerHTML = stateText();
   document.querySelectorAll('#events button').forEach((b) => { b.disabled = !EV.find((e)=>e.id===b.dataset.ev).when(M); });
@@ -441,7 +435,8 @@ document.addEventListener('click', (ev) => {
   const a = ev.target.closest('[data-act]');
   if (a) { if (a.dataset.act==='pickerStart' && M.target<=0) return; if (a.dataset.prog) M.program = a.dataset.prog; fire(a.dataset.act); }
 });
-$('reset').onclick = () => { M = init(); step = 0; warned.clear(); $('log').innerHTML = ''; render(); };
+$('reset').onclick = () => { M = init(); step = 0; warned.clear(); $('log').innerHTML = ''; boot(); render(); };
+function boot(){ log('<b>Lancement</b> → « Sélectionner la séance », rameur non connecté', BOOT_WARN); }
 async function play(ids){
   $('reset').click(); M.phone='portrait'; render();
   for (const id of ids) { await new Promise((r)=>setTimeout(r,1300)); if (!fire(id)) break; }
@@ -450,6 +445,7 @@ $('auto').onclick = () => play(['connect','found','pickFree','stroke1','stop4','
 $('autoDur').onclick = () => play(['connect','found','pickDuration','pickerStart','stroke1','goal','keep','shareOk']);
 $('autoHiit').onclick = () => play(['connect','found','pickInterval','programPick','stroke1','segNext','segNext','segNext','phaseNext','phaseNext','keep','shareOk']);
 addEventListener('resize', fit);
+boot();
 render();
 </script>
 </body>

@@ -11,7 +11,7 @@ Documents de référence, à relire avant toute décision de conception :
 
 ## Principes non négociables
 - **HTML / CSS / JS vanilla, modules ES, aucune étape de build, aucune dépendance runtime.** Pas de framework ni de librairie graphique (rendu natif HTML / CSS / SVG).
-- **Cible : Galaxy S23, Chrome Android** (Web Bluetooth ; jamais Samsung Internet, le navigateur par défaut). Accueil en portrait (par défaut) ou paysage ; **écran de séance en paysage plein écran** (bascule automatique à la connexion).
+- **Cible : Galaxy S23, Chrome Android** (Web Bluetooth ; jamais Samsung Internet, le navigateur par défaut). **Tout en paysage plein écran** (manifeste `orientation: landscape`) : l'appli s'ouvre directement sur « Sélectionner la séance », il n'y a plus d'écran d'accueil.
   - Viewport CSS en paysage : **780 × 360** en plein écran, environ **780 × 300** avec la barre d'adresse. Vérifier toute mise en page aux deux tailles.
   - Densité × 3 ; caméra perforée sur le côté → marges `env(safe-area-inset-*)` avec `viewport-fit=cover`.
   - Tailles en `min(vw, vh)` pour rester lisible dans les deux cas, à 1,5 m.
@@ -28,12 +28,13 @@ src/  ftms.js          décodeur Rower Data (pur)
       sim.js           faux rameur (scénarios repos / continu / HIIT)
       ble.js           connexion Web Bluetooth + reconnexion
       activity.js      détection d'arrêt (attente / en cours / arrêt)
+      smooth.js        lissage d'affichage : moyenne des 3 derniers coups (2 en programme), pur
       wakelock.js      écran maintenu allumé
       session.js       chrono, pause auto, cumuls et bilan de la séance (pur)
       goal.js          objectif durée / distance : bornes, valeur depuis l'angle, progression (pur)
       store.js         IndexedDB : copie de secours, historique
       export.js        fichier d'export `rower-session/1` et son nom (pur)
-      version.js       numéro de build affiché sur l'accueil (écrit par `npm run stamp`)
+      version.js       numéro de build affiché en bas de l'écran de sélection (écrit par `npm run stamp`)
       programs.js      les 6 programmes d'intervalles (données)
       engine.js        moteur de programme : phase, segment, compte à rebours, frise (pur)
       target.js        repère personnel et zone cible de split (pur)
@@ -48,10 +49,10 @@ scripts/  phone-eval.js  sim-demo.js  stamp-version.js  import-rowerboard.js (im
 
 ## Commandes
 - Serveur local : `python3 -m http.server 8080`, puis http://localhost:8080 (`?sw=1` active le service worker en local ; le panneau navigateur de l'app Claude refuse les service workers : tester dans Chrome).
-  - `?dev` affiche les boutons du simulateur sur l'accueil ; `?sim=steady` (ou `hiit`, `startstop`, `rest`) démarre directement le simulateur ; `&speed=10` accélère (10 s simulées par seconde, mais l'horloge de séance reste réelle) ; `&mode=program&program=pyramide` démarre un programme d'intervalles (ids : `pyramide`, `6x1`, `8x1`, `4x2`, `4x4`, `3x6x30`) ; `&frames=full` envoie des trames entières (sans lui, le simulateur découpe en 20 octets et la séance reste « en attente »). Sans `?sim=`, `?mode=` ne fait rien : il faut le simulateur. `&mode=duration|distance&target=1200` (s) ou `2000` (m) démarre une séance à objectif, `&mode=choice` s'arrête sur l'écran de choix.
+  - `?dev` affiche les boutons du simulateur sur l'écran de sélection ; `?sim=steady` (ou `hiit`, `startstop`, `rest`) démarre directement le simulateur ; `&speed=10` accélère (10 s simulées par seconde, mais l'horloge de séance reste réelle) ; `&mode=program&program=pyramide` démarre un programme d'intervalles (ids : `pyramide`, `6x1`, `8x1`, `4x2`, `4x4`, `3x6x30`) ; `&frames=full` envoie des trames entières (sans lui, le simulateur découpe en 20 octets et la séance reste « en attente »). Sans `?sim=`, `?mode=` ne fait rien : il faut le simulateur. `&mode=duration|distance&target=1200` (s) ou `2000` (m) démarre une séance à objectif, `&mode=choice` s'arrête sur l'écran de choix.
   - Maquette (une seule, cliquable, tous les écrans) : http://localhost:8080/docs/maquette-cinematique.html.
 - Tests : `npm test` (= `node --test test/*.test.js`, runner intégré à Node, sans dépendance). Trames de test : `encodeRowerData` (`src/ftms-encoder.js`) et `test/helpers.js`.
-- Numéro de build (discret en bas de l'accueil : « build 38 · 15/11 22:09 ») : `npm run stamp` l'écrit dans `src/version.js` (n° = nombre de commits + 1, + l'heure). **À lancer juste avant chaque commit** pour que le numéro affiché sur le téléphone soit celui du commit ; un crochet Git `pre-commit` peut le faire tout seul (non installé : le dossier `.git/hooks` n'est pas versionné).
+- Numéro de build (discret en bas de l'écran de sélection : « build 38 · 15/11 22:09 ») : `npm run stamp` l'écrit dans `src/version.js` (n° = nombre de commits + 1, + l'heure). **À lancer juste avant chaque commit** pour que le numéro affiché sur le téléphone soit celui du commit ; un crochet Git `pre-commit` peut le faire tout seul (non installé : le dossier `.git/hooks` n'est pas versionné).
 - Capture d'une page à la taille du S23, sans téléphone :
   `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars --force-device-scale-factor=3 --window-size=780,300 --screenshot=out.png "http://localhost:8080/?sim=steady"`
 - Démo du faux rameur en terminal : `node scripts/sim-demo.js [rest|steady|hiit] [secondes] [pas]`.
@@ -66,10 +67,10 @@ scripts/  phone-eval.js  sim-demo.js  stamp-version.js  import-rowerboard.js (im
   3. vérifier que l'Auto Blocker Samsung est désactivé.
 
 ## Architecture
-- **Chaîne de données** : source (`sim.js` ou `ble.js`) → `parseRowerData` → `createRowerState` (fusion) → `activity` (masque les valeurs instantanées hors effort) → séance → écran.
+- **Chaîne de données** : source (`sim.js` ou `ble.js`) → `parseRowerData` → `createRowerState` (fusion) → `activity` (masque les valeurs instantanées hors effort) → séance (valeurs brutes) ; en parallèle `smooth.js` (moyenne des 3 derniers coups, 2 en programme : puissance et split **affichés** seulement) → écran.
 - **Contrat « source de données »** : `sim.js` et `ble.js` exposent la même interface, pour que l'appli ne sache pas à quoi elle parle : un `EventTarget` avec `connect()`, `disconnect()`, des événements `status` (`connecting` | `connected` | `disconnected`), `data` (un `DataView` par notification Rower Data) et `log` (texte, BLE seulement).
 - **Interface : gabarit + composants + configurations.** `index.html` porte le gabarit commun (zones `data-zone`). Un composant est une fabrique `{ mount(el), update(model) }` : `mount` construit le DOM une fois, `update` ne change que textes et attributs. Un type de séance (ou le bilan) = une entrée de `LAYOUTS` (zone → composant) ; en ajouter un ne touche ni le gabarit ni les composants existants.
-- Fonctions d'affichage et de calcul **pures** (`ftms.js`, `activity.js`, `session.js`, `ui/format.js`, futur `engine.js`) : ni DOM ni Web Bluetooth, testées sous Node. Le temps est passé en paramètre (`now`), jamais lu en interne.
+- Fonctions d'affichage et de calcul **pures** (`ftms.js`, `activity.js`, `session.js`, `ui/format.js`, `smooth.js`, `engine.js`, `goal.js`, `target.js`) : ni DOM ni Web Bluetooth, testées sous Node. Le temps est passé en paramètre (`now`), jamais lu en interne.
 
 ## Conventions
 - Code, identifiants et commentaires : anglais. Documentation et messages de commit : français.
@@ -86,11 +87,11 @@ Versions et périmètre : brief § 16. Version en cours : **v1** terminée et va
 - [x] Écrans décidés sur maquettes : [docs/ECRAN.md](docs/ECRAN.md)
 - [x] Écran de séance libre, pause automatique (`session.js`), bilan, copie de secours et historique (`store.js`) : [docs/PLAN-ecran-v1.md](docs/PLAN-ecran-v1.md). Essai réel du 2026-11-15 concluant
 - [x] Squelette PWA ([docs/PLAN-pwa.md](docs/PLAN-pwa.md)) : RowerMonitor, `sw.js` (réseau d'abord, mise à jour silencieuse, hors ligne). **Installée sur le S23 : plein écran paysage et icône vérifiés**
-- [x] Écran d'accueil : logo et nom centrés, fond dégradé, portrait ou paysage, bouton de connexion, dernière séance, simulateur caché hors `?dev` ; bascule auto en paysage à la connexion ([docs/maquette-cinematique.html](docs/maquette-cinematique.html)). Fin de séance : ⏸ en pause ou en attente, appui immédiat ; bilan « Enregistrer la séance » / « Ignorer la séance »
+- [x] Écran d'accueil v1 (logo, bouton de connexion, dernière séance) **supprimé le 2026-11-20** : l'appli s'ouvre sur « Sélectionner la séance » (logo, bouton discret « Connecter » / « ✓ Connecté », tuiles grisées avant connexion, pas de point vert, message court « S4 non détecté », bouton « ‹ Retour » avant le premier coup, rameur gardé connecté entre deux séances), tout en paysage ([docs/maquette-cinematique.html](docs/maquette-cinematique.html), [docs/ECRAN.md](docs/ECRAN.md)). **Pas encore essayé sur le S23.** Fin de séance : ⏸ en pause, appui immédiat ; bilan « Enregistrer la séance » / « Ignorer la séance »
 - [x] Dépôt public + GitHub Pages (2026-11-15) : https://ndelucin.github.io/rower-pwa/
 - [x] Reconnexion au rameur déjà autorisé sans le sélecteur Bluetooth de Chrome (`getDevices`), repli sur le sélecteur ; testée sous Node, **validée sur le S23 le 2026-11-15** (à condition d'activer le flag Chrome, voir ci-dessous)
 - [x] Export de séance vers Drive (2026-11-15) : « Enregistrer la séance » → copie locale + partage Android → dossier Drive → artefact Claude qui l'affiche. **Validé de bout en bout sur le S23** (voir « Export et dashboard »)
-- [x] Icône (ligne de battement de cœur bleue dans un anneau partiel jaune), numéro de build discret sur l'accueil, service worker qui revalide à chaque chargement
+- [x] Icône (ligne de battement de cœur bleue dans un anneau partiel jaune), numéro de build discret, service worker qui revalide à chaque chargement
 
 - [x] Écran de choix de séance (Libre / Durée / Distance / Intervalles), sélecteur circulaire d'objectif, séances Durée et Distance avec fin automatique « Objectif atteint » (`goal.js`, `ui/choice.js`). Couleurs : bleu = durée, violet = distance, gris = libre, jaune = intervalles et efforts, vert = récup (voir docs/ECRAN.md). **Pas encore essayé sur le S23.**
 - [x] Séances par intervalles : liste de 6 programmes (`programs.js`), moteur (`engine.js`), zone cible de split (`target.js`), écran HIIT (anneau par phase, frise, fond teinté), fin automatique du programme. Tests sous Node seulement. **Pas encore essayé sur le S23.**

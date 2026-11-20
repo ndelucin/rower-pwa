@@ -12,7 +12,7 @@ Brief § 13. Décisions prises avec Nico le 2026-11-15.
 | Icône | Ligne de battement de cœur bleue dans un anneau partiel jaune, sur fond sombre. SVG source + PNG 192 et 512 (Chrome les exige pour l'installation), version « maskable » avec marge de sécurité. |
 
 ## Fichiers
-- `manifest.webmanifest` : `name`/`short_name` RowerMonitor, `start_url` et `scope` `./`, `id` `./`, `display: fullscreen` (repli `display_override` : `fullscreen`, `standalone`), `orientation: any` (l'accueil suit le téléphone ; le verrouillage en paysage se fait par code à la connexion, `screen.orientation.lock`, et se libère au retour à l'accueil), couleurs du thème, icônes.
+- `manifest.webmanifest` : `name`/`short_name` RowerMonitor, `start_url` et `scope` `./`, `id` `./`, `display: fullscreen` (repli `display_override` : `fullscreen`, `standalone`), `orientation: landscape` (aucun écran en portrait depuis la suppression de l'accueil ; l'appli redemande aussi le verrouillage par code, `screen.orientation.lock`), couleurs du thème, icônes.
 - `icons/` : `icon.svg`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` (PNG générés depuis le SVG avec Chrome headless).
 - `sw.js` : réseau d'abord (délai 3 s), copie en cache de chaque réponse réussie (même arrivée après le délai), cache en secours (aussi sur une réponse 404 ou 5xx) ; préchargement de tous les fichiers de l'appli à l'installation ; à l'activation, suppression des seuls anciens caches `rower-monitor*` (l'origine github.io est partagée avec d'autres sites).
 - `index.html` : lien vers le manifeste, titre RowerMonitor.
