@@ -34,19 +34,22 @@ src/  ftms.js          décodeur Rower Data (pur)
       store.js         IndexedDB : copie de secours, historique
       export.js        fichier d'export `rower-session/1` et son nom (pur)
       version.js       numéro de build affiché sur l'accueil (écrit par `npm run stamp`)
-      engine.js*  audio.js*   (v2 et suivantes)
+      programs.js      les 6 programmes d'intervalles (données)
+      engine.js        moteur de programme : phase, segment, compte à rebours, frise (pur)
+      target.js        repère personnel et zone cible de split (pur)
+      audio.js*        (v2 et suivantes)
       app.js           câblage
-      ui/  components.js  layouts.js  choice.js  format.js  styles.css
-test/  *.test.js  helpers.js  fixtures/ (séances réelles du S4)
-docs/  BRIEF.md  ECRAN.md  S4-OBSERVATIONS.md  PLAN-*.md  maquette-*.html  artefact-dashboard.html
+      ui/  components.js  layouts.js  choice.js  format.js  styles.css   (choice.js : écrans de choix, sélecteur circulaire, liste des programmes)
+test/  *.test.js  helpers.js  fixtures/ (séances réelles du S4 + un export rower-session/1)
+docs/  BRIEF.md  ECRAN.md  S4-OBSERVATIONS.md  PLAN-*.md  cinematique.md  maquette-cinematique.html  artefact-dashboard.html
 scripts/  phone-eval.js  sim-demo.js  stamp-version.js  import-rowerboard.js (import ponctuel des séances de l'autre dépôt rowerboard)
 ```
 `*` : à venir.
 
 ## Commandes
 - Serveur local : `python3 -m http.server 8080`, puis http://localhost:8080 (`?sw=1` active le service worker en local ; le panneau navigateur de l'app Claude refuse les service workers : tester dans Chrome).
-  - `?dev` affiche les boutons du simulateur sur l'accueil ; `?sim=steady` (ou `hiit`, `startstop`, `rest`) démarre directement le simulateur ; `&speed=10` accélère (10 s simulées par seconde).
-  - Maquettes : http://localhost:8080/docs/maquette-seance-libre.html (et `maquette-accueil.html`, `maquette-hiit.html`, `maquette-phases.html`).
+  - `?dev` affiche les boutons du simulateur sur l'accueil ; `?sim=steady` (ou `hiit`, `startstop`, `rest`) démarre directement le simulateur ; `&speed=10` accélère (10 s simulées par seconde, mais l'horloge de séance reste réelle) ; `&mode=program&program=pyramide` démarre un programme d'intervalles (ids : `pyramide`, `6x1`, `8x1`, `4x2`, `4x4`, `3x6x30`) ; `&frames=full` envoie des trames entières (sans lui, le simulateur découpe en 20 octets et la séance reste « en attente »). Sans `?sim=`, `?mode=` ne fait rien : il faut le simulateur. `&mode=duration|distance&target=1200` (s) ou `2000` (m) démarre une séance à objectif, `&mode=choice` s'arrête sur l'écran de choix.
+  - Maquette (une seule, cliquable, tous les écrans) : http://localhost:8080/docs/maquette-cinematique.html.
 - Tests : `npm test` (= `node --test test/*.test.js`, runner intégré à Node, sans dépendance). Trames de test : `encodeRowerData` (`src/ftms-encoder.js`) et `test/helpers.js`.
 - Numéro de build (discret en bas de l'accueil : « build 38 · 15/11 22:09 ») : `npm run stamp` l'écrit dans `src/version.js` (n° = nombre de commits + 1, + l'heure). **À lancer juste avant chaque commit** pour que le numéro affiché sur le téléphone soit celui du commit ; un crochet Git `pre-commit` peut le faire tout seul (non installé : le dossier `.git/hooks` n'est pas versionné).
 - Capture d'une page à la taille du S23, sans téléphone :
@@ -75,7 +78,7 @@ scripts/  phone-eval.js  sim-demo.js  stamp-version.js  import-rowerboard.js (im
 - Rien d'identifiant dans le dépôt (adresse Bluetooth du rameur, e-mail…).
 
 ## Avancement
-Versions et périmètre : brief § 16. Version en cours : **v1**, fonctionnellement terminée (export compris) ; restent les vérifications sur le S23 listées plus bas.
+Versions et périmètre : brief § 16. Version en cours : **v1** terminée et validée sur le S23 (export compris) ; **v2 en cours** (choix de séance, durée / distance, intervalles) : codée et testée sous Node, **rien de cela n'a encore été essayé sur le S23**.
 - [x] Décodeur `ftms.js`, encodeur `ftms-encoder.js` et faux rameur `sim.js`, testés
 - [x] Connexion Bluetooth `ble.js` (reconnexion automatique), validée sur le vrai rameur : trames de 27 octets en un seul envoi, jamais découpées
 - [x] Détection d'arrêt `activity.js` : seuil adaptatif (≈ 4 s), coup fantôme du S4 ignoré ; testée en rejouant trois séances réelles
@@ -83,13 +86,14 @@ Versions et périmètre : brief § 16. Version en cours : **v1**, fonctionnellem
 - [x] Écrans décidés sur maquettes : [docs/ECRAN.md](docs/ECRAN.md)
 - [x] Écran de séance libre, pause automatique (`session.js`), bilan, copie de secours et historique (`store.js`) : [docs/PLAN-ecran-v1.md](docs/PLAN-ecran-v1.md). Essai réel du 2026-11-15 concluant
 - [x] Squelette PWA ([docs/PLAN-pwa.md](docs/PLAN-pwa.md)) : RowerMonitor, `sw.js` (réseau d'abord, mise à jour silencieuse, hors ligne). **Installée sur le S23 : plein écran paysage et icône vérifiés**
-- [x] Écran d'accueil : logo et nom centrés, fond dégradé, portrait ou paysage, bouton de connexion, dernière séance, simulateur caché hors `?dev` ; bascule auto en paysage à la connexion ([docs/maquette-accueil.html](docs/maquette-accueil.html)). Fin de séance : ⏸ en pause ou en attente, appui immédiat ; bilan « Enregistrer la séance » / « Ignorer la séance »
+- [x] Écran d'accueil : logo et nom centrés, fond dégradé, portrait ou paysage, bouton de connexion, dernière séance, simulateur caché hors `?dev` ; bascule auto en paysage à la connexion ([docs/maquette-cinematique.html](docs/maquette-cinematique.html)). Fin de séance : ⏸ en pause ou en attente, appui immédiat ; bilan « Enregistrer la séance » / « Ignorer la séance »
 - [x] Dépôt public + GitHub Pages (2026-11-15) : https://ndelucin.github.io/rower-pwa/
 - [x] Reconnexion au rameur déjà autorisé sans le sélecteur Bluetooth de Chrome (`getDevices`), repli sur le sélecteur ; testée sous Node, **validée sur le S23 le 2026-11-15** (à condition d'activer le flag Chrome, voir ci-dessous)
 - [x] Export de séance vers Drive (2026-11-15) : « Enregistrer la séance » → copie locale + partage Android → dossier Drive → artefact Claude qui l'affiche. **Validé de bout en bout sur le S23** (voir « Export et dashboard »)
 - [x] Icône (ligne de battement de cœur bleue dans un anneau partiel jaune), numéro de build discret sur l'accueil, service worker qui revalide à chaque chargement
 
-- [x] Écran de choix de séance (Libre / Durée / Distance, Intervalles grisé « bientôt ») et sélecteur circulaire d'objectif, séances Durée et Distance avec fin automatique « Objectif atteint » ; couleurs : bleu = temps, violet = distance, orange = intervalles, boutons neutres (maquette : [docs/maquette-cinematique.html](docs/maquette-cinematique.html)). **Pas encore essayé sur le S23.** `?sim=steady&mode=duration&target=1200` (ou `distance`, `choice`) démarre directement en développement.
+- [x] Écran de choix de séance (Libre / Durée / Distance / Intervalles), sélecteur circulaire d'objectif, séances Durée et Distance avec fin automatique « Objectif atteint » (`goal.js`, `ui/choice.js`). Couleurs : bleu = durée, violet = distance, gris = libre, jaune = intervalles et efforts, vert = récup (voir docs/ECRAN.md). **Pas encore essayé sur le S23.**
+- [x] Séances par intervalles : liste de 6 programmes (`programs.js`), moteur (`engine.js`), zone cible de split (`target.js`), écran HIIT (anneau par phase, frise, fond teinté), fin automatique du programme. Tests sous Node seulement. **Pas encore essayé sur le S23.**
 - Connu : le simulateur découpe ses trames en deux (`maxFrameBytes: 20`) et `activity.js` y voit un coup fantôme : la séance reste en « attente » avec `?sim=`. Le vrai S4 envoie des trames entières, donc sans effet réel.
 
 ## Export et dashboard
@@ -101,13 +105,18 @@ Versions et périmètre : brief § 16. Version en cours : **v1**, fonctionnellem
 - Pas de lien vers l'artefact dans l'appli (décision du 2026-11-15) : l'adresse serait publique dans le dépôt.
 
 ## Reste à faire (dans l'ordre)
-1. **Reconnexion sans sélecteur : à revérifier sur l'appli installée** (le test du 2026-11-15 a eu lieu sur `http://localhost:8080` dans un onglet Chrome, avec le code du Mac). Prérequis sur le S23 : activer `chrome://flags/#enable-web-bluetooth-new-permissions-backend` puis relancer Chrome ; sans lui, `getDevices()` renvoie une liste vide et le sélecteur revient à chaque fois. La 1ʳᵉ connexion après activation passe par le sélecteur (l'ancienne autorisation n'est pas reprise), les suivantes sont directes. Le sélecteur revient aussi quand le S4 n'est pas joignable (`Device is no longer in range`, vu au 1ᵉʳ essai après rechargement de la page, S4 pourtant allumé : cause non élucidée, peut-être une connexion encore tenue par la page précédente). Journal : `window.__rower.events` via `scripts/phone-eval.js`.
-2. **Vraie séance de 20 min** avec 2-3 arrêts, appli installée : pause en ≈ 4 s, chrono qui ne recule pas, lisibilité à 1,5 m sur la durée, comparaison avec les séances rowerboard (médiane 2:08).
-3. **Rowerboard** (facultatif) : aujourd'hui il ne lit que les TCX du S4 ; lui faire lire les exports `rower-session/1` est un travail dans l'autre dépôt (prévu en v4). L'artefact Claude fait déjà office de dashboard.
-4. **v2** : moteur de programmes (`engine.js`, phases = segment seul ou bloc d'intervalles), écran HIIT déjà maquetté ([docs/maquette-hiit.html](docs/maquette-hiit.html), [docs/maquette-phases.html](docs/maquette-phases.html)), choix du type de séance sur l'accueil, signaux sonores.
+1. **Essayer sur le S23 ce qui est codé et jamais vu sur téléphone** : écran de choix, sélecteurs durée / distance, fin automatique à l'objectif, une séance par intervalles complète (lisibilité de l'anneau et de la frise à 1,5 m, arcs à venir trop estompés ?, zone cible de split).
+2. **Reconnexion sans sélecteur : à revérifier sur l'appli installée** (le test du 2026-11-15 a eu lieu sur `http://localhost:8080` dans un onglet Chrome). Prérequis sur le S23 : activer `chrome://flags/#enable-web-bluetooth-new-permissions-backend` puis relancer Chrome ; sans lui, `getDevices()` renvoie une liste vide et le sélecteur revient à chaque fois. La 1ʳᵉ connexion après activation passe par le sélecteur, les suivantes sont directes. Le sélecteur revient aussi quand le S4 n'est pas joignable (`Device is no longer in range`, cause non élucidée). Journal : `window.__rower.events` via `scripts/phone-eval.js`.
+3. **Vraie séance de 20 min** avec 2-3 arrêts, appli installée, et **capturer les trames brutes** (`node scripts/phone-eval.js`, `window.__rower.raw` n'est qu'en mémoire) pour trancher l'écart de chrono avec l'écran du S4 (voir S4-OBSERVATIONS.md, séance du 18/11).
+4. **Écarts de la cinématique** à trancher : [docs/cinematique.md](docs/cinematique.md) (1, 2, 3 en priorité).
+5. **Lissage de la puissance** sur les 3 derniers coups (piste, non implémentée).
+6. **Rowerboard** (facultatif) : lui faire lire les exports `rower-session/1` (autre dépôt, prévu en v4) ; l'artefact Claude fait déjà office de dashboard.
+7. **Suite de la v2** : signaux sonores (`audio.js`), trait blanc de la barre = split moyen de l'intervalle en cours.
 
 ## Questions en suspens
-- Distance affichée par le S4 en fin de 2ᵉ essai, à comparer aux 174 m reçus.
+- Chrono de la PWA ≈ 70 s de moins que l'écran du S4 sur la séance du 18/11 (split moyen 2:09,5 contre ≈ 2:26) : pause automatique trop précoce en rame lente ? Cause non établie, trames brutes non conservées ([docs/S4-OBSERVATIONS.md](docs/S4-OBSERVATIONS.md)).
+- Watts BLE ≈ 0,8 × la formule 2,8 × (500/split)³, et instantanés bruités (±7 W d'un coup à l'autre) alors que le S4 lisse : lisser côté PWA ?
+- Distance affichée par le S4 en fin de 2ᵉ essai (15/11), à comparer aux 174 m reçus.
 - Un coup très léger juste après un arrêt compte comme une reprise (vu à 16 W le 2026-11-15, suivi d’une vraie reprise) : comportement gardé, à revoir seulement s’il gêne.
 - Rowerboard : dans les fichiers TCX du S4, les watts donnent un split ~13 s plus lent que la distance (médiane 2:21 contre 2:08). Ça peut fausser les watts du dashboard.
 - Rattrapage `brew bundle` : le Mac diverge de `~/Brewfile` (node, git, gh, pyenv, quelques apps) ; `~/Brewfile` n'est versionné nulle part.
