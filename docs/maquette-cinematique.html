@@ -4,24 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cinématique des écrans · RowerMonitor</title>
-<!-- Maquette cliquable du parcours v1 de bout en bout (docs/cinematique.md).
-     Indépendante de src/ : chaque transition reproduit une branche de src/app.js.
-     Cadre en unités de conteneur (1cqmin = min(vw, vh) / 100 du téléphone), comme --u dans styles.css. -->
+<!-- Maquette cliquable du parcours de bout en bout (docs/cinematique.md), version 2 : choix du type de séance,
+     sélecteurs circulaires durée / distance, correctifs des écarts 1, 2 et 3.
+     Indépendante de src/. Tailles en unités de conteneur (1cqmin = --u du téléphone). -->
 <style>
-:root { --bg:#0a0d12; --panel:#141a23; --line:#222b38; --text:#f3f6fa; --muted:#8b97a9; --pace:#4fc3f7; --power:#ffb547; --ok:#5cd27a; --warn:#ffb547; --err:#ff5d5d; color-scheme: dark; }
+:root { --bg:#0a0d12; --panel:#141a23; --line:#222b38; --text:#f3f6fa; --muted:#8b97a9; --pace:#4fc3f7; --power:#ffb547; --dur:#4fc3f7; --dist:#b197fc; --btn:#e8edf4; --neutral:#aab4c3; --ok:#5cd27a; --warn:#ffb547; --err:#ff5d5d; color-scheme: dark; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin:0; background:#06080c; color:var(--text); font:14px/1.45 system-ui,-apple-system,Roboto,sans-serif; }
 .page { display:grid; grid-template-columns: minmax(0,1fr) 340px; gap:20px; padding:20px; max-width:1300px; margin:0 auto; align-items:start; }
 @media (max-width: 900px) { .page { grid-template-columns: 1fr; } }
 h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 14px; }
-.stage { display:flex; justify-content:center; align-items:center; min-height:calc(780px * .62); background:#0b0f15; border:1px solid var(--line); border-radius:14px; padding:18px; }
+.stage { display:flex; justify-content:center; align-items:center; min-height:480px; background:#0b0f15; border:1px solid var(--line); border-radius:14px; padding:18px; }
 
 /* ----- Téléphone ----- */
 .phone { position:relative; border-radius:22px; border:2px solid #2a3547; box-shadow:0 0 0 6px #10151d; overflow:hidden; background:var(--bg);
   container-type:size; transition:width .45s ease, height .45s ease; --u:1cqmin; font-variant-numeric:tabular-nums; }
 .phone * { -webkit-user-select:none; user-select:none; }
 .badge { position:absolute; left:50%; top:calc(1*var(--u)); transform:translateX(-50%); z-index:30; font-size:calc(2.6*var(--u)); color:var(--muted); background:#000a; padding:.1em .7em; border-radius:99px; pointer-events:none; }
+[data-act] { cursor:pointer; }
 
 /* ----- Accueil ----- */
 .start { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:calc(4*var(--u)); text-align:center;
@@ -29,27 +30,28 @@ h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 14p
 .hero { display:flex; flex-direction:column; align-items:center; gap:calc(2*var(--u)); margin-bottom:calc(4*var(--u)); }
 .hero svg { width:calc(30*var(--u)); height:calc(15*var(--u)); filter:drop-shadow(0 0 calc(4*var(--u)) rgba(79,195,247,.5)); }
 .wordmark { margin:0; font-size:calc(9*var(--u)); line-height:1; letter-spacing:.03em; font-weight:400; } .wordmark b{font-weight:600} .wordmark span{font-weight:300;color:var(--pace);margin-left:.12em}
-.btn-connect { display:inline-flex; align-items:center; justify-content:center; gap:calc(3*var(--u)); font:700 calc(6.5*var(--u)) system-ui,sans-serif; color:var(--bg); background:var(--pace); border:0; border-radius:99px; padding:calc(3*var(--u)) calc(9*var(--u)); box-shadow:0 0 calc(5*var(--u)) rgba(79,195,247,.35); }
+.btn-connect { display:inline-flex; align-items:center; justify-content:center; gap:calc(3*var(--u)); font:700 calc(6.5*var(--u)) system-ui,sans-serif; color:var(--bg); background:var(--btn); border:0; border-radius:99px; padding:calc(3*var(--u)) calc(9*var(--u)); box-shadow:0 0 calc(5*var(--u)) rgba(255,255,255,.18); }
 .btn-connect.busy { background:var(--panel); color:var(--muted); box-shadow:none; }
 .phone.portrait .btn-connect { width:100%; font-size:calc(6*var(--u)); padding:calc(5.5*var(--u)) calc(4*var(--u)); }
 .start-msg { margin:calc(2.5*var(--u)) 0 0; min-height:1.3em; max-width:90%; font-size:calc(4*var(--u)); color:var(--warn); }
 .last { position:absolute; left:0; right:0; bottom:calc(6*var(--u)); margin:0; padding:0 calc(4*var(--u)); font-size:calc(4*var(--u)); color:var(--muted); text-wrap:balance; } .last b{color:var(--text);font-weight:600}
 
-/* ----- Séance / bilan ----- */
+/* ----- Grille commune (séance, bilan, choix) ----- */
 .screen { position:absolute; inset:0; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; padding:calc(2.5*var(--u)) calc(3*var(--u)) calc(2*var(--u)); column-gap:calc(3*var(--u)); }
-.col { display:flex; flex-direction:column; justify-content:space-around; min-width:0; } .col.r { text-align:right; }
+.col { display:flex; flex-direction:column; justify-content:space-around; min-width:0; } .col.r { text-align:right; align-items:flex-end; }
 .metric .label { font-size:calc(4.6*var(--u)); color:var(--muted); letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; }
 .metric .value { font-size:calc(20*var(--u)); font-weight:700; line-height:1; white-space:nowrap; }
 .metric .value.long { font-size:calc(15*var(--u)); } .metric .unit { font-size:calc(5.5*var(--u)); color:var(--muted); font-weight:400; margin-left:.2em; }
-.metric.pace .value{color:var(--pace)} .metric.power .value{color:var(--power)}
+.metric.dist .value{color:var(--dist)}
 .ring { position:relative; height:100%; aspect-ratio:1; align-self:center; justify-self:center; }
 .ring > svg { position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); } .ring circle { fill:none; stroke-width:5; }
-.ring .track { stroke:#1b2533; } .ring .arc { stroke:var(--pace); stroke-linecap:round; }
+.ring .track { stroke:#1b2533; } .ring .arc { stroke:var(--pace); stroke-linecap:round; } .ring .arc.power { stroke:var(--power); } .ring .arc.dist { stroke:var(--dist); }
 .ring-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.ring-ico { position:absolute; top:12%; left:50%; transform:translateX(-50%); font-size:calc(8*var(--u)); line-height:1; font-style:normal; } .ring-ico.free { color:var(--neutral); } .ring-ico.dur { color:var(--dur); } .ring-ico.dist { color:var(--dist); } .ring-ico.intv { color:var(--power); }
 .ring .label { font-size:calc(4*var(--u)); color:var(--muted); letter-spacing:.05em; text-transform:uppercase; }
-.ring .chrono { font-size:calc(18*var(--u)); font-weight:700; line-height:1; } .ring.dim .chrono { color:var(--muted); }
+.ring .chrono { font-size:calc(18*var(--u)); font-weight:700; line-height:1; } .ring.dim .chrono { color:var(--muted); } .ring .chrono.power { color:var(--power); }
 .ring .note { font-size:calc(4.5*var(--u)); color:var(--power); min-height:1.2em; white-space:pre; }
-.tap { width:calc(14*var(--u)); height:calc(14*var(--u)); border-radius:50%; display:grid; place-items:center; background:#26303f; color:#ff8a80; box-shadow:inset 0 0 0 calc(.5*var(--u)) #ff8a8066; margin-top:calc(2*var(--u)); }
+.tap { width:calc(16*var(--u)); height:calc(16*var(--u)); border-radius:50%; display:grid; place-items:center; background:#26303f; color:#ff8a80; box-shadow:inset 0 0 0 calc(.5*var(--u)) #ff8a8066; margin-top:calc(2*var(--u)); }
 .tap svg { width:42%; height:42%; fill:currentColor; }
 .bar { grid-column:1/-1; margin-top:calc(3*var(--u)); }
 .track-b { position:relative; height:calc(8*var(--u)); border-radius:99px; background:linear-gradient(90deg,#1b2533,#22344a 50%,#1b2533); }
@@ -58,12 +60,37 @@ h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 14p
 .scale { position:relative; height:calc(5.5*var(--u)); font-size:calc(4.2*var(--u)); color:var(--muted); } .scale span{position:absolute;top:calc(.8*var(--u));transform:translateX(-50%)} .scale span:first-child{transform:none} .scale span:last-child{transform:translateX(-100%)}
 .actions { display:grid; grid-template-columns:repeat(2,14em); justify-content:center; gap:calc(6*var(--u)); font-size:calc(5*var(--u)); }
 .actions div { text-align:center; border-radius:99px; padding:.55em 1em; font-weight:600; }
-.keep { background:var(--pace); color:#08131c; } .discard { background:#26303f; color:#ff8a80; box-shadow:inset 0 0 0 calc(.4*var(--u)) #ff8a8066; font-weight:400 !important; }
+.keep { background:var(--btn); color:#0a0d12; } .discard { background:#26303f; color:#ff8a80; box-shadow:inset 0 0 0 calc(.4*var(--u)) #ff8a8066; font-weight:400 !important; }
 .dot { position:absolute; top:calc(1.5*var(--u)); right:calc(1.5*var(--u)); width:calc(1.8*var(--u)); height:calc(1.8*var(--u)); border-radius:50%; background:var(--ok); }
 .band { position:absolute; top:0; left:50%; transform:translateX(-50%); z-index:10; padding:calc(1.2*var(--u)) calc(5*var(--u)); border-radius:0 0 calc(2*var(--u)) calc(2*var(--u)); background:var(--err); color:#fff; font-weight:700; font-size:calc(5*var(--u)); animation:blink 1.6s ease-in-out infinite; }
+.band.info { background:#1d4f6b; animation:none; font-weight:600; font-size:calc(4.2*var(--u)); }
 @keyframes blink { 50% { opacity:.65; } }
 .rotate { position:absolute; inset:0; z-index:20; display:flex; flex-direction:column; gap:1em; justify-content:center; align-items:center; text-align:center; padding:2em; font-size:calc(5.5*var(--u)); color:var(--muted); background:var(--bg); }
 .rotate small { font-size:.6em; }
+
+/* ----- Choix de séance ----- */
+.choice { position:absolute; inset:0; display:grid; grid-template-columns:minmax(0,.55fr) minmax(0,1.45fr); gap:calc(4*var(--u)); padding:calc(4*var(--u)) calc(5*var(--u)); }
+.choice h2 { margin:0; font-size:calc(7*var(--u)); font-weight:600; line-height:1.15; } .choice p { margin:calc(1.5*var(--u)) 0 0; font-size:calc(4*var(--u)); color:var(--muted); }
+.side { display:flex; flex-direction:column; justify-content:space-between; }
+.back { align-self:flex-start; font-size:calc(4.4*var(--u)); color:var(--muted); border:1px solid #2c3748; border-radius:99px; padding:.4em 1.1em; }
+.tiles { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:calc(3*var(--u)); }
+.tile { background:linear-gradient(160deg,#17202c,#111822); border:1px solid #26334a; border-radius:calc(3*var(--u)); padding:calc(3*var(--u)) calc(4*var(--u)); display:flex; flex-direction:column; justify-content:center; gap:calc(.8*var(--u)); }
+.tile b { font-size:calc(8*var(--u)); font-weight:600; } .tile span { font-size:calc(4*var(--u)); color:var(--muted); }
+.tile.free { border-color:#aab4c3aa; } .tile i { font-style:normal; font-size:calc(13*var(--u)); color:var(--neutral); line-height:1; } .tile i.intv { color:var(--power); } .tile i.dur { color:var(--dur); } .tile i.dist { color:var(--dist); }
+.plist { display:flex; flex-direction:column; gap:calc(2.2*var(--u)); justify-content:center; }
+.prow { display:flex; justify-content:space-between; align-items:center; background:#141c27; border:1px solid #26334a; border-radius:calc(2.5*var(--u)); padding:calc(2.6*var(--u)) calc(4*var(--u)); font-size:calc(5.2*var(--u)); font-weight:600; }
+.prow span { font-size:calc(3.8*var(--u)); color:var(--muted); font-weight:400; }
+.tag { display:inline-block; margin-top:calc(2*var(--u)); font-size:calc(3.4*var(--u)); color:var(--warn); border:1px dashed #ffb54766; border-radius:99px; padding:.15em .8em; }
+
+/* ----- Sélecteur circulaire ----- */
+.picker .ring { cursor:grab; touch-action:none; } .picker .ring:active { cursor:grabbing; }
+.picker .knob { fill:var(--text); stroke:var(--pace); stroke-width:2; } .picker.dist .knob { stroke:var(--dist); }
+.picker .chrono { font-size:calc(17*var(--u)); } .picker .pu { font-size:calc(6*var(--u)); font-weight:400; color:var(--muted); margin-left:.3em; } .picker .hint { font-size:calc(3.6*var(--u)); color:var(--muted); margin-top:calc(1.5*var(--u)); }
+.pm { display:flex; gap:calc(9*var(--u)); margin-top:calc(7*var(--u)); } .pm div { width:calc(16*var(--u)); height:calc(16*var(--u)); display:grid; place-items:center; font-size:calc(9.5*var(--u)); border-radius:50%; background:#26303f; }
+.go { text-align:center; border-radius:99px; padding:.6em 1em; font-size:calc(6*var(--u)); font-weight:700; background:var(--btn); color:#0a0d12; }
+.pk-ico { font-style:normal; font-size:calc(30*var(--u)); line-height:1; height:calc(16*var(--u)); display:flex; align-items:center; margin:0 0 calc(-2*var(--u)) calc(2*var(--u)); } .picker.dur .pk-ico { color:var(--dur); } .picker.dist .pk-ico { color:var(--dist); }
+.presets { display:grid; grid-template-columns:1fr 1fr; gap:calc(2.5*var(--u)); } .presets div { text-align:center; padding:.45em .9em; border-radius:99px; background:#26303f; font-size:calc(5.2*var(--u)); font-weight:600; white-space:nowrap; } .presets div:hover { background:#324056; }
+.go.off { background:#1c2431; color:#5b6678; }
 
 /* ----- Panneau ----- */
 .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; position:sticky; top:12px; }
@@ -72,24 +99,24 @@ h1 { font-size:18px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 14p
 .evs { display:flex; flex-wrap:wrap; gap:6px; }
 button { font:inherit; color:var(--text); background:#1c2431; border:1px solid #2c3748; border-radius:8px; padding:6px 10px; cursor:pointer; }
 button:hover:not(:disabled) { border-color:var(--pace); } button:disabled { opacity:.32; cursor:default; }
-button.gap { border-color:#ffb54766; } button.primary { background:var(--pace); color:#08131c; border-color:var(--pace); font-weight:600; }
+button.gap { border-color:#ffb54766; } button.primary { background:var(--btn); color:#0a0d12; border-color:var(--btn); font-weight:600; }
 label.opt { display:flex; gap:8px; align-items:center; color:var(--muted); font-size:13px; margin-top:6px; }
-#log { list-style:none; margin:0; padding:0; max-height:230px; overflow:auto; font-size:12.5px; }
-#log li { padding:4px 0; border-top:1px solid var(--line); } #log li:first-child { border-top:0; } #log .t { color:var(--muted); } #log .w { color:var(--warn); }
+#log { list-style:none; margin:0; padding:0; max-height:260px; overflow:auto; font-size:12.5px; }
+#log li { padding:4px 0; border-top:1px solid var(--line); } #log li:first-child { border-top:0; } #log .t { color:var(--muted); } #log .w { color:var(--warn); } #log .n { color:var(--ok); }
 </style>
 </head>
 <body>
 <div class="page">
   <div>
-    <h1>Cinématique des écrans · parcours v1</h1>
-    <p class="sub">Chaque bouton à droite est un événement réel du parcours ; seuls ceux possibles dans l'état courant sont actifs. Les lignes ⚠ du journal sont des écarts à trancher (voir <code>cinematique.md</code>).</p>
+    <h1>Cinématique des écrans · v2 (choix de séance)</h1>
+    <p class="sub">Les tuiles, le sélecteur circulaire (glisser sur l'anneau) et les boutons du téléphone sont cliquables ; les boutons à droite jouent les événements extérieurs (coups, Bluetooth, crash…). ⚠ = point à trancher, ✔ = écart déjà identifié et corrigé ici.</p>
     <div class="stage"><div class="phone landscape" id="phone"><div class="badge" id="badge"></div><div id="view"></div></div></div>
   </div>
   <aside class="panel">
     <h2>État</h2>
     <div class="state" id="state"></div>
     <h2>Parcours</h2>
-    <div class="evs"><button class="primary" id="auto">▶ Chemin nominal</button><button id="reset">↺ Remise à zéro</button></div>
+    <div class="evs"><button class="primary" id="auto">▶ Séance libre</button><button class="primary" id="autoDur">▶ Séance durée</button><button id="reset">↺ Remise à zéro</button></div>
     <h2>Téléphone</h2>
     <div class="evs"><button data-ev="rotatePhone">⟳ Tourner le téléphone</button></div>
     <label class="opt"><input type="checkbox" id="lockRefused"> Verrouillage paysage refusé (onglet Chrome)</label>
@@ -102,44 +129,81 @@ label.opt { display:flex; gap:8px; align-items:center; color:var(--muted); font-
 
 <script>
 // ---------- Modèle ----------
-// screen: home | session | summary ; sess: waiting | running | paused ; conn: connected | reconnecting
+// screen : home | menu | picker | programs | session | summary ; sess : waiting | running | paused ; conn : connected | reconnecting
+// mode : free | duration | distance | interval ; target : secondes (durée) ou mètres (distance)
+const PRESETS = { duration:[600,1200,1800,2700], distance:[1000,2000,5000,8000] };
+const LIMITS = { duration:{ max:3600, step:30, def:1200 }, distance:{ max:8000, step:500, def:2000 } };
 const init = () => ({ screen:'home', sess:null, conn:'connected', searching:false, msg:'', phone:'landscape', locked:false,
-  hadSession:false, interrupted:false, pendingShare:false, lastSession:'hier · 20:12 · 4 988 m · 2:00 /500 m' });
+  hadSession:false, interrupted:false, goal:false, mode:'free', target:0, pickKind:'duration', pendingShare:false,
+  lastSession:'hier · 20:12 · 4 988 m · 2:00 /500 m' });
 let M = init();
 const $ = (id) => document.getElementById(id);
 const shown = () => (M.locked ? 'landscape' : M.phone);
+const fmtTime = (s) => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+const fmtDist = (m) => (m >= 1000 ? `${(m/1000).toFixed(1).replace('.',',')} km` : `${m} m`);
+const fmtTarget = (kind, v) => (kind==='duration' ? fmtTime(v) : fmtDist(v));
+const MODE_NAME = { free:'libre', duration:'durée', distance:'distance', interval:'intervalles' };
 
-// Événements : when(M) → possible ; run(M) → effet ; warn → écart signalé dans le journal.
+const goSession = (m, mode, refusedTag='') => { m.screen='session'; m.sess='waiting'; m.mode=mode; m.hadSession=false; m.goal=false; return `Attente du 1er coup · séance ${MODE_NAME[mode]}${refusedTag}`; };
+const isMenuish = (m) => ['menu','picker','programs'].includes(m.screen);
+
+// ---------- Événements ----------
 const EV = [
-  { id:'connect', label:'Appui « Connecter le rameur »', when:m=>m.screen==='home'&&!m.searching, run(m){ m.searching=true; m.msg='Recherche du rameur…'; return 'Recherche du rameur (bouton grisé, pas d’annulation)'; },
-    warn:'Pas d’annulation de la recherche : le bouton reste grisé tant que Chrome ne répond pas.' },
-  { id:'found', label:'Rameur trouvé', when:m=>m.searching, run(m,refused){ m.searching=false; m.msg=''; m.screen='session'; m.sess='waiting'; m.conn='connected'; m.hadSession=false; m.locked=!refused;
-      return refused ? 'Attente du 1er coup · verrouillage refusé : « Tourne le téléphone » en portrait' : 'Attente du 1er coup · bascule auto en paysage, écran maintenu allumé'; } },
-  { id:'notfound', label:'Rameur introuvable', when:m=>m.searching, run(m){ m.searching=false; m.msg='Aucun rameur trouvé ou choisi. Réveille le S4, ferme WaterRower Connect, puis réessaie.'; return 'Retour accueil avec message d’erreur'; } },
-  { id:'stroke1', label:'Premier coup', when:m=>m.screen==='session'&&m.sess==='waiting'&&m.conn==='connected', run(m){ m.sess='running'; m.hadSession=true; return 'Séance en cours (chrono lancé)'; } },
-  { id:'stop4', label:'Plus de coup (≈ 4 s)', when:m=>m.screen==='session'&&m.sess==='running', run(m){ m.sess='paused'; return 'Pause auto, datée du dernier coup · ⏸ apparaît'; } },
+  { id:'connect', label:'Appui « Connecter le rameur »', when:m=>m.screen==='home'&&!m.searching, run(m){ m.searching=true; m.msg='Recherche du rameur…'; return 'Recherche du rameur (bouton grisé)'; },
+    warn:'Recherche non annulable (écart 5, inchangé).' },
+  { id:'found', label:'Rameur trouvé', when:m=>m.searching, run(m,refused){ m.searching=false; m.msg=''; m.screen='menu'; m.conn='connected'; m.hadSession=false; m.locked=!refused;
+      return refused ? 'Choix de séance · verrouillage refusé : « Tourne le téléphone » en portrait' : 'Choix de séance · bascule auto en paysage, écran maintenu allumé'; },
+    warn:'Nouveau : le paysage est demandé dès la connexion, avant le choix du type de séance (le sélecteur circulaire est en paysage).' },
+  { id:'notfound', label:'Rameur introuvable', when:m=>m.searching, run(m){ m.searching=false; m.msg='S4 non détecté, vérifier la connexion'; return 'Retour accueil · message court « S4 non détecté, vérifier la connexion »'; },
+    warn:'Message unique pour toutes les causes (introuvable, refus, réseau…) : le détail reste dans le journal de diagnostic. Voir la question sur les autres erreurs.' },
+
+  // --- Choix de séance (nouveau) ---
+  { id:'pickFree', label:'Tuile « Libre »', when:m=>m.screen==='menu', run(m,r){ return goSession(m,'free'); } },
+  { id:'pickDuration', label:'Tuile « Durée »', when:m=>m.screen==='menu', run(m){ m.screen='picker'; m.pickKind='duration'; m.target=LIMITS.duration.def; return 'Sélecteur circulaire de durée (0–60 min, pas 30 s), départ à 20:00'; } },
+  { id:'pickDistance', label:'Tuile « Distance »', when:m=>m.screen==='menu', run(m){ m.screen='picker'; m.pickKind='distance'; m.target=LIMITS.distance.def; return 'Sélecteur circulaire de distance (0–8 km, pas 500 m), départ à 2,0 km'; } },
+  { id:'pickInterval', label:'Tuile « Intervalles »', when:m=>m.screen==='menu', run(m){ m.screen='programs'; return 'Liste des programmes (à définir)'; } },
+  { id:'pickerStart', label:'Démarrer (sélecteur)', when:m=>m.screen==='picker'&&m.target>0, run(m){ const k=m.pickKind; const t=fmtTarget(k,m.target); goSession(m,k); return `Attente du 1er coup · objectif ${t} (le chrono / la distance ne démarrent qu’au 1er coup)`; } },
+  { id:'programPick', label:'Choisir un programme', when:m=>m.screen==='programs', run(m){ return goSession(m,'interval'); },
+    warn:'L’écran de séance par intervalles = maquette-hiit.html (v2) ; non redessiné ici.' },
+  { id:'menuBack', label:'‹ Retour (sélecteur / programmes → choix)', when:m=>m.screen==='picker'||m.screen==='programs', run(m){ m.screen='menu'; return 'Retour au choix de séance (rameur toujours connecté)'; } },
+  { id:'disconnectBtn', label:'‹ Déconnecter (choix → accueil)', when:m=>m.screen==='menu', run(m){ m.screen='home'; m.locked=false; m.msg=''; return 'Accueil · rameur déconnecté, orientation libérée'; },
+    warn:'Nouveau bouton : sans lui, il faudrait attendre le délai du S4 pour libérer la connexion.' },
+
+  // --- Séance ---
+  { id:'stroke1', label:'Premier coup', when:m=>m.screen==='session'&&m.sess==='waiting'&&m.conn==='connected', run(m){ m.sess='running'; m.hadSession=true; return 'Séance en cours'; } },
+  { id:'stop4', label:'Plus de coup (≈ 4 s)', when:m=>m.screen==='session'&&m.sess==='running'&&m.mode!=='interval', run(m){ m.sess='paused'; return 'Pause auto, datée du dernier coup · ⏸ apparaît · le compte à rebours / la distance restante se figent'; } },
   { id:'stroke', label:'Coup : reprise', when:m=>m.screen==='session'&&m.sess==='paused'&&m.conn==='connected', run(m){ m.sess='running'; return 'Reprise auto (⏸ disparaît)'; } },
+  { id:'goal', label:'Objectif atteint', when:m=>m.screen==='session'&&m.sess==='running'&&m.mode!=='free', run(m){ m.screen='summary'; m.sess=null; m.goal=true; m.interrupted=false; return 'Fin automatique : bilan « Objectif atteint » (même bilan, mêmes deux actions)'; },
+    warn:'Pas de signal à l’atteinte de l’objectif tant que l’audio (v2) n’existe pas : l’écran change seul.' },
   { id:'tapPause', label:'Appui ⏸', when:m=>m.screen==='session'&&(m.sess==='waiting'||m.sess==='paused'), run(m){
-      if (m.sess==='waiting') { m.screen='home'; m.sess=null; m.locked=false; m.msg=''; m.hadSession=false; return 'Accueil direct, sans bilan (rien n’a été ramé), rameur déconnecté'; }
-      m.screen='summary'; m.sess=null; m.interrupted=false; return 'Bilan (effet immédiat, pas de confirmation)'; } },
-  { id:'disc', label:'Déconnexion Bluetooth', when:m=>m.screen==='session'&&m.conn==='connected', run(m){ m.conn='reconnecting'; if (m.sess==='running') m.sess='paused'; return 'Bandeau « Reconnexion… » · en effort : pause auto'; },
-    warn:'Reconnexion sans fin (retard 1→10 s, jamais d’abandon) : seule sortie = ⏸, absent en effort.' },
+      if (m.sess==='waiting') { m.screen='menu'; m.sess=null; m.hadSession=false; return 'Retour au choix de séance (rien n’a été ramé, pas de bilan, rameur toujours connecté)'; }
+      m.screen='summary'; m.sess=null; m.goal=false; m.interrupted=false; return 'Bilan (effet immédiat, pas de confirmation)'; },
+    warn:'Changement : ⏸ en attente ramenait à l’accueil (rameur déconnecté) ; il ramène désormais au choix de séance, pour changer d’avis sans se reconnecter.' },
+  { id:'disc', label:'Déconnexion Bluetooth', when:m=>m.screen==='session'&&m.conn==='connected', run(m){ m.conn='reconnecting'; if (m.sess==='running') m.sess='paused'; return 'Bandeau « Reconnexion… » · en effort : pause auto'; } },
   { id:'reco', label:'Reconnexion réussie', when:m=>m.screen==='session'&&m.conn==='reconnecting', run(m){ m.conn='connected'; return 'Bandeau remplacé par le point vert · reprise au prochain coup'; } },
-  { id:'back', label:'Bouton Retour Android', when:m=>m.screen!=='home', gap:true, run(m){ return crash(m,'Retour Android non géré : Chrome quitte la page'); },
-    warn:'Aucun garde-fou : un geste de retour en pleine séance ferme la page (≤ 5 s de séance perdues).' },
-  { id:'crash', label:'Crash / rechargement', when:m=>m.screen!=='home', run(m){ return crash(m,'Page rechargée'); } },
-  { id:'keep', label:'Enregistrer (partage lancé)', when:m=>m.screen==='summary', run(m){ m.screen='home'; m.msg='Séance enregistrée.'; m.pendingShare=true; m.locked=false; m.interrupted=false;
-      m.lastSession='à l’instant · 8:38 · 1 250 m · 2:08 /500 m'; return 'Accueil immédiat « Séance enregistrée. » · feuille de partage ouverte'; } },
-  { id:'shareOk', label:'Partage terminé', when:m=>m.pendingShare, run(m){ m.pendingShare=false; const late=m.searching; m.msg='Séance enregistrée. Fichier partagé.'; return late?'⚠ message écrasé : « Recherche du rameur… » remplacé':'Message complété : « Fichier partagé. »'; },
-    warn:'Si on a déjà appuyé sur Connecter, la réponse du partage écrase « Recherche du rameur… ».' },
-  { id:'shareCancel', label:'Partage annulé', when:m=>m.pendingShare, run(m){ m.pendingShare=false; m.msg='Séance enregistrée. Partage annulé.'; return 'Message : « Partage annulé. » (copie locale conservée)'; } },
-  { id:'discard', label:'Ignorer (appui long)', when:m=>m.screen==='summary', run(m){ m.screen='home'; m.msg=''; m.locked=false; m.interrupted=false; return 'Séance supprimée, accueil sans message'; } },
+  { id:'back', label:'Bouton Retour Android', when:m=>m.screen!=='home', run(m){
+      if (m.screen==='picker'||m.screen==='programs') { m.screen='menu'; return '✔ Retour du sélecteur au choix de séance'; }
+      if (m.screen==='menu') { m.screen='home'; m.locked=false; m.msg=''; return 'Accueil · rameur déconnecté (comme « Déconnecter »)'; }
+      return '✔ (écart 3) Geste intercepté : rien ne se passe, une consigne « Termine par ⏸ » s’affiche brièvement'; } },
+  { id:'crash', label:'Crash / rechargement', when:m=>m.screen!=='home', run(m,r){ return crash(m,'Page rechargée',r); } },
+
+  // --- Bilan ---
+  { id:'keep', label:'Enregistrer (partage lancé)', when:m=>m.screen==='summary', run(m){ m.screen='home'; m.msg='Séance enregistrée.'; m.pendingShare=true; m.locked=false; m.interrupted=false; m.goal=false;
+      m.lastSession='à l’instant · 8:38 · 1 250 m · 2:08 /500 m'; return 'Accueil immédiat « Séance enregistrée. » · feuille de partage ouverte · rameur déconnecté'; } },
+  { id:'shareOk', label:'Partage terminé', when:m=>m.pendingShare, run(m){ m.pendingShare=false;
+      if (m.screen==='home'&&!m.searching) { m.msg='Séance enregistrée. Fichier partagé.'; return 'Message complété : « Fichier partagé. »'; }
+      return '✔ (écart 2) Résultat du partage ignoré : l’écran n’est plus au repos, le message en cours n’est pas écrasé'; } },
+  { id:'shareCancel', label:'Partage annulé', when:m=>m.pendingShare, run(m){ m.pendingShare=false;
+      if (m.screen==='home'&&!m.searching) { m.msg='Séance enregistrée. Partage annulé.'; return 'Message : « Partage annulé. » (copie locale conservée)'; }
+      return '✔ (écart 2) Résultat du partage ignoré : écran occupé'; } },
+  { id:'discard', label:'Ignorer (appui long)', when:m=>m.screen==='summary', run(m){ m.screen='home'; m.msg=''; m.locked=false; m.interrupted=false; m.goal=false; return 'Séance supprimée, accueil sans message'; } },
 ];
-function crash(m, why){
+function crash(m, why, refused){
   const had = m.hadSession;
-  m.searching=false; m.pendingShare=false; m.locked=false; m.conn='connected';
-  if (had) { m.screen='summary'; m.sess=null; m.interrupted=true; m.msg=''; return `${why} → relance : bilan de la séance interrompue (copie de secours)`; }
-  m.screen='home'; m.sess=null; m.msg=''; return `${why} → relance : accueil (pas de copie de secours : jamais ramé)`;
+  m.searching=false; m.pendingShare=false; m.conn='connected'; m.goal=false;
+  if (had) { m.screen='summary'; m.sess=null; m.interrupted=true; m.msg=''; m.locked=!refused;
+    return `${why} → relance : ✔ (écart 1) paysage verrouillé aussitôt, bilan de la séance interrompue avec bandeau « Séance interrompue retrouvée »`; }
+  m.screen='home'; m.sess=null; m.msg=''; m.locked=false; return `${why} → relance : accueil (pas de copie de secours : rien n’a été ramé, ou on était encore dans le choix de séance)`;
 }
 
 // ---------- Rendu ----------
@@ -147,49 +211,134 @@ const I = {
   logo:'<svg viewBox="0 0 64 32"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#4fc3f7" stop-opacity="0"/><stop offset=".25" stop-color="#4fc3f7"/><stop offset=".75" stop-color="#4fc3f7"/><stop offset="1" stop-color="#4fc3f7" stop-opacity="0"/></linearGradient></defs><path d="M1 18H13L16.5 14.5L19.5 18H25L29 4L35 30L39 18H45L48.5 13.5L52 18H63" fill="none" stroke="url(#g)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   pause:'<svg viewBox="0 0 10 10"><rect x="2" y="1.5" width="2" height="7" rx=".5"/><rect x="6" y="1.5" width="2" height="7" rx=".5"/></svg>',
 };
-const arc = (f) => `<circle class="arc" cx="50" cy="50" r="46" stroke-dasharray="${(289.03*f).toFixed(1)} 289.03" style="display:${f>0?'':'none'}"/>`;
+const C = 289.03;
+const arc = (f, cls='') => `<circle class="arc ${cls}" cx="50" cy="50" r="46" stroke-dasharray="${(C*Math.min(f,1)).toFixed(1)} ${C}" style="display:${f>0?'':'none'}"/>`;
 const metric = (label, value, unit, tone, long) => `<div class="metric ${tone||''}"><div class="label">${label}</div><div class="value${long?' long':''}">${value}${unit?`<span class="unit">${unit}</span>`:''}</div></div>`;
-const ring = ({label,main,note='',dim=false,btn=false,f=0}) => `<div class="ring${dim?' dim':''}"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="46"/>${arc(f)}</svg><div class="ring-center"><div class="label">${label}</div><div class="chrono">${main}</div><div class="note">${note}</div>${btn?`<div class="tap">${I.pause}</div>`:''}</div></div>`;
+const MODE_ICO = { free:['∞','free'], duration:['◔','dur'], distance:['↔','dist'], interval:['▮▯▮','intv'] };
+const modeIco = () => { const [g,c] = MODE_ICO[M.mode]||MODE_ICO.free; return `<i class="ring-ico ${c}">${g}</i>`; };
+const ring = ({label,main,note='',dim=false,btn=false,f=0,tone='',mainCls=''}) => `<div class="ring${dim?' dim':''}"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="46"/>${arc(f,tone)}</svg>${modeIco()}<div class="ring-center"><div class="label">${label}</div><div class="chrono ${mainCls}">${main}</div><div class="note">${note}</div>${btn?`<div class="tap" data-act="tapPause">${I.pause}</div>`:''}</div></div>`;
 const bar = (cursor) => `<div class="bar"><div class="track-b"><div class="avg" style="left:55%"></div>${cursor?'<div class="cursor" style="left:60%"></div>':''}</div><div class="scale"><span style="left:0">2:30</span><span style="left:25%">2:20</span><span style="left:50%">2:10</span><span style="left:75%">2:00</span><span style="left:100%">1:50</span></div></div>`;
 
 function viewHome(){
   return `<div class="start"><div class="hero">${I.logo}<h1 class="wordmark"><b>Rower</b><span>Monitor</span></h1></div>
-    <div class="btn-connect${M.searching?' busy':''}">⌁ Connecter le rameur</div><p class="start-msg">${M.msg}</p>
+    <div class="btn-connect${M.searching?' busy':''}" data-act="connect">⌁ Connecter le rameur</div><p class="start-msg">${M.msg}</p>
     <p class="last">Dernière séance : <b>${M.lastSession}</b></p></div>`;
 }
+function viewMenu(){
+  return `<div class="choice"><div class="side"><div class="back" data-act="disconnectBtn">‹ Déconnecter</div>
+      <div><h2>Démarrer<br>une séance</h2><p>Rameur connecté.</p></div><span></span></div>
+    <div class="tiles">
+      <div class="tile free" data-act="pickFree"><i>∞</i><b>Libre</b><span>sans objectif</span></div>
+      <div class="tile" data-act="pickDuration"><i class="dur">◔</i><b>Durée</b><span>0 à 60 min</span></div>
+      <div class="tile" data-act="pickDistance"><i class="dist">↔</i><b>Distance</b><span>0 à 8 km</span></div>
+      <div class="tile" data-act="pickInterval"><i class="intv">▮▯▮</i><b>Intervalles</b><span>programmes</span></div>
+    </div><div class="dot"></div></div>`;
+}
+function viewPrograms(){
+  return `<div class="choice"><div class="side"><div class="back" data-act="menuBack">‹ Retour</div>
+      <div><h2>Intervalles</h2><p>Choisis un programme.</p><span class="tag">liste à définir</span></div><span></span></div>
+    <div class="plist">
+      <div class="prow" data-act="programPick">Programme A <span>exemple · 8 × 20 s / 10 s</span></div>
+      <div class="prow" data-act="programPick">Programme B <span>exemple · 4 × 4 min / 2 min</span></div>
+      <div class="prow" data-act="programPick">Programme C <span>exemple · pyramide</span></div>
+    </div><div class="dot"></div></div>`;
+}
+function viewPicker(){
+  const k = M.pickKind, name = k==='duration'?'Durée':'Distance';
+  return `<div class="screen picker ${k==='duration'?'dur':'dist'}" style="grid-template-rows:minmax(0,1fr)"><div class="col" style="justify-content:space-between;padding:calc(2*var(--u)) 0"><div class="back" data-act="menuBack" style="align-self:flex-start;font-size:calc(4.4*var(--u));color:var(--muted);border:1px solid #2c3748;border-radius:99px;padding:.4em 1.1em">‹ Retour</div>
+      <div class="metric"><div class="value long" style="font-size:calc(7*var(--u));line-height:1.15;white-space:normal">Définir<br>une ${name.toLowerCase()}</div></div><i class="pk-ico">${k==='duration'?'◔':'↔'}</i></div>
+    <div class="ring" id="pkRing"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="46"/><circle class="arc ${k==='duration'?'':'dist'}" id="pkArc" cx="50" cy="50" r="46"/><circle class="knob" id="pkKnob" r="4.2"/></svg>
+      <div class="ring-center"><div class="chrono" id="pkMain"></div>
+      <div class="pm"><div data-pk="-1">−</div><div data-pk="1">+</div></div></div></div>
+    <div class="col r" style="justify-content:space-between;padding:calc(2*var(--u)) 0"><div class="presets">${PRESETS[k].map((v)=>`<div data-preset="${v}">${k==='duration'?v/60+' min':v/1000+' km'}</div>`).join('')}</div>
+      <div class="go" id="pkGo" data-act="pickerStart">Démarrer</div></div>
+    <div class="dot"></div></div>`;
+}
+function updatePicker(){
+  const k = M.pickKind, L = LIMITS[k], f = M.target / L.max;
+  const arcEl = $('pkArc'); if (!arcEl) return;
+  arcEl.setAttribute('stroke-dasharray', `${(C*f).toFixed(1)} ${C}`); arcEl.style.display = f>0 ? '' : 'none';
+  const a = f * 2*Math.PI;
+  $('pkKnob').setAttribute('cx', (50+46*Math.cos(a)).toFixed(2)); $('pkKnob').setAttribute('cy', (50+46*Math.sin(a)).toFixed(2));
+  $('pkMain').innerHTML = k==='duration' ? `${fmtTime(M.target)}<span class="pu">min</span>` : `${(M.target/1000).toFixed(1).replace('.',',')}<span class="pu">km</span>`;
+  $('pkGo').classList.toggle('off', M.target<=0);
+  document.querySelectorAll('#events button').forEach((b) => { b.disabled = !EV.find((e)=>e.id===b.dataset.ev).when(M); });
+}
+function bindPicker(){
+  const ringEl = $('pkRing'); if (!ringEl) return;
+  const L = LIMITS[M.pickKind];
+  const setFromPointer = (e) => {
+    const r = ringEl.getBoundingClientRect();
+    let ang = Math.atan2(e.clientY - (r.top + r.height/2), e.clientX - (r.left + r.width/2)) + Math.PI/2;
+    if (ang < 0) ang += 2*Math.PI;
+    let v = Math.round((ang/(2*Math.PI)) * L.max / L.step) * L.step;
+    // 0 et le maximum se touchent en haut : le curseur ne saute pas d’un bout à l’autre
+    if (M.target > L.max*.75 && v < L.max*.25) v = L.max;
+    else if (M.target < L.max*.25 && v > L.max*.75) v = 0;
+    M.target = Math.max(0, Math.min(L.max, v)); updatePicker();
+  };
+  let drag = false;
+  ringEl.addEventListener('pointerdown', (e) => { if (e.target.closest('[data-pk]')) return; drag = true; ringEl.setPointerCapture(e.pointerId); setFromPointer(e); });
+  ringEl.addEventListener('pointermove', (e) => { if (drag) setFromPointer(e); });
+  const end = () => { if (drag) { drag = false; log(`<b>Valeur réglée</b> → ${fmtTarget(M.pickKind, M.target)}`); } };
+  ringEl.addEventListener('pointerup', end); ringEl.addEventListener('pointercancel', end);
+  ringEl.querySelectorAll('[data-pk]').forEach((b) => b.addEventListener('click', () => { M.target = Math.max(0, Math.min(L.max, M.target + Number(b.dataset.pk)*L.step)); updatePicker(); }));
+  document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => { M.target = Number(b.dataset.preset); updatePicker(); log(`<b>Valeur prédéfinie</b> → ${fmtTarget(M.pickKind, M.target)}`); }));
+  updatePicker();
+}
+
 function viewSession(){
-  const s = M.sess, run = s==='running', pause = s==='paused', wait = s==='waiting';
+  const s = M.sess, run = s==='running', pause = s==='paused', wait = s==='waiting', md = M.mode;
   const v = (x) => (run ? x : '--');
+  let ringProps, rightBottom;
+  if (md==='free') {
+    ringProps = { label: pause?'En pause':'Temps écoulé', main: wait?'0:00':'8:42', note: wait?'Premier coup pour démarrer':'', f: wait?0:(1250%2000)/2000, tone:'dist' };
+    rightBottom = metric('Distance', wait?'0':'1 250', 'm', '', !wait);
+  } else if (md==='duration') {
+    ringProps = { label: pause?'En pause':'Temps restant', main: wait?fmtTime(M.target):fmtTime(M.target-522), note: wait?'Premier coup pour démarrer':'', f: wait?0:522/M.target };
+    rightBottom = metric('Distance', wait?'0':'1 250', 'm', '', !wait);
+  } else if (md==='distance') {
+    const done = 1250;
+    ringProps = { label: pause?'En pause':'Distance restante', main: wait?fmtDist(M.target):fmtDist(Math.max(0,M.target-done)), note: wait?'Premier coup pour démarrer':'', f: wait?0:done/M.target, tone:'dist' };
+    rightBottom = metric('Temps', wait?'0:00':'8:42', '', '', false);
+  } else {
+    ringProps = { label: wait?'Programme A':'Effort 3 / 8', main: wait?'0:20':'0:12', note: wait?'Premier coup pour démarrer':'(écran HIIT : maquette-hiit)', f: wait?0:.4, tone: wait?'':'power', mainCls: wait?'':'power' };
+    rightBottom = metric('Distance', wait?'0':'1 250', 'm', '', !wait);
+  }
   return `<div class="screen">
-    <div class="col">${metric('Split /500 m', v('2:06'), '', 'pace')}${metric('Puissance', v('178'), 'W', 'power')}</div>
-    ${ring({ label: pause?'En pause':'Temps écoulé', main: wait?'0:00':'8:42', note: wait?'Premier coup pour démarrer':'', dim:pause, btn:wait||pause, f: wait?0:.625 })}
-    <div class="col r">${metric('Cadence', v('22'), '/min')}${metric('Distance', wait?'0':'1 250', 'm', '', !wait)}</div>
+    <div class="col">${metric('Split /500 m', v('2:06'), '')}${metric('Puissance', v('178'), 'W')}</div>
+    ${ring({ ...ringProps, dim:pause, btn:wait||pause })}
+    <div class="col r">${metric('Cadence', v('22'), '/min')}${rightBottom}</div>
     ${bar(run)}
     ${M.conn==='connected' ? '<div class="dot"></div>' : '<div class="band">Reconnexion…</div>'}</div>`;
 }
 function viewSummary(){
   return `<div class="screen">
-    <div class="col">${metric('Split moyen','2:08','','pace')}${metric('Puissance moy.','171','W','power')}</div>
-    ${ring({ label:'Séance terminée', main:'8:38', note:'Meilleur 500 m  2:01', f:.625 })}
+    <div class="col">${metric('Split moyen','2:08','')}${metric('Puissance moy.','171','W')}</div>
+    ${ring({ label:'Séance terminée', main:'8:38', note: M.goal?'Objectif atteint':'Meilleur 500 m  2:01', f:.625 })}
     <div class="col r">${metric('Cadence moy.','21','/min')}${metric('Distance','1 250','m','',true)}</div>
-    <div class="bar"><div class="actions"><div class="discard">Ignorer la séance</div><div class="keep">Enregistrer la séance</div></div></div></div>`;
+    <div class="bar"><div class="actions"><div class="discard">Ignorer la séance</div><div class="keep">Enregistrer la séance</div></div></div>
+    ${M.interrupted?'<div class="band info">Séance interrompue retrouvée</div>':''}</div>`;
 }
 function stateText(){
-  const where = { home: M.searching?'Accueil · recherche en cours':'Accueil', summary: M.interrupted?'Bilan · séance interrompue (copie de secours)':'Bilan',
-    session: { waiting:'Séance · attente du 1er coup', running:'Séance · en cours', paused:'Séance · en pause' }[M.sess] }[M.screen];
+  const sess = { waiting:'attente du 1er coup', running:'en cours', paused:'en pause' }[M.sess];
+  const where = { home: M.searching?'Accueil · recherche en cours':'Accueil', menu:'Choix de séance', programs:'Choix d’un programme (intervalles)',
+    picker:`Sélecteur de ${M.pickKind==='duration'?'durée':'distance'} · ${fmtTarget(M.pickKind,M.target)}`,
+    summary: M.interrupted?'Bilan · séance interrompue (copie de secours)':M.goal?'Bilan · objectif atteint':'Bilan',
+    session: `Séance ${MODE_NAME[M.mode]} · ${sess}` }[M.screen];
   const extra = [M.screen==='session'&&M.conn==='reconnecting'&&'Bluetooth coupé', M.pendingShare&&'partage en attente', M.locked&&'paysage verrouillé'].filter(Boolean).join(' · ');
   return `${where}<small>${extra||'—'}</small>`;
 }
 function render(){
   const o = shown(), p = $('phone');
-  p.className = `phone ${o}`;
-  fit();
+  p.className = `phone ${o}`; fit();
   $('badge').textContent = `${o==='landscape'?'780 × 360':'360 × 780'} · ${M.locked?'verrouillé':'libre'}`;
-  const body = { home:viewHome, session:viewSession, summary:viewSummary }[M.screen]();
-  const hint = (o==='portrait' && M.screen!=='home') ? `<div class="rotate">Tourne le téléphone en paysage<small>${M.screen==='session'?'La séance continue à tourner derrière.':'Le bilan reste inaccessible en portrait.'}</small></div>` : '';
+  const body = { home:viewHome, menu:viewMenu, programs:viewPrograms, picker:viewPicker, session:viewSession, summary:viewSummary }[M.screen]();
+  const hint = (o==='portrait' && M.screen!=='home') ? `<div class="rotate">Tourne le téléphone en paysage<small>${M.screen==='session'?'La séance continue à tourner derrière.':'Le choix et le bilan restent inaccessibles en portrait.'}</small></div>` : '';
   $('view').innerHTML = body + hint;
   $('state').innerHTML = stateText();
   document.querySelectorAll('#events button').forEach((b) => { b.disabled = !EV.find((e)=>e.id===b.dataset.ev).when(M); });
+  if (M.screen==='picker') bindPicker();
 }
 function fit(){
   const stage = $('phone').parentElement, avail = Math.min(stage.clientWidth - 40, 780);
@@ -201,24 +350,32 @@ function fit(){
 // ---------- Journal et commandes ----------
 let step = 0;
 function log(text, warn){ const li = document.createElement('li'); li.innerHTML = `<span class="t">${++step}.</span> ${text}${warn?`<br><span class="w">⚠ ${warn}</span>`:''}`; $('log').prepend(li); }
+const warned = new Set();
 function fire(id){
   const e = EV.find((x)=>x.id===id);
-  if (!e.when(M)) return false;
+  if (!e || !e.when(M)) return false;
   const effect = e.run(M, $('lockRefused').checked);
-  log(`<b>${e.label}</b> → ${effect}`, e.warn);
+  log(`<b>${e.label}</b> → ${effect}`, e.warn && !warned.has(id) ? (warned.add(id), e.warn) : '');
   render(); return true;
 }
-$('events').innerHTML = EV.map((e)=>`<button data-ev="${e.id}"${e.gap?' class="gap"':''}>${e.label}</button>`).join('');
+$('events').innerHTML = EV.map((e)=>`<button data-ev="${e.id}">${e.label}</button>`).join('');
 document.addEventListener('click', (ev) => {
-  const b = ev.target.closest('button[data-ev]'); if (!b) return;
-  if (b.dataset.ev === 'rotatePhone') { M.phone = M.phone==='landscape'?'portrait':'landscape'; log(`<b>Téléphone tourné</b> → ${M.phone}${M.locked?' (ignoré : verrouillé en paysage)':''}`); render(); }
-  else fire(b.dataset.ev);
+  const b = ev.target.closest('button[data-ev]');
+  if (b) {
+    if (b.dataset.ev === 'rotatePhone') { M.phone = M.phone==='landscape'?'portrait':'landscape'; log(`<b>Téléphone tourné</b> → ${M.phone}${M.locked?' (ignoré : verrouillé en paysage)':''}`); render(); }
+    else fire(b.dataset.ev);
+    return;
+  }
+  const a = ev.target.closest('[data-act]');
+  if (a) { if (a.dataset.act==='pickerStart' && M.target<=0) return; fire(a.dataset.act); }
 });
-$('reset').onclick = () => { M = init(); step = 0; $('log').innerHTML = ''; render(); };
-$('auto').onclick = async () => {
+$('reset').onclick = () => { M = init(); step = 0; warned.clear(); $('log').innerHTML = ''; render(); };
+async function play(ids){
   $('reset').click(); M.phone='portrait'; render();
-  for (const id of ['connect','found','stroke1','stop4','stroke','stop4','tapPause','keep','shareOk']) { await new Promise((r)=>setTimeout(r,1400)); if (!fire(id)) break; }
-};
+  for (const id of ids) { await new Promise((r)=>setTimeout(r,1300)); if (!fire(id)) break; }
+}
+$('auto').onclick = () => play(['connect','found','pickFree','stroke1','stop4','stroke','stop4','tapPause','keep','shareOk']);
+$('autoDur').onclick = () => play(['connect','found','pickDuration','pickerStart','stroke1','goal','keep','shareOk']);
 addEventListener('resize', fit);
 render();
 </script>

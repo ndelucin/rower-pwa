@@ -30,12 +30,13 @@ src/  ftms.js          décodeur Rower Data (pur)
       activity.js      détection d'arrêt (attente / en cours / arrêt)
       wakelock.js      écran maintenu allumé
       session.js       chrono, pause auto, cumuls et bilan de la séance (pur)
+      goal.js          objectif durée / distance : bornes, valeur depuis l'angle, progression (pur)
       store.js         IndexedDB : copie de secours, historique
       export.js        fichier d'export `rower-session/1` et son nom (pur)
       version.js       numéro de build affiché sur l'accueil (écrit par `npm run stamp`)
       engine.js*  audio.js*   (v2 et suivantes)
       app.js           câblage
-      ui/  components.js  layouts.js  format.js  styles.css
+      ui/  components.js  layouts.js  choice.js  format.js  styles.css
 test/  *.test.js  helpers.js  fixtures/ (séances réelles du S4)
 docs/  BRIEF.md  ECRAN.md  S4-OBSERVATIONS.md  PLAN-*.md  maquette-*.html  artefact-dashboard.html
 scripts/  phone-eval.js  sim-demo.js  stamp-version.js  import-rowerboard.js (import ponctuel des séances de l'autre dépôt rowerboard)
@@ -87,6 +88,9 @@ Versions et périmètre : brief § 16. Version en cours : **v1**, fonctionnellem
 - [x] Reconnexion au rameur déjà autorisé sans le sélecteur Bluetooth de Chrome (`getDevices`), repli sur le sélecteur ; testée sous Node, **validée sur le S23 le 2026-11-15** (à condition d'activer le flag Chrome, voir ci-dessous)
 - [x] Export de séance vers Drive (2026-11-15) : « Enregistrer la séance » → copie locale + partage Android → dossier Drive → artefact Claude qui l'affiche. **Validé de bout en bout sur le S23** (voir « Export et dashboard »)
 - [x] Icône (ligne de battement de cœur bleue dans un anneau partiel jaune), numéro de build discret sur l'accueil, service worker qui revalide à chaque chargement
+
+- [x] Écran de choix de séance (Libre / Durée / Distance, Intervalles grisé « bientôt ») et sélecteur circulaire d'objectif, séances Durée et Distance avec fin automatique « Objectif atteint » ; couleurs : bleu = temps, violet = distance, orange = intervalles, boutons neutres (maquette : [docs/maquette-cinematique.html](docs/maquette-cinematique.html)). **Pas encore essayé sur le S23.** `?sim=steady&mode=duration&target=1200` (ou `distance`, `choice`) démarre directement en développement.
+- Connu : le simulateur découpe ses trames en deux (`maxFrameBytes: 20`) et `activity.js` y voit un coup fantôme : la séance reste en « attente » avec `?sim=`. Le vrai S4 envoie des trames entières, donc sans effet réel.
 
 ## Export et dashboard
 - **Parcours** : appui sur « Enregistrer la séance » → copie locale (IndexedDB) **et**, dans le même geste, `navigator.share({ files })` → l'utilisateur choisit Drive et le dossier `Personnel / RowerMonitor / data` → un artefact Claude lit ce dossier. Au retour, l'accueil affiche le résultat sous le bouton (« Séance enregistrée. Fichier partagé. », ou la cause d'un échec).

@@ -129,14 +129,15 @@ export function tapButton({ label, icon = 'pause', onTap, cls = '' }) {
 
 /**
  * Central ring: SVG arcs around a label, a big main text (chrono) and an optional line.
- *  arcs(model)    -> [{ from, to, tone }] fractions of a turn (tone: 'pace' | 'power' | 'rest')
+ *  arcs(model)    -> [{ from, to, tone }] fractions of a turn (tone: 'pace' | 'power' | 'rest' | 'dur' | 'dist')
  *  label(model)   -> small caps text above
  *  main(model)    -> big text (chrono / countdown)
  *  note(model)    -> small line under the main text ('' to leave empty)
  *  dimmed(model)  -> true greys the main text (paused)
  *  action         -> optional component (e.g. tapButton) under the main text, shown when actionVisible(model)
+ *  icon           -> optional { glyph, tone } shown at the top centre: the session type (∞ ◔ ↔), tone 'free' | 'dur' | 'dist' | 'intv'
  */
-export function ring({ arcs, label, main, note = () => '', dimmed = () => false, action = null, actionVisible = () => true }) {
+export function ring({ arcs, label, main, note = () => '', dimmed = () => false, action = null, actionVisible = () => true, icon = null }) {
   let root, arcGroup, labelEl, mainEl, noteEl;
   const arcEls = [];
   return {
@@ -153,7 +154,13 @@ export function ring({ arcs, label, main, note = () => '', dimmed = () => false,
         action.mount(controls);
         center.append(controls);
       }
-      root.append(s, center);
+      root.append(s);
+      if (icon) {
+        const ico = h('i', `ring-ico ${icon.tone}`, icon.glyph);
+        ico.setAttribute('aria-hidden', 'true');
+        root.append(ico);
+      }
+      root.append(center);
       el.append(root);
     },
     update(m) {

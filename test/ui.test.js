@@ -76,3 +76,13 @@ test('formatLastSession: start screen line for the last session', async () => {
   assert.equal(formatLastSession({ ...s, avgSplit: null }, now), "Dernière séance : aujourd'hui · 2:17 · 604 m");
   assert.equal(formatLastSession(null, now), '');
 });
+
+test('formatDistanceShort: metres below 1 km, km with a comma above, rounded up', async () => {
+  const { formatDistanceShort } = await import('../src/ui/format.js');
+  assert.equal(formatDistanceShort(750), '750 m');
+  assert.equal(formatDistanceShort(749.2), '750 m');
+  assert.equal(formatDistanceShort(1500), '1,5 km');
+  assert.equal(formatDistanceShort(2000), '2,0 km');
+  assert.equal(formatDistanceShort(0), '0 m');
+  assert.equal(formatDistanceShort(null), '--');
+});

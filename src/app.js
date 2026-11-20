@@ -5,6 +5,8 @@ import { parseRowerData, createRowerState } from './ftms.js';
 import { createSimSource } from './sim.js';
 import { createBleSource, isBleAvailable } from './ble.js';
 import { LAYOUTS, mountLayout } from './ui/layouts.js';
+import { mountChoice, mountPicker } from './ui/choice.js';
+import { GOAL_KINDS, goalProgress, goalName } from './goal.js';
 import { formatLastSession } from './ui/format.js';
 import { createKeepAwake } from './wakelock.js';
 import { createActivityFilter } from './activity.js';
@@ -19,6 +21,7 @@ let source = null;
 let rower = createRowerState();
 let activity = createActivityFilter(); // hides the S4's stale values when not rowing
 let session = null;                    // createSession(), null outside a session
+let goal = null;                       // { kind: 'duration' | 'distance', target } of the running session, null = free session
 let values = {};                       // rower state after the activity filter
 let snapshot = {};                     // session.snapshot() or, on the summary screen, session.summary()
 let status = 'disconnected';
@@ -123,11 +126,15 @@ async function freeOrientation() {
 // ---------- Screens ----------
 const startEl = document.getElementById('start');
 const screenEl = document.getElementById('screen');
+const choiceEl = document.getElementById('choice');
+const pickerEl = document.getElementById('picker');
 // A tap on the session screen retries the landscape lock (a user gesture may be needed).
 screenEl.addEventListener('click', lockLandscape);
 
 function show(layout) {
   startEl.hidden = true;
+  choiceEl.hidden = true;
+  pickerEl.hidden = true;
   screenEl.hidden = false;
   view = mountLayout(screenEl, layout);
   scheduleRender();
@@ -140,10 +147,38 @@ function showLastSession() {
     .catch(() => {});
 }
 
+// Rower connected, no session yet: the four tiles, then (duration / distance) the circular picker.
+// Data keeps flowing (it is simply not used until a session starts); « Déconnecter » goes back home.
+function showChoice() {
+  view = null;
+  startEl.hidden = true;
+  screenEl.hidden = true;
+  pickerEl.hidden = true;
+  choiceEl.hidden = false;
+  mountChoice(choiceEl, {
+    onPick: (kind) => (GOAL_KINDS.includes(kind) ? showPicker(kind) : startSession(sourceLabel, null)),
+    onBack: goHome,
+  });
+  lockLandscape();
+}
+
+function showPicker(kind) {
+  choiceEl.hidden = true;
+  pickerEl.hidden = false;
+  mountPicker(pickerEl, {
+    kind,
+    onStart: (target) => startSession(sourceLabel, { kind, target }),
+    onBack: showChoice,
+  });
+}
+
 function goHome() {
   view = null;
   session = null;
+  goal = null;
   snapshot = {};
+  choiceEl.hidden = true;
+  pickerEl.hidden = true;
   clearInterval(draftTimer);
   keepAwake.stop();
   freeOrientation();
@@ -159,17 +194,18 @@ function goHome() {
 const saveDraft = () => {
   // Not before the initial read of the previous backup has answered: we could overwrite a copy never shown.
   if (!draftReady || !session || session.snapshot().status === 'waiting') return;
-  store.saveDraft({ sourceLabel, savedAt: Date.now(), session: session.toJSON() })
+  store.saveDraft({ sourceLabel, savedAt: Date.now(), session: session.toJSON(), goal })
     .catch((err) => logEvent(`copie de secours impossible : ${err.message}`));
 };
 
-function startSession(label) {
+function startSession(label, sessionGoal = null) {
   sourceLabel = label;
+  goal = sessionGoal;
   rower = createRowerState();
   activity = createActivityFilter();
   session = createSession();
   snapshot = session.snapshot();
-  show(LAYOUTS.free({ onEnd: finishSession }));
+  show(LAYOUTS.session({ goal, onEnd: () => finishSession() }));
   lockLandscape();
   awakeWarning = false;
   const mine = session;
@@ -182,7 +218,8 @@ function startSession(label) {
   draftTimer = setInterval(saveDraft, DRAFT_EVERY_MS);
 }
 
-function finishSession() {
+// goalReached: the session ends by itself because its duration / distance goal was reached.
+function finishSession(goalReached = false) {
   clearInterval(draftTimer);
   if (session.snapshot().status === 'waiting') { // connected but never rowed: back home, no summary
     if (draftReady) store.deleteDraft().catch(() => {});
@@ -190,14 +227,17 @@ function finishSession() {
     return;
   }
   saveDraft(); // the draft survives until the summary is kept or discarded
-  showSummary(session.end(Date.now()));
+  showSummary(session.end(Date.now()), { goalReached });
 }
 
 // Hands the session file to Android's share sheet (Drive, Claude…); plain download where sharing
 // files is unsupported. Never rejects: the outcome goes to the diagnostic journal.
-function shareSession(summary) {
+function shareSession(summary, sessionGoal) {
   try {
-    const file = exportFile(summary);
+    const program = sessionGoal
+      ? { id: `${sessionGoal.kind}-${sessionGoal.target}`, name: goalName(sessionGoal), kind: sessionGoal.kind }
+      : undefined;
+    const file = exportFile(summary, globalThis.File, program ? { program } : {});
     if (navigator.canShare?.({ files: [file] })) {
       // No `title`: the Drive share target would use it as the file name instead of the file's own name.
       return navigator.share({ files: [file] })
@@ -220,11 +260,14 @@ function shareSession(summary) {
   }
 }
 
-function showSummary(summary) {
+function showSummary(summary, { goalReached = false } = {}) {
   session = null; // the session is over: frames still arriving must not touch the summary
   snapshot = summary;
+  const summaryGoal = goal;
   let settled = false; // one outcome per summary: a double tap must not share and save twice
   show(LAYOUTS.summary({
+    goal: summaryGoal,
+    goalReached,
     onKeep: () => {
       if (settled) return;
       settled = true;
@@ -234,7 +277,7 @@ function showSummary(summary) {
       }
       // Web Share needs the tap's user gesture: it is started first, synchronously. The local copy
       // is the safety net (a cancelled share loses nothing).
-      const sharing = shareSession(summary);
+      const sharing = shareSession(summary, summaryGoal);
       let saved = 'Séance enregistrée.';
       store.saveSession(summary)
         .then(() => store.deleteDraft())
@@ -273,18 +316,30 @@ function bindSource(src) {
     logFrame(e.detail, parsed);
     const now = Date.now();
     values = activity.update(rower.apply(parsed), now);
-    if (session) snapshot = session.update(values, now);
+    if (session) {
+      snapshot = session.update(values, now);
+      if (goal && goalProgress(goal, snapshot).reached) { finishSession(true); return; } // the goal ends the session by itself
+    }
     logSeries(values);
     scheduleRender();
   });
 }
 
-function startSimulator(scenario) {
+// Simulator. `direct`: start the session at once (?sim=… in the address); otherwise go through the choice
+// screen like the real rower. ?mode=duration|distance&target=1200 (s) or 2000 (m) starts a goal session,
+// ?mode=choice stops on the choice screen.
+function startSimulator(scenario, { direct = false } = {}) {
   const params = new URLSearchParams(location.search);
   const speed = Number(params.get('speed')) || 1;  // ?speed=10 to fast-forward while developing
   const src = createSimSource({ scenario, intervalMs: 1000 / speed, maxFrameBytes: 20 });
   bindSource(src);
-  startSession(`Simulateur · ${scenario}`);
+  const label = `Simulateur · ${scenario}`;
+  const mode = params.get('mode');
+  if (!direct || mode === 'choice') { sourceLabel = label; showChoice(); }
+  else {
+    const target = Number(params.get('target'));
+    startSession(label, GOAL_KINDS.includes(mode) && target > 0 ? { kind: mode, target } : null);
+  }
   src.connect();
 }
 
@@ -310,7 +365,8 @@ async function startRower() {
   try {
     await src.connect();
     startMsg.textContent = '';
-    startSession(src.deviceName() ?? 'Rameur');
+    sourceLabel = src.deviceName() ?? 'Rameur';
+    showChoice();
   } catch (err) {
     logEvent(`erreur : ${err.name} ${err.message}`);
     startMsg.textContent = BLE_ERRORS[err.name] ?? `Erreur : ${err.message}`;
@@ -360,6 +416,7 @@ const autoSim = new URLSearchParams(location.search).get('sim');
 function showInterrupted(draft) {
   logEvent('séance interrompue retrouvée');
   sourceLabel = draft.sourceLabel;
+  goal = draft.goal ?? null;
   session = createSession({ restore: draft.session });
   showSummary(session.end(draft.savedAt));
 }
@@ -377,5 +434,5 @@ Promise.race([draftRead, new Promise((resolve) => setTimeout(resolve, 1500, null
   .then((read) => {
     startupDone = true;
     if (read?.draft) showInterrupted(read.draft);
-    else if (autoSim) startSimulator(autoSim);
+    else if (autoSim) startSimulator(autoSim, { direct: true });
   });

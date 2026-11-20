@@ -18,7 +18,9 @@
   <link rel="modulepreload" href="src/store.js">
   <link rel="modulepreload" href="src/export.js">
   <link rel="modulepreload" href="src/version.js">
+  <link rel="modulepreload" href="src/goal.js">
   <link rel="modulepreload" href="src/ui/format.js">
+  <link rel="modulepreload" href="src/ui/choice.js">
   <link rel="modulepreload" href="src/ui/components.js">
   <link rel="modulepreload" href="src/ui/layouts.js">
   <script type="module" src="src/app.js"></script>
@@ -34,7 +36,11 @@
     <div class="zone-conn" data-zone="conn"></div>
   </main>
 
-  <!-- Start screen (docs/ECRAN.md, "Accueil"): v1 = free session only, the choice of session type comes in v2.
+  <!-- Session choice (4 tiles) and goal picker: shown once the rower is connected (src/ui/choice.js). -->
+  <main id="choice" class="choice" hidden></main>
+  <main id="picker" hidden></main>
+
+  <!-- Start screen (docs/ECRAN.md, "Accueil"): connect, then choose the session type.
        Portrait (default) and landscape; the session screen switches to landscape once connected. -->
   <div id="start" class="start">
     <div class="start-main">

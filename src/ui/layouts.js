@@ -1,34 +1,70 @@
 // One configuration per screen: which component goes into which zone of the common template
 // (index.html: left, center, right, bar, conn). See docs/ECRAN.md.
-// Adding a session type = adding an entry here; the template never changes.
+// Adding a session type = adding a case here; the template never changes.
 import { metricColumn, ring, tapButton, splitBar, summaryActions, connection } from './components.js';
-import { formatPace, formatDuration, formatNumber, formatDistance } from './format.js';
+import { formatPace, formatDuration, formatNumber, formatDistance, formatDistanceShort } from './format.js';
+import { goalProgress } from '../goal.js';
 
 const RING_DISTANCE = 2000; // m: one full turn of the ring in a free session (reference rowing distance)
+
+// Colours carry the data, not the controls: blue = time, violet = distance, orange = intervals, grey = free.
+// The ring icon says which kind of session this is.
+const ICON = {
+  free: { glyph: '∞', tone: 'free' },
+  duration: { glyph: '◔', tone: 'dur' },
+  distance: { glyph: '↔', tone: 'dist' },
+};
 
 const sessionOf = (m) => m.session ?? {};
 const isPaused = (m) => sessionOf(m).status === 'paused';
 // Instantaneous values: "--" when the activity filter has nothing, and always while paused.
 const inst = (m, key) => (isPaused(m) ? null : m.values?.[key]);
-// Ring fraction: wraps every 2000 m so long sessions keep moving.
+// Ring fraction: wraps every 2000 m so long sessions keep moving (free session).
 const distanceArc = (d) => {
   const f = d > 0 ? (d % RING_DISTANCE) / RING_DISTANCE : 0;
-  return [{ from: 0, to: d > 0 && f === 0 ? 1 : f, tone: 'pace' }];
+  return [{ from: 0, to: d > 0 && f === 0 ? 1 : f, tone: 'dist' }];
 };
 
 const NOTE = { waiting: 'Premier coup pour démarrer' };
+const elapsedOf = (m) => sessionOf(m).displayElapsed ?? sessionOf(m).elapsed ?? 0;
+
+/** Centre of the ring (label, big text, ring arc) per kind of session. */
+function centre(goal) {
+  if (goal?.kind === 'duration') {
+    return {
+      arcs: (m) => [{ from: 0, to: goalProgress(goal, sessionOf(m)).fraction, tone: 'dur' }],
+      label: (m) => (isPaused(m) ? 'En pause' : 'Temps restant'),
+      main: (m) => formatDuration(goalProgress(goal, sessionOf(m)).remaining),
+    };
+  }
+  if (goal?.kind === 'distance') {
+    return {
+      arcs: (m) => [{ from: 0, to: goalProgress(goal, sessionOf(m)).fraction, tone: 'dist' }],
+      label: (m) => (isPaused(m) ? 'En pause' : 'Distance restante'),
+      main: (m) => formatDistanceShort(goalProgress(goal, sessionOf(m)).remaining),
+    };
+  }
+  return {
+    arcs: (m) => distanceArc(sessionOf(m).distance ?? 0),
+    label: (m) => (isPaused(m) ? 'En pause' : 'Temps écoulé'),
+    main: (m) => formatDuration(elapsedOf(m)),
+  };
+}
 
 export const LAYOUTS = {
-  /** Free session. onEnd() is called by a tap on ⏸ (shown while waiting for the first stroke and while paused): it ends the session at once. */
-  free: ({ onEnd } = {}) => ({
+  /**
+   * Running session: free (no goal) or with a goal { kind: 'duration' | 'distance', target }.
+   * onEnd() is called by a tap on ⏸ (shown while waiting for the first stroke and while paused): it ends the session at once.
+   * The fourth value is the distance, or the time when the goal is a distance (the ring already shows the distance).
+   */
+  session: ({ goal = null, onEnd } = {}) => ({
     left: metricColumn([
-      { label: 'Split /500 m', tone: 'pace', value: (m) => formatPace(inst(m, 'instPace')) },
-      { label: 'Puissance', unit: 'W', tone: 'power', value: (m) => formatNumber(inst(m, 'instPower')) },
+      { label: 'Split /500 m', value: (m) => formatPace(inst(m, 'instPace')) },
+      { label: 'Puissance', unit: 'W', value: (m) => formatNumber(inst(m, 'instPower')) },
     ]),
     center: ring({
-      arcs: (m) => distanceArc(sessionOf(m).distance ?? 0),
-      label: (m) => (isPaused(m) ? 'En pause' : 'Temps écoulé'),
-      main: (m) => formatDuration(sessionOf(m).displayElapsed ?? sessionOf(m).elapsed ?? 0),
+      ...centre(goal),
+      icon: ICON[goal?.kind ?? 'free'],
       note: (m) => NOTE[sessionOf(m).status] ?? '',
       dimmed: isPaused,
       action: tapButton({ label: 'Terminer la séance', icon: 'pause', cls: 'stop', onTap: onEnd }),
@@ -36,23 +72,33 @@ export const LAYOUTS = {
     }),
     right: metricColumn([
       { label: 'Cadence', unit: '/min', value: (m) => formatNumber(inst(m, 'strokeRate')) },
-      { label: 'Distance', unit: 'm', value: (m) => formatDistance(sessionOf(m).distance ?? 0) },
+      goal?.kind === 'distance'
+        ? { label: 'Temps', value: (m) => formatDuration(elapsedOf(m)) }
+        : { label: 'Distance', unit: 'm', value: (m) => formatDistance(sessionOf(m).distance ?? 0) },
     ], { align: 'right' }),
     bar: splitBar(),
     conn: connection(),
   }),
 
-  /** Summary after the end of a session. model.session = summary() of src/session.js. */
-  summary: ({ onKeep, onDiscard } = {}) => ({
+  /**
+   * Summary after the end of a session. model.session = summary() of src/session.js.
+   * goal: the goal of the session, if any; goalReached: it ended because the goal was reached.
+   */
+  summary: ({ goal = null, goalReached = false, onKeep, onDiscard } = {}) => ({
     left: metricColumn([
-      { label: 'Split moyen', tone: 'pace', value: (m) => formatPace(sessionOf(m).avgSplit) },
-      { label: 'Puissance moy.', unit: 'W', tone: 'power', value: (m) => formatNumber(sessionOf(m).avgPower) },
+      { label: 'Split moyen', value: (m) => formatPace(sessionOf(m).avgSplit) },
+      { label: 'Puissance moy.', unit: 'W', value: (m) => formatNumber(sessionOf(m).avgPower) },
     ]),
     center: ring({
-      arcs: (m) => distanceArc(sessionOf(m).distance ?? 0),
+      arcs: (m) => {
+        if (!goal) return distanceArc(sessionOf(m).distance ?? 0);
+        const f = goalReached ? 1 : goalProgress(goal, { ...sessionOf(m), displayElapsed: sessionOf(m).duration }).fraction;
+        return [{ from: 0, to: f, tone: goal.kind === 'duration' ? 'dur' : 'dist' }];
+      },
+      icon: ICON[goal?.kind ?? 'free'],
       label: () => 'Séance terminée',
       main: (m) => formatDuration(sessionOf(m).duration),
-      note: (m) => (sessionOf(m).best500 != null ? `Meilleur 500 m  ${formatPace(sessionOf(m).best500)}` : ''),
+      note: (m) => (goalReached ? 'Objectif atteint' : sessionOf(m).best500 != null ? `Meilleur 500 m  ${formatPace(sessionOf(m).best500)}` : ''),
     }),
     right: metricColumn([
       { label: 'Cadence moy.', unit: '/min', value: (m) => formatNumber(sessionOf(m).avgSpm) },

@@ -24,6 +24,13 @@ export function formatDistance(meters) {
   return String(Math.max(0, Math.floor(meters))).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
 
+/** Remaining distance on the ring: 750 -> "750 m", 1500 -> "1,5 km" (rounded up: never "0 m" before the goal). */
+export function formatDistanceShort(meters) {
+  if (meters == null || !Number.isFinite(meters)) return '--';
+  const m = Math.max(0, Math.ceil(meters));
+  return m >= 1000 ? `${(m / 1000).toFixed(1).replace('.', ',')} km` : `${m} m`;
+}
+
 /**
  * Position of a split (s/500 m) on the fixed split bar: slow on the left, fast on the right.
  * Returns { ratio in [0, 1], clamp: 'left' | 'right' | null } ; null when there is no split.

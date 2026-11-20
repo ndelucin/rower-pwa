@@ -38,3 +38,9 @@ test('exportFile: a plain-text file (shareable on Android) carrying the JSON exp
   assert.equal(f.name, exportFileName(summary));
   assert.equal(JSON.parse(await f.text()).schema, SCHEMA);
 });
+
+test('exportFile: the program of a goal session goes into the same schema', async () => {
+  const program = { id: 'duration-1200', name: 'Durée 20 min', kind: 'duration' };
+  const f = exportFile(summary, globalThis.File, { program });
+  assert.deepEqual(JSON.parse(await f.text()).program, program);
+});

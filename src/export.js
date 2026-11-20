@@ -46,6 +46,6 @@ export function exportFileName(summary) {
 }
 
 /** The file to share or download. */
-export function exportFile(summary, FileCtor = globalThis.File) {
-  return new FileCtor([JSON.stringify(buildExport(summary))], exportFileName(summary), { type: 'text/plain' });
+export function exportFile(summary, FileCtor = globalThis.File, options = {}) {
+  return new FileCtor([JSON.stringify(buildExport(summary, options))], exportFileName(summary), { type: 'text/plain' });
 }
