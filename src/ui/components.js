@@ -177,7 +177,7 @@ export function controlGroup(items) {
  *  tone(model)    -> optional phase tone ('work' | 'rest' | 'warm'): colours the main text and tints the screen background
  *  dimmed(model)  -> true greys the main text (paused)
  *  action         -> optional component (e.g. tapButton) under the main text, shown when actionVisible(model)
- *  icon           -> optional { glyph, tone } shown at the top centre: the session type (∞ ◔ ↔), tone 'free' | 'dur' | 'dist' | 'intv'
+ *  icon           -> optional { glyph | html, tone } shown at the top centre: the session type (∞ ◔ ↔ or the interval icon, src/ui/icons.js), tone 'free' | 'dur' | 'dist' | 'intv'
  */
 export function ring({ arcs, label, main, note = () => '', count = null, tone = () => null, dimmed = () => false, action = null, actionVisible = () => true, icon = null }) {
   let root, arcGroup, labelEl, mainEl, noteEl, countEl;
@@ -203,6 +203,7 @@ export function ring({ arcs, label, main, note = () => '', count = null, tone = 
       root.append(s);
       if (icon) {
         const ico = h('i', `ring-ico ${icon.tone}`, icon.glyph);
+        if (icon.html) ico.innerHTML = icon.html; // static markup (src/ui/icons.js)
         ico.setAttribute('aria-hidden', 'true');
         root.append(ico);
       }

@@ -124,6 +124,18 @@ const isDev = new URLSearchParams(location.search).has('dev');
 screenEl.addEventListener('click', lockLandscape);
 choiceEl.addEventListener('click', lockLandscape);
 
+// Short notification (the build, from « Information »): disappears by itself, or at a tap.
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function hideToast() { clearTimeout(toastTimer); toastEl.hidden = true; }
+function showToast(text, ms = 4000) {
+  toastEl.textContent = text;
+  toastEl.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, ms);
+}
+toastEl.addEventListener('click', hideToast);
+
 // The rower link, as the choice screen shows it: 'off' | 'searching' | 'on' (the simulator counts as connected),
 // and the one short line under the connection button (yellow).
 let link = 'off';
@@ -134,6 +146,7 @@ const setMessage = (text) => { linkMessage = text; renderChoice(); };
 
 function show(layout) {
   choice = null;
+  hideToast();
   devEl.hidden = true;
   choiceEl.hidden = true;
   pickerEl.hidden = true;
@@ -152,7 +165,7 @@ function showChoice() {
   choiceEl.hidden = false;
   devEl.hidden = !isDev;
   choice = mountChoice(choiceEl, {
-    build: formatBuild(BUILD),
+    onInfo: () => showToast(formatBuild(BUILD)),
     onPick: (kind) => {
       if (GOAL_KINDS.includes(kind)) showPicker(kind);
       else if (kind === 'intervals') showPrograms();

@@ -4,6 +4,7 @@
 import { metricColumn, ring, tapButton, backButton, controlGroup, splitBar, summaryActions, connection } from './components.js';
 import { formatPace, formatDuration, formatNumber, formatDistance, formatDistanceShort } from './format.js';
 import { goalProgress } from '../goal.js';
+import { INTERVAL_ICON } from './icons.js';
 import { engineOf } from '../engine.js';
 import { DEFAULT_REFERENCE, targetZone } from '../target.js';
 
@@ -15,7 +16,7 @@ const ICON = {
   free: { glyph: '∞', tone: 'free' },
   duration: { glyph: '◔', tone: 'dur' },
   distance: { glyph: '↔', tone: 'dist' },
-  program: { glyph: '▮▯▮', tone: 'intv' },
+  program: { html: INTERVAL_ICON, tone: 'intv' },
 };
 // Ring arc colour of a goal (the summary draws it in the colour of its session type).
 const GOAL_TONE = { duration: 'dur', distance: 'dist', program: 'work' };
@@ -30,7 +31,7 @@ const distanceArc = (d) => {
   return [{ from: 0, to: d > 0 && f === 0 ? 1 : f, tone: 'dist' }];
 };
 
-const NOTE = { waiting: 'Premier coup pour démarrer' };
+const NOTE = { waiting: 'Attente du premier coup' };
 const elapsedOf = (m) => sessionOf(m).displayElapsed ?? sessionOf(m).elapsed ?? 0;
 
 // Ring of a programme: the frieze of the current phase (one arc per segment, past ones bright, to-come ones faint,

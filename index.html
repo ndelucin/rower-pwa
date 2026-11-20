@@ -25,6 +25,7 @@
   <link rel="modulepreload" href="src/target.js">
   <link rel="modulepreload" href="src/ui/format.js">
   <link rel="modulepreload" href="src/ui/choice.js">
+  <link rel="modulepreload" href="src/ui/icons.js">
   <link rel="modulepreload" href="src/ui/components.js">
   <link rel="modulepreload" href="src/ui/layouts.js">
   <script type="module" src="src/app.js"></script>
@@ -43,6 +44,9 @@
   <!-- Session choice: the root screen (logo, connection button, 4 tiles) ; goal picker and programme list reuse these two containers (src/ui/choice.js). -->
   <main id="choice" class="choice" hidden></main>
   <main id="picker" hidden></main>
+
+  <!-- Short notification (build number from the « Information » link). -->
+  <div id="toast" class="toast" role="status" hidden></div>
 
   <!-- Simulator: development only, shown on the session choice with ?dev in the address. -->
   <div class="sim-choice" id="sim-choice" hidden>

@@ -34,7 +34,7 @@ La couleur porte l'information, les boutons restent neutres (blanc cassé `#e8ed
 | Durée | bleu `#4fc3f7` | icône ◔, arc de l'anneau en séance durée |
 | Distance | violet `#b197fc` | icône ↔, arc de l'anneau en séance distance et en séance libre (un tour = 2000 m) |
 | Séance libre | gris `#aab4c3` | icône ∞ |
-| Intervalles | jaune `#ffd23f` | icône ▮▯▮ |
+| Intervalles | jaune `#ffd23f` + vert `#4cd97b` | icône à **trois barres en arche** : barre centrale haute jaune (effort), deux barres basses vertes (récup) ; 9 `--u` de haut dans l'anneau (haut à 8 % de l'anneau, sans toucher le trait), 11 sur la tuile, 13 dans la liste des programmes |
 | **Phase effort** | **jaune** `#ffd23f` | arc, libellé, compte à rebours, zone cible de la barre de split, fond teinté |
 | **Phase récupération** | **vert** `#4cd97b` | idem (récup longue entre séries comprise) |
 | **Échauffement et retour au calme** | **bleu** `#4fc3f7` | idem ; même couleur pour les deux |
@@ -77,10 +77,10 @@ La couleur porte l'information, les boutons restent neutres (blanc cassé `#e8ed
 ## Sélection de la séance (écran racine, remplace l'accueil)
 Maquette : [maquette-cinematique.html](maquette-cinematique.html). **Plus d'écran d'accueil** : l'appli s'ouvre directement sur « Sélectionner la séance », rameur non connecté. **Tout est en paysage** (manifeste `orientation: landscape` ; en onglet Chrome non installé, « Tourne le téléphone en paysage » s'affiche en portrait).
 - **Panneau de gauche** :
-  - en haut, le nom **RowerMonitor** (« Rower » demi-gras blanc, « Monitor » fin bleu) et, **centré dessous, le logo** (ligne de battement de cœur, en SVG dans la page) ;
+  - en haut, le nom **RowerMonitor** en grand (8,5 `--u` ; « Rower » demi-gras blanc, « Monitor » fin bleu) et, **centré dessous, le logo** en grand aussi (38 × 19 `--u` ; ligne de battement de cœur, en SVG dans la page) ;
   - en bas, **sous l'axe médian**, le titre « Sélectionner la séance » et, dessous, un **bouton discret de connexion** : « ⌁ Connecter » → « Recherche… » (atténué) → « ✓ Connecté » (un appui **déconnecte**, ce qui libère le S4 pour une autre appli) ;
   - sous le bouton, **une ligne de message** en jaune, deux lignes réservées pour que le texte ne décale jamais la mise en page : « S4 non détecté » (toutes les causes d'échec ; le détail reste dans le journal `window.__rower.events`), « Séance enregistrée. Fichier partagé. », « Bluetooth indisponible » ;
-  - tout en bas, le numéro de build, très discret.
+  - tout en bas à gauche, un lien discret **« Information »** : il affiche, dans une **notification** temporaire (4 s, ou jusqu'à un appui), le numéro de build (« build 50 · 20/11 19:22 »). Le build n'est plus affiché en permanence.
 - **Tuiles** (Libre, Durée, Distance, Intervalles) : **grisées tant que le rameur n'est pas connecté**.
 - **Pas de point vert de connexion** (à peine visible sur le S23) : l'état est écrit (« ✓ Connecté »). Seul le bandeau rouge « Reconnexion… » signale une coupure en séance.
 - **Titres sous l'axe médian** : sur cet écran, sur le sélecteur circulaire et sur la liste des programmes, le haut du titre reste sous le milieu de l'écran ; logo ou bouton « ‹ Retour » en haut, titre et icône groupés en bas.
@@ -91,7 +91,7 @@ Maquette : [maquette-cinematique.html](maquette-cinematique.html). **Plus d'écr
 
 ## Séance libre (v1)
 - Anneau = **distance parcourue / 2000 m** (distance de référence en aviron) ; au-delà, il recommence un tour tous les 2000 m.
-- Avant le premier coup : chrono à 0:00 et « Premier coup pour démarrer » sous le chrono.
+- Avant le premier coup : chrono à 0:00 et « Attente du premier coup » sous le chrono.
 - Au centre : « TEMPS ÉCOULÉ » et le chrono. Pas de distance dans l'anneau.
 - **Aucun bouton pendant l'effort.**
 

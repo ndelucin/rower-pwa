@@ -34,7 +34,7 @@ src/  ftms.js          décodeur Rower Data (pur)
       goal.js          objectif durée / distance : bornes, valeur depuis l'angle, progression (pur)
       store.js         IndexedDB : copie de secours, historique
       export.js        fichier d'export `rower-session/1` et son nom (pur)
-      version.js       numéro de build affiché en bas de l'écran de sélection (écrit par `npm run stamp`)
+      version.js       numéro de build, affiché dans une notification par le lien « Information » de l'écran de sélection (écrit par `npm run stamp`)
       programs.js      les 6 programmes d'intervalles (données)
       engine.js        moteur de programme : phase, segment, compte à rebours, frise (pur)
       target.js        repère personnel et zone cible de split (pur)
@@ -52,7 +52,7 @@ scripts/  phone-eval.js  sim-demo.js  stamp-version.js  import-rowerboard.js (im
   - `?dev` affiche les boutons du simulateur sur l'écran de sélection ; `?sim=steady` (ou `hiit`, `startstop`, `rest`) démarre directement le simulateur ; `&speed=10` accélère (10 s simulées par seconde, mais l'horloge de séance reste réelle) ; `&mode=program&program=pyramide` démarre un programme d'intervalles (ids : `pyramide`, `6x1`, `8x1`, `4x2`, `4x4`, `3x6x30`) ; `&frames=full` envoie des trames entières (sans lui, le simulateur découpe en 20 octets et la séance reste « en attente »). Sans `?sim=`, `?mode=` ne fait rien : il faut le simulateur. `&mode=duration|distance&target=1200` (s) ou `2000` (m) démarre une séance à objectif, `&mode=choice` s'arrête sur l'écran de choix.
   - Maquette (une seule, cliquable, tous les écrans) : http://localhost:8080/docs/maquette-cinematique.html.
 - Tests : `npm test` (= `node --test test/*.test.js`, runner intégré à Node, sans dépendance). Trames de test : `encodeRowerData` (`src/ftms-encoder.js`) et `test/helpers.js`.
-- Numéro de build (discret en bas de l'écran de sélection : « build 38 · 15/11 22:09 ») : `npm run stamp` l'écrit dans `src/version.js` (n° = nombre de commits + 1, + l'heure). **À lancer juste avant chaque commit** pour que le numéro affiché sur le téléphone soit celui du commit ; un crochet Git `pre-commit` peut le faire tout seul (non installé : le dossier `.git/hooks` n'est pas versionné).
+- Numéro de build (lien « Information » de l'écran de sélection, en notification : « build 38 · 15/11 22:09 ») : `npm run stamp` l'écrit dans `src/version.js` (n° = nombre de commits + 1, + l'heure). **À lancer juste avant chaque commit** pour que le numéro affiché sur le téléphone soit celui du commit ; un crochet Git `pre-commit` peut le faire tout seul (non installé : le dossier `.git/hooks` n'est pas versionné).
 - Capture d'une page à la taille du S23, sans téléphone :
   `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars --force-device-scale-factor=3 --window-size=780,300 --screenshot=out.png "http://localhost:8080/?sim=steady"`
 - Démo du faux rameur en terminal : `node scripts/sim-demo.js [rest|steady|hiit] [secondes] [pas]`.

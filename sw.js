@@ -10,7 +10,7 @@ const SHELL = [
   './', './index.html', './manifest.webmanifest', './src/ui/styles.css',
   './src/app.js', './src/activity.js', './src/ble.js', './src/export.js', './src/ftms.js', './src/ftms-encoder.js',
   './src/session.js', './src/smooth.js', './src/sim.js', './src/store.js', './src/version.js', './src/wakelock.js',
-  './src/goal.js', './src/engine.js', './src/programs.js', './src/target.js', './src/ui/choice.js', './src/ui/components.js', './src/ui/format.js', './src/ui/layouts.js',
+  './src/goal.js', './src/engine.js', './src/programs.js', './src/target.js', './src/ui/choice.js', './src/ui/icons.js', './src/ui/components.js', './src/ui/format.js', './src/ui/layouts.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/icon.svg',
 ];
 

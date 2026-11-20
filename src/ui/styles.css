@@ -69,7 +69,7 @@ html, body {
 .ring-arc.tone-warm { stroke: var(--warm); }
 .ring-center { position: absolute; inset: 0; padding-bottom: 8%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 .ring-ico { position: absolute; top: 5%; left: 50%; transform: translateX(-50%); font-size: calc(15 * var(--u)); line-height: 1; font-style: normal; }
-.ring-ico.free { color: var(--neutral); } .ring-ico.dur { color: var(--dur); } .ring-ico.dist { color: var(--dist); } .ring-ico.intv { color: var(--work); font-size: calc(11 * var(--u)); letter-spacing: -.05em; } /* ▮▯▮ is wide and heavy: smaller font for the same visual size as ∞ ◔ ↔ */
+.ring-ico.free { color: var(--neutral); } .ring-ico.dur { color: var(--dur); } .ring-ico.dist { color: var(--dist); } .ring-ico.intv { top: 8.1%; font-size: calc(9 * var(--u)); }
 .ring .label { font-size: calc(4 * var(--u)); color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
 .ring .chrono { font-size: calc(18 * var(--u)); font-weight: 700; line-height: 1; }
 .ring.t-work .chrono { color: var(--work); } .ring.t-rest .chrono { color: var(--rest); } .ring.t-warm .chrono { color: var(--warm); }
@@ -167,8 +167,8 @@ html, body {
 .tile span { font-size: calc(4 * var(--u)); color: var(--muted); }
 /* Root screen: name + logo, connection button, short message */
 .brand { display: flex; flex-direction: column; align-items: center; gap: calc(1.8 * var(--u)); width: fit-content; }
-.brand svg { width: calc(26 * var(--u)); height: calc(13 * var(--u)); filter: drop-shadow(0 0 calc(3 * var(--u)) rgba(79,195,247,.5)); }
-.wordmark { margin: 0; font-family: "Segoe UI", Roboto, system-ui, sans-serif; font-size: calc(7 * var(--u)); line-height: 1; letter-spacing: .02em; font-weight: 400; }
+.brand svg { width: calc(38 * var(--u)); height: calc(19 * var(--u)); filter: drop-shadow(0 0 calc(3 * var(--u)) rgba(79,195,247,.5)); }
+.wordmark { margin: 0; font-family: "Segoe UI", Roboto, system-ui, sans-serif; font-size: calc(8.5 * var(--u)); line-height: 1; letter-spacing: .02em; font-weight: 400; }
 .wordmark b { font-weight: 600; }
 .wordmark span { font-weight: 300; color: var(--pace); margin-left: .1em; }
 .conn-btn { font: inherit; display: inline-flex; align-items: center; gap: calc(1.6 * var(--u)); margin-top: calc(1.6 * var(--u)); font-size: calc(4.2 * var(--u)); color: var(--muted);
@@ -177,11 +177,16 @@ html, body {
 .conn-btn.on { color: var(--text); border-color: #2f4a38; } .conn-btn.on i { font-style: normal; color: var(--ok); }
 .conn-btn:disabled { cursor: default; }
 .choice .start-msg { margin: calc(1 * var(--u)) 0 0; height: calc(9.5 * var(--u)); overflow: hidden; max-width: 95%; font-size: calc(3.8 * var(--u)); color: var(--work); line-height: 1.25; } /* two lines reserved: a message never moves the layout */
-.build { position: absolute; left: max(calc(5 * var(--u)), env(safe-area-inset-left)); bottom: calc(1 * var(--u)); margin: 0; font-size: calc(3.2 * var(--u)); color: var(--muted); opacity: .6; font-variant-numeric: tabular-nums; } /* out of the flow: it must not push the title above the median axis */
+.info-link { position: absolute; left: max(calc(5 * var(--u)), env(safe-area-inset-left)); bottom: calc(.8 * var(--u)); font: inherit; font-size: calc(3.4 * var(--u)); color: var(--muted);
+  background: none; border: 0; padding: 0; text-decoration: underline; opacity: .7; cursor: pointer; } /* out of the flow: it must not push the title above the median axis */
+.info-link::after { content: ""; position: absolute; inset: calc(-3 * var(--u)) calc(-3 * var(--u)) calc(-1 * var(--u)); } /* enlarged, invisible tap area */
+.toast { position: fixed; left: 50%; bottom: calc(6 * var(--u)); transform: translateX(-50%); z-index: 20; background: #1c2431; border: 1px solid #2c3748; border-radius: 99px;
+  padding: .7em 1.6em; font-size: calc(4.2 * var(--u)); color: var(--text); white-space: nowrap; box-shadow: 0 calc(1 * var(--u)) calc(3 * var(--u)) #0008; }
 
 .tile.free { border-color: #aab4c3aa; }
 .tile i { font-style: normal; font-size: calc(13 * var(--u)); color: var(--neutral); line-height: 1; }
-.tile i.dur { color: var(--dur); } .tile i.dist { color: var(--dist); } .tile i.intv { color: var(--work); }
+.tile i.dur { color: var(--dur); } .tile i.dist { color: var(--dist); } .tile i.intv { font-size: calc(11 * var(--u)); }
+.ico-intv { display: block; height: 1em; width: 1.2em; } .ico-intv .w { fill: var(--work); } .ico-intv .r { fill: var(--rest); } /* interval icon: yellow effort bar, green recovery bars */
 
 /* Programme list */
 .side-title { font-size: calc(7 * var(--u)); font-weight: 700; line-height: 1.15; }
@@ -195,7 +200,7 @@ html, body {
 .pcard .pd { font-size: calc(4 * var(--u)); font-weight: 700; color: var(--work); letter-spacing: .04em; }
 .pcard b { font-size: calc(6.2 * var(--u)); font-weight: 600; line-height: 1.1; }
 .pcard .struct { font-size: calc(3.5 * var(--u)); color: var(--muted); line-height: 1.3; }
-.pk-ico.intv { color: var(--work); font-size: calc(15 * var(--u)); letter-spacing: -.05em; }
+.pk-ico.intv { font-size: calc(13 * var(--u)); }
 
 .picker { grid-template-rows: minmax(0, 1fr); }
 .picker-left { justify-content: flex-end; gap: calc(3 * var(--u)); padding: calc(2 * var(--u)) 0; }

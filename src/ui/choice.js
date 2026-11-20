@@ -6,6 +6,7 @@ import {
 } from '../goal.js';
 import { PROGRAMS } from '../programs.js';
 import { ringCircumference } from './format.js';
+import { INTERVAL_ICON } from './icons.js';
 
 const GLYPH = { duration: '◔', distance: '↔' };
 const TITLE = { duration: 'une durée', distance: 'une distance' };
@@ -16,11 +17,12 @@ const LOGO = '<svg viewBox="0 0 64 32" aria-hidden="true"><defs><linearGradient 
 /**
  * The root screen "Sélectionner la séance": name and logo, a discreet connection button under the title and the
  * four tiles (Libre, Durée, Distance, Intervalles), greyed until the rower is connected.
- * onPick('free' | 'duration' | 'distance' | 'intervals'), onConnect(), onDisconnect() (a tap on « ✓ Connecté »).
+ * onPick('free' | 'duration' | 'distance' | 'intervals'), onConnect(), onDisconnect() (a tap on « ✓ Connecté »),
+ * onInfo() (the discreet « Information » link: the app shows the build in a short notification).
  * Returns { update({ link, message, available }) }: link = 'off' | 'searching' | 'on', message = one short line
  * under the button (yellow), available = false when Web Bluetooth is missing (the button is disabled).
  */
-export function mountChoice(el, { onPick, onConnect, onDisconnect, build = '' }) {
+export function mountChoice(el, { onPick, onConnect, onDisconnect, onInfo }) {
   el.innerHTML = `
     <div class="side">
       <div class="brand"><h1 class="wordmark"><b>Rower</b><span>Monitor</span></h1>${LOGO}</div>
@@ -28,19 +30,20 @@ export function mountChoice(el, { onPick, onConnect, onDisconnect, build = '' })
         <h2>Sélectionner<br>la séance</h2>
         <button type="button" class="conn-btn" data-conn></button>
         <p class="start-msg" role="status" data-msg></p>
-        <p class="build">${build}</p>
       </div>
     </div>
+    <button type="button" class="info-link" data-info>Information</button>
     <div class="tiles">
       <button type="button" class="tile free" data-pick="free"><i>∞</i><b>Libre</b><span>sans objectif</span></button>
       <button type="button" class="tile" data-pick="duration"><i class="dur">◔</i><b>Durée</b><span>0 à 60 min</span></button>
       <button type="button" class="tile" data-pick="distance"><i class="dist">↔</i><b>Distance</b><span>0 à 8 km</span></button>
-      <button type="button" class="tile" data-pick="intervals"><i class="intv">▮▯▮</i><b>Intervalles</b><span>programmes</span></button>
+      <button type="button" class="tile" data-pick="intervals"><i class="intv">${INTERVAL_ICON}</i><b>Intervalles</b><span>programmes</span></button>
     </div>`;
   const conn = el.querySelector('[data-conn]');
   const msg = el.querySelector('[data-msg]');
   const tiles = [...el.querySelectorAll('[data-pick]')];
   let link = 'off';
+  el.querySelector('[data-info]').addEventListener('click', () => onInfo?.());
   conn.addEventListener('click', () => (link === 'on' ? onDisconnect?.() : onConnect?.()));
   tiles.forEach((b) => b.addEventListener('click', () => onPick?.(b.dataset.pick)));
   return {
@@ -68,7 +71,7 @@ export function mountPrograms(el, { onPick, onBack }) {
     <div class="side">
       <button type="button" class="back" data-back>‹ Retour</button>
       <div class="side-title">Sélectionner<br>un programme</div>
-      <i class="pk-ico intv">▮▯▮</i>
+      <i class="pk-ico intv">${INTERVAL_ICON}</i>
     </div>
     <div class="pgrid">${PROGRAMS.map(card).join('')}</div>`;
   el.querySelector('[data-back]').addEventListener('click', () => onBack?.());
